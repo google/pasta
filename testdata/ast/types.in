@@ -1,0 +1,8 @@
+def a(b, c: str, d: int=123):
+  pass
+
+def e( f  :g.h =   i, *j: str, **k: int) -> bool:
+  pass
+
+def l(m: Optional[n], o: Tuple[p, q]):
+  pass

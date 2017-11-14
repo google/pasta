@@ -1,0 +1,8 @@
+while True:
+  a
+  b
+
+while True:
+  c
+else:
+  d

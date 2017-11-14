@@ -1,0 +1,24 @@
+if a:
+  b
+
+if c:
+  e
+else:
+  f
+
+if e:
+  g
+elif h:
+  i
+elif j:
+  k
+else:
+  l
+
+if m:
+  n
+elif o:
+  p
+else:
+  if q:
+    r

@@ -1,0 +1,16 @@
+def a(b):
+  c
+
+def   d  (   e  ,f= g, *h,  ** i ):
+  j
+
+def k():
+  l
+  m
+  return n
+
+@o()
+@p
+@q(r, s, t=u)
+def v():
+  w

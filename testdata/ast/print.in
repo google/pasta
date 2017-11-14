@@ -1,0 +1,11 @@
+print a
+
+print b, c
+
+print   d   ,e   ,  f
+
+print g. h,
+
+print  >>  i  , j ,  k
+
+print >>l, m,

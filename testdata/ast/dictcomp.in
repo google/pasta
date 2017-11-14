@@ -1,0 +1,4 @@
+{a: b for c in d}
+
+{  e:f   for
+  h in   i   for   j in   k }

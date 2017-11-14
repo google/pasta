@@ -1,0 +1,5 @@
+del a
+
+del b, c
+
+del    d  ,e   ,      f

@@ -1,0 +1,7 @@
+class a(object):
+  pass
+
+@b
+@c()
+class   d  (   e ,  f):
+  pass
