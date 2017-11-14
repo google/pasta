@@ -21,10 +21,10 @@ from __future__ import print_function
 import ast
 import unittest
 
-import ast_utils
-from augment import rename
-import scope
-import test_utils
+from pasta.augment import rename
+from pasta.base import ast_utils
+from pasta.base import scope
+from pasta.base import test_utils
 
 
 class RenameTest(test_utils.TestCase):

@@ -32,7 +32,7 @@ try:
 except ImportError:  # py3k
   from io import StringIO
 
-import ast_utils
+from pasta.base import ast_utils
 
 # Alias for extracting token names
 TOKENS = tokenize

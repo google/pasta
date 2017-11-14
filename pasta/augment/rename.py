@@ -22,8 +22,8 @@ import ast
 import copy
 import itertools
 
-from augment import import_utils
-import scope
+from pasta.augment import import_utils
+from pasta.base import scope
 
 
 def rename_external(t, old_name, new_name):

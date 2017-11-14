@@ -14,9 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import annotate
-import ast_utils
-import codegen
+from pasta.base import annotate
+from pasta.base import ast_utils
+from pasta.base import codegen
 
 
 def parse(src):

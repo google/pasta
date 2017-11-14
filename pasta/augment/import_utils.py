@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import copy
 
-from augment import errors
+from pasta.augment import errors
 
 def split_import(sc, node, alias_to_remove):
   parent = sc.parent(node)

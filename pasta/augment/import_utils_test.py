@@ -22,10 +22,10 @@ import ast
 import traceback
 import unittest
 
-import ast_utils
-from augment import import_utils
-import test_utils
-import scope
+from pasta.augment import import_utils
+from pasta.base import ast_utils
+from pasta.base import test_utils
+from pasta.base import scope
 
 
 class SplitImportTest(test_utils.TestCase):

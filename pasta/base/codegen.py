@@ -18,13 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import annotate
 import ast
 import collections
 import contextlib
 import itertools
 
-import ast_utils
+from pasta.base import annotate
+from pasta.base import ast_utils
 
 # TODO: Handle indentation correctly on inserted nodes
 

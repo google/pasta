@@ -23,10 +23,10 @@ import difflib
 import os
 import unittest
 
-import annotate
-import ast_utils
-import codegen
-import test_utils
+from pasta.base import annotate
+from pasta.base import ast_utils
+from pasta.base import codegen
+from pasta.base import test_utils
 
 
 class SymmetricTest(test_utils.TestCase):
