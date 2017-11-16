@@ -1,13 +1,13 @@
 # coding=utf-8
 """Annotate python syntax trees with formatting from the soruce file."""
 # Copyright 2017 Google LLC
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -32,6 +32,7 @@ try:
 except ImportError:  # py3k
   from io import StringIO
 
+from pasta.base import ast_constants
 from pasta.base import ast_utils
 
 # Alias for extracting token names
@@ -60,6 +61,16 @@ def spaced(f):
 
 
 class BaseVisitor(ast.NodeVisitor):
+  """Walks a syntax tree in the order it appears in code.
+
+  This class has a dual-purpose. It is implemented (in this file) for annotating
+  an AST with formatting information needed to reconstruct the source code, but
+  it also is implemented in pasta.base.codegen to reconstruct the source code.
+
+  Each visit method in this class specifies the order in which both child nodes
+  and syntax tokens appear, plus where to account for whitespace, commas,
+  parentheses, etc.
+  """
 
   __metaclass__ = abc.ABCMeta
 
@@ -68,30 +79,37 @@ class BaseVisitor(ast.NodeVisitor):
     super(BaseVisitor, self).visit(node)
 
   def suffix(self, node, oneline=False):
+    """Account for some amount of whitespace as the suffix to a node."""
     self.attr(node, 'suffix', [lambda: self.ws(oneline=oneline)])
 
   def prefix(self, node):
+    """Account for some amount of whitespace as the prefix to a node."""
     self.attr(node, 'prefix', [self.ws])
 
   def ws(self, oneline=False):
+    """Account for some amount of whitespace.
+
+    Arguments:
+      oneline: (bool) Whether the whitespace can span more than one line.
+    """
     return ''
 
   @abc.abstractmethod
   def token():
-    pass
+    """Account for a specific token."""
 
   @abc.abstractmethod
-  def optional_suffix():
-    pass
+  def optional_suffix(node, attr_name, token_val):
+    """Account for a suffix that may or may not occur."""
 
   @spaced
   def visit_Module(self, node):
     self.generic_visit(node)
     self.attr(node, 'suffix', [self.ws])
 
-  @parenthesizable
+  @abc.abstractmethod
   def visit_Str(self, node):
-    self.attr(node, 'content', [self.str])
+    pass
 
   @abc.abstractmethod
   def visit_Num(self, node):
@@ -123,29 +141,8 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_AugAssign(self, node):
     self.visit(node.target)
     self.suffix(node.target)
-    # TODO Better approach for this
-    if isinstance(node.op, ast.Add):
-      self.token('+=')
-    elif isinstance(node.op, ast.Sub):
-      self.token('-=')
-    elif isinstance(node.op, ast.Mult):
-      self.token('*=')
-    elif isinstance(node.op, ast.Div):
-      self.token('/=')
-    elif isinstance(node.op, ast.Mod):
-      self.token('%=')
-    elif isinstance(node.op, ast.BitAnd):
-      self.token('&=')
-    elif isinstance(node.op, ast.BitOr):
-      self.token('|=')
-    elif isinstance(node.op, ast.BitXor):
-      self.token('^=')
-    elif isinstance(node.op, ast.FloorDiv):
-      self.token('//=')
-    elif isinstance(node.op, ast.Pow):
-      self.token('**=')
-    else:
-      raise ValueError('Unable to parse AugAssign op: ' + node.op)
+    op_token = '%s=' % ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+    self.token(op_token)
     self.visit(node.value)
 
   @parenthesizable
@@ -216,86 +213,86 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(comparator)
 
   def visit_Add(self, node):
-    self.token('+')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Sub(self, node):
-    self.token('-')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Mult(self, node):
-    self.token('*')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Div(self, node):
-    self.token('/')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Mod(self, node):
-    self.token('%')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Pow(self, node):
-    self.token('**')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_LShift(self, node):
-    self.token('<<')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_RShift(self, node):
-    self.token('>>')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_BitAnd(self, node):
-    self.token('&')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_BitOr(self, node):
-    self.token('|')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_BitXor(self, node):
-    self.token('^')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_FloorDiv(self, node):
-    self.token('//')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Invert(self, node):
-    self.token('~')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Not(self, node):
-    self.token('not')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_UAdd(self, node):
-    self.token('+')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_USub(self, node):
-    self.token('-')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_And(self, node):
-    self.token('and')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Or(self, node):
-    self.token('or')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_Eq(self, node):
-    self.token('==')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_NotEq(self, node):
-    self.token('!=')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_Lt(self, node):
-    self.token('<')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_LtE(self, node):
-    self.token('<=')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_Gt(self, node):
-    self.token('>')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_GtE(self, node):
-    self.token('>=')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_Is(self, node):
-    self.token('is')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_IsNot(self, node):
@@ -303,7 +300,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   @spaced
   def visit_In(self, node):
-    self.token('in')
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   @spaced
   def visit_NotIn(self, node):
@@ -338,7 +335,24 @@ class BaseVisitor(ast.NodeVisitor):
 
   @abc.abstractmethod
   def check_is_elif(self):
-    pass
+    """Return True if the node continues a previous `if` statement as `elif`.
+
+    In python 2.x, `elif` statments get parsed as If nodes. E.g, the following
+    two syntax forms are indistinguishable in the ast in python 2.
+
+    if a:
+      do_something()
+    elif b:
+      do_something_else()
+
+    if a:
+      do_something()
+    else:
+      if b:
+        do_something_else()
+
+    This method should return True for the 'if b' node if it has the first form.
+    """
 
   @parenthesizable
   def visit_IfExp(self, node):
@@ -412,8 +426,23 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(stmt)
 
   @abc.abstractmethod
-  def check_is_continued_with(self, unused_node):
-    pass
+  def check_is_continued_with(self, node):
+    """Return True if the node continues a previous `with` statement.
+
+    In python 2.x, `with` statments with many context expressions get parsed as
+    a tree of With nodes. E.g, the following two syntax forms are
+    indistinguishable in the ast in python 2.
+
+    with a, b, c:
+      do_something()
+
+    with a:
+      with b:
+        with c:
+          do_something()
+
+    This method should return True for the `with b` and `with c` nodes.
+    """
 
   @spaced
   def visit_With_3(self, node):
@@ -612,8 +641,8 @@ class BaseVisitor(ast.NodeVisitor):
     self.token('(')
     num_items = (len(node.args) + len(node.keywords) +
                  (1 if node.starargs else 0) + (1 if node.kwargs else 0))
-    i = 0
 
+    i = 0
     for arg in node.args:
       self.visit(arg)
       self.suffix(arg)
@@ -650,10 +679,10 @@ class BaseVisitor(ast.NodeVisitor):
   @spaced
   def visit_arguments(self, node):
     total_args = (len(node.args) +
-                  (1 if node.vararg else 0) + 
+                  (1 if node.vararg else 0) +
                   (1 if node.kwarg else 0))
     arg_i = 0
-    
+
     positional = node.args[:-len(node.defaults)] if node.defaults else node.args
     keyword = node.args[-len(node.defaults):] if node.defaults else node.args
 
@@ -878,18 +907,10 @@ class BaseVisitor(ast.NodeVisitor):
       self.token(',')
       self.visit(node.tback)
 
-  def check_is_continued_with(self, node):
-    return isinstance(node, ast.With) and self.tokens.peek()[1] == ','
-
-  def _ws(self):
-    return self.tokens.whitespace()
-
   @contextlib.contextmanager
   def scope(self, node):
+    """Context manager to handle a parenthesized scope."""
     yield
-
-  def str(self):
-    pass
 
 
 class AstAnnotator(BaseVisitor):
@@ -899,24 +920,38 @@ class AstAnnotator(BaseVisitor):
 
   @parenthesizable
   def visit_Num(self, node):
-    contentargs = [lambda: self._skip(TOKENS.NUMBER)]
+    """Annotate a Num node with the exact number format."""
+    contentargs = [lambda: self.token_type(TOKENS.NUMBER)]
     if node.n < 0:
       contentargs.insert(0, '-')
     self.attr(node, 'content', contentargs, deps=('n',), default=str(node.n))
 
+  @parenthesizable
+  def visit_Str(self, node):
+    """Annotate a Str node with the exact string format."""
+    self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
+
   def check_is_elif(self, node):
+    """Return True iff the If node is an `elif` in the source."""
     next_tok = self.tokens.next_name()
     return isinstance(node, ast.If) and next_tok[1] == 'elif'
 
+  def check_is_continued_with(self, node):
+    """Return True iff the With node is a continued `with` in the source."""
+    return isinstance(node, ast.With) and self.tokens.peek()[1] == ','
+
   def ws(self, oneline=False):
+    """Parse some whitespace from the source tokens and return it."""
     return self.tokens.whitespace(oneline=oneline)
 
   def token(self, token_val):
+    """Parse a single token with exactly the given value."""
     token = self.tokens.next()
     if token[1] != token_val:
       raise ValueError("Expected %r but found %r\nline %d: %s" % (
           token_val, token[1], token[2][0], self.tokens._lines[token[2][0] - 1]))
 
+    # If the token opens or closes a parentheses scope, keep track of it
     if token[1] in '({[':
       self.tokens.hint_open()
     elif token[1] in ')}]':
@@ -925,30 +960,66 @@ class AstAnnotator(BaseVisitor):
     return token[1]
 
   def optional_suffix(self, node, attr_name, token_val):
+    """Try to parse a suffix and attach it to the node."""
     token = self.tokens.peek()
-    if token[1] == token_val:
+    if token and token[1] == token_val:
       self.tokens.next()
       ast_utils.appendprop(node, attr_name, token[1] + self.ws())
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
+    """Parses some source and sets an attribute on the given node.
+
+    Stores some arbitrary formatting information on the node. This takes a list
+    attr_vals which tell what parts of the source to parse. The result of each
+    function is concatenated onto the formatting data, and strings in this list
+    are a shorthand to look for an exactly matching token.
+
+    For example:
+      self.attr(node, 'foo', ['(', self.ws, 'Hello, world!', self.ws, ')'],
+                deps=('s',), default=node.s)
+
+    is a rudimentary way to parse a parenthesized string. After running this,
+    the matching source code for this node will be stored in its formatting
+    dict under the key 'foo'. The result might be `(\n  'Hello, world!'\n)`.
+
+    This also keeps track of the current value of each of the dependencies.
+    In the above example, we would have looked for the string 'Hello, world!'
+    because that's the value of node.s, however, when we print this back, we
+    want to know if the value of node.s has changed since this time. If any of
+    the dependent values has changed, the default would be used instead.
+
+    Arguments:
+      node: (ast.AST) An AST node to attach formatting information to.
+      attr_name: (string) Name to store the formatting information under.
+      attr_vals: (list of functions/strings) Each item is either a function
+        that parses some source and return a string OR a string to match
+        exactly (as a token).
+      deps: (optional, set of strings) Attributes of the node which attr_vals
+        depends on.
+      default: (string) Unused here.
+    """
+    del default  # unused
     if deps:
       for dep in deps:
         ast_utils.setprop(node, dep + '__src', getattr(node, dep, None))
     for attr_val in attr_vals:
-      if attr_val == ' ':
-        attr_val = self.ws
       if isinstance(attr_val, six.string_types):
         ast_utils.appendprop(node, attr_name, self.token(attr_val))
       else:
         ast_utils.appendprop(node, attr_name, attr_val())
 
-  def _skip(self, token_type):
+  def token_type(self, token_type):
+    """Parse a token of the given type and return its string representation."""
     token = self.tokens.next()
     if not token[0] == token_type:
       raise ValueError("Expected %r but found %r\nline %d: %s" % (
           tokenize.tok_name[token_type], token[1], token[2][0],
           self.tokens._lines[token[2][0] - 1]))
     return token[1]
+
+  def scope(self, node):
+    """Return a context manager to handle a parenthesized scope."""
+    return self.tokens.scope(node)
 
   def _optional_suffix(self, token_type, token_val):
     token = self.tokens.peek()
@@ -957,12 +1028,7 @@ class AstAnnotator(BaseVisitor):
     else:
       self.tokens.next()
       return token[1] + self.ws()
-  
-  def scope(self, node):
-    return self.tokens.scope(node)
 
-  def str(self):
-    return self.tokens.str()
 
 class TokenGenerator(object):
 
@@ -979,21 +1045,25 @@ class TokenGenerator(object):
     self._loc = self.loc_begin()
 
   def loc_begin(self):
+    """Get the start column of the current location parsed to."""
     if self._i < 0:
       return (1, 0)
     return self._tokens[self._i][2]
 
   def loc_end(self):
+    """Get the end column of the current location parsed to."""
     if self._i < 0:
       return (1, 0)
     return self._tokens[self._i][3]
 
   def peek(self):
+    """Get the next token without advancing."""
     if self._i >= self._len:
       return None
     return self._tokens[self._i + 1]
-  
+
   def next(self, advance=True):
+    """Consume the next token and optionally advance the current location."""
     self._i += 1
     if self._i >= self._len:
       return None
@@ -1002,6 +1072,7 @@ class TokenGenerator(object):
     return self._tokens[self._i]
 
   def rewind(self, amount=1):
+    """Rewind the token iterator."""
     self._i -= amount
 
   def whitespace(self, oneline=False):
@@ -1110,11 +1181,13 @@ class TokenGenerator(object):
 
   @contextlib.contextmanager
   def scope(self, node):
+    """Context manager to handle a parenthesized scope."""
     self.open_scope(node)
     yield
     self.close_scope(node)
 
   def is_in_scope(self):
+    """Return True iff there is a scope open."""
     return self._parens or self._hints
 
   def str(self):
@@ -1154,7 +1227,7 @@ class TokenGenerator(object):
     result = self.next(advance=False)
     self._i = last_i
     return result
-  
+
   def takewhile(self, condition, advance=True):
     """Parse tokens as long as a condition holds on the next token."""
     token = self.next(advance=advance)
@@ -1165,7 +1238,21 @@ class TokenGenerator(object):
 
 
 def _scope_helper(node):
-  """Get the closure of nodes that could begin a scope at this point."""
+  """Get the closure of nodes that could begin a scope at this point.
+
+  For instance, when encountering a `(` when parsing a BinOp node, this could
+  indicate that the BinOp itself is parenthesized OR that the BinOp's left node
+  could be parenthesized.
+
+  E.g.: (a + b * c)   or   (a + b) * c   or   (a) + b * c
+        ^                  ^                  ^
+
+  Arguments:
+    node: (ast.AST) Node encountered when opening a scope.
+
+  Returns:
+    A closure of nodes which that scope might apply to.
+  """
   if isinstance(node, ast.Attribute):
     return (node,) + _scope_helper(node.value)
   if isinstance(node, ast.Assign):

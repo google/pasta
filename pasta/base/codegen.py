@@ -30,19 +30,20 @@ from pasta.base import ast_utils
 
 
 class Printer(annotate.BaseVisitor):
+  """Traverses an AST and generates formatted python source code.
+  
+  This uses the same base visitor as annotating the AST, but instead of eating a
+  token it spits one out. For special formatting information which was stored on
+  the node, this is output exactly as it was read in unless one or more of the
+  dependency attributes used to generate it has changed, in which case its
+  default formatting is used.
+  """
 
   def __init__(self):
     self.code = ''
 
   def visit(self, node):
-#    if isinstance(node, ast.Name):
-#      print(node.__class__.__name__, node.id, dict(node.a))
-#    else:
-#      print(node.__class__.__name__, dict(node.a))
-    try:
-      node._printer_info = collections.defaultdict(lambda: False)
-    except AttributeError:
-      pass # fails for primitive types
+    node._printer_info = collections.defaultdict(lambda: False)
     super(Printer, self).visit(node)
     del node._printer_info
 
@@ -51,25 +52,46 @@ class Printer(annotate.BaseVisitor):
     self.code += node.a.get('content', repr(node.n))
     self.suffix(node)
 
+  def visit_Str(self, node):
+    self.prefix(node)
+    self.code += node.a.get('content', repr(node.s))
+    self.suffix(node)
+
   def token(self, value):
     self.code += value
 
-  def optional_suffix(self, node, name, unused_val):
+  def optional_suffix(self, node, attr_name, token_val):
+    del token_val
     if not hasattr(node, 'a'):
       return
-    self.code += ast_utils.prop(node, name)
+    self.code += ast_utils.prop(node, attr_name)
 
-  def attr(self, node, attr_name, unused_attr_vals, deps=None, default=''):
+  def attr(self, node, attr_name, attr_vals, deps=None, default=None):
+    """Add the formatted data stored for a given attribute on this node.
+
+    If any of the dependent attributes of the node have changed since it was
+    annotated, then the stored formatted data for this attr_name is no longer
+    valid, and we must use the default instead.
+    
+    Arguments:
+      node: (ast.AST) An AST node to retrieve formatting information from.
+      attr_name: (string) Name to load the formatting information from.
+      attr_vals: (list of functions/strings) Unused here.
+      deps: (optional, set of strings) Attributes of the node which the stored
+        formatting data depends on.
+      default: (string) Default formatted data for this attribute.
+    """
+    del attr_vals
     if not hasattr(node, '_printer_info') or node._printer_info[attr_name]:
       return
     node._printer_info[attr_name] = True
     if (deps and
         any(getattr(node, dep, None) != ast_utils.prop(node, dep + '__src')
             for dep in deps)):
-      self.code += default
+      self.code += default or ''
     else:
       val = ast_utils.prop(node, attr_name)
-      self.code += val if val is not None else default
+      self.code += val if val is not None else (default or '')
 
   def check_is_elif(self, node):
     try:
@@ -83,6 +105,7 @@ class Printer(annotate.BaseVisitor):
 
 
 def to_str(tree):
+  """Convenient function to get the python source for an AST."""
   p = Printer()
   p.visit(tree)
   return p.code
