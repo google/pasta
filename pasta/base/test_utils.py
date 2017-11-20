@@ -19,8 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
-import contextlib
-import six
 import unittest
 
 

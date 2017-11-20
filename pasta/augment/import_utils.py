@@ -22,6 +22,8 @@ import copy
 
 from pasta.augment import errors
 
+
+# TODO smithnick: Add docstring, handle bad inputs and error conditions
 def split_import(sc, node, alias_to_remove):
   parent = sc.parent(node)
   parent_list = None

@@ -4,7 +4,9 @@
 functionality may not be perfect.*
 
 ## Mission
-Enable python source code refactoring through modifying the AST.
+Enable python source code refactoring through AST modifications.
+
+[TODO: smithnick] Add a couple of examples of user journeys where you would use pasta.
 
 ## Design Goals
 
@@ -12,8 +14,12 @@ Enable python source code refactoring through modifying the AST.
   `pasta.dump(pasta.parse(src)) == src`.
 * **Mutability**: Any changes made in the AST are reflected in the code
   generated from it.
-* **Standardization**: The syntax tree parse by pasta will not introduce new
+* **Standardization**: The syntax tree parsed by pasta will not introduce new
   nodes or structure that the user must learn.
+
+## Python Version Support
+
+Targeted for Python `2.7`, with additional support for Python `3.4`.
 
 ## Basic Usage
 
@@ -31,7 +37,7 @@ source_code = pasta.dump(tree)
 Pasta includes some common augmentations out-of-the-box. These can be used as
 building blocks for more complex refactoring actions.
 
-*There will be more of these basic augmentations added. Stay tuned!*
+*There will be more of these basic augmentations added over time. Stay tuned!*
 
 ### Rename an imported name
 
@@ -53,14 +59,14 @@ rename.rename_external(tree, 'pkg.module.Query', 'pkg.module.ExecuteQuery')
 
 * Changing the indentation level of a block of code is not supported. This is
   not an issue for renames, but would cause problems for refactors like
-  extracting a method or similar.
+  extracting a method.
 
-* pasta works under the assumption that the python version that the code is
+* `pasta` works under the assumption that the python version that the code is
   written for and the version used to run pasta are the same. This is because
   pasta relies on [`ast.parse`](https://docs.python.org/2/library/ast.html#ast.parse)
 
 * Some python features are not fully supported, including `global` and python3
-  language features including PEP-498, and probably many others.
+  language features including PEP-498.
 
 ## Developing
 

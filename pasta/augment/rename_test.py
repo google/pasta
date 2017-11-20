@@ -22,8 +22,6 @@ import ast
 import unittest
 
 from pasta.augment import rename
-from pasta.base import ast_utils
-from pasta.base import scope
 from pasta.base import test_utils
 
 
