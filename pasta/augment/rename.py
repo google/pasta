@@ -1,13 +1,13 @@
 # coding=utf-8
 """Rename names in a python module."""
 # Copyright 2017 Google LLC
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -27,6 +27,32 @@ from pasta.base import scope
 
 
 def rename_external(t, old_name, new_name):
+  """Rename an imported name in a module.
+
+  This will rewrite all import statements in `tree` that reference the old
+  module as well as any names in `tree` which reference the imported name. This
+  may introduce new import statements, but only if necessary.
+
+  For example, to move and rename the module `foo.bar.utils` to `foo.bar_utils`:
+  > rename_external(tree, 'foo.bar.utils', 'foo.bar_utils')
+
+  - import foo.bar.utils
+  + import foo.bar_utils
+
+  - from foo.bar import utils
+  + from foo import bar_utils
+
+  - from foo.bar import logic, utils
+  + from foo.bar import logic
+  + from foo import bar_utils
+
+  Arguments:
+    t: (ast.Module) Module syntax tree to perform the rename in. This will be
+      updated as a result of this function call with all affected nodes changed
+      and potentially new Import/ImportFrom nodes added.
+    old_name: (string) Fully-qualified path of the name to replace.
+    new_name: (string) Fully-qualified path of the name to update to.
+  """
   sc = scope.analyze(t)
 
   if old_name not in sc.external_references:
@@ -36,11 +62,13 @@ def rename_external(t, old_name, new_name):
   for node in sc.external_references[old_name]:
     if isinstance(node, ast.alias):
       parent = sc.parent(node)
-      if isinstance(parent, ast.ImportFrom):
-        if parent not in already_changed:
-          assert _rename_name_in_importfrom(sc, parent, old_name, new_name)
-          already_changed.append(parent)
-      elif isinstance(parent, ast.Import):
+      # An alias may be the most specific reference to an imported name, but it
+      # could if it is a child of an ImportFrom, the ImportFrom node's module
+      # may also need to be updated.
+      if isinstance(parent, ast.ImportFrom) and parent not in already_changed:
+        assert _rename_name_in_importfrom(sc, parent, old_name, new_name)
+        already_changed.append(parent)
+      else:
         node.name = new_name + node.name[len(old_name):]
     elif isinstance(node, ast.ImportFrom):
       if node not in already_changed:

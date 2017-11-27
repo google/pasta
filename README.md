@@ -6,7 +6,12 @@ functionality may not be perfect.*
 ## Mission
 Enable python source code refactoring through AST modifications.
 
-[TODO: smithnick] Add a couple of examples of user journeys where you would use pasta.
+Sample use cases:
+
+* Facilitate moving or renaming python modules by rewriting import statements.
+* Refactor code to enforce a certain style, such as reordering function
+  definitions.
+* Safely migrate code from one API to another.
 
 ## Design Goals
 

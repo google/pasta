@@ -1,13 +1,13 @@
 # coding=utf-8
 """Functions for dealing with import statements."""
 # Copyright 2017 Google LLC
-# 
+#
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
 # You may obtain a copy of the License at
-# 
+#
 #     https://www.apache.org/licenses/LICENSE-2.0
-# 
+#
 # Unless required by applicable law or agreed to in writing, software
 # distributed under the License is distributed on an "AS IS" BASIS,
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -23,8 +23,19 @@ import copy
 from pasta.augment import errors
 
 
-# TODO smithnick: Add docstring, handle bad inputs and error conditions
 def split_import(sc, node, alias_to_remove):
+  """Split an import node by moving the given imported alias into a new import.
+
+  Arguments:
+    sc: (scope.Scope) Scope computed on whole tree of the code being modified.
+    node: (ast.Import|ast.ImportFrom) An import node to split.
+    alias_to_remove: (ast.alias) The import alias node to remove. This must be a
+      child of the given `node` argument.
+
+  Raises:
+    errors.InvalidAstError: if `node` is not appropriately contained in the tree
+      represented by the scope `sc`.
+  """
   parent = sc.parent(node)
   parent_list = None
   for a in ('body', 'orelse', 'finalbody'):
