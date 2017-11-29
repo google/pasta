@@ -27,7 +27,7 @@ def all_tests():
     return test_suite
 
 setup(
-    name="pasta",
+    name="google-pasta",
     version="0.1",
     packages=find_packages(),
 
