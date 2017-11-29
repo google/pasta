@@ -35,8 +35,12 @@ setup(
     author="Nick Smith",
     author_email="smithnick@google.com",
     description="pasta is an AST-based Python refactoring library",
-    #license="??",
+    license="Apache 2.0",
     keywords="python refactoring ast",
     #url="http://example.com/HelloWorld/",
     test_suite='setup.all_tests',
+    classifiers=[
+        "Development Status :: 2 - Pre-Alpha",
+        "License :: OSI Approved :: Apache Software License",
+    ],
 )
