@@ -20,13 +20,17 @@ from __future__ import print_function
 
 import ast
 import difflib
-import os
+import os.path
 import unittest
 
+import pasta
 from pasta.base import annotate
 from pasta.base import ast_utils
 from pasta.base import codegen
 from pasta.base import test_utils
+
+TESTDATA_DIR = os.path.realpath(
+    os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
 class SymmetricTest(test_utils.TestCase):
@@ -62,7 +66,8 @@ def _is_syntax_valid(filepath):
   return True
 
 
-for dirpath, dirs, files in os.walk('./testdata/ast'):
+data_dir = os.path.join(TESTDATA_DIR, 'ast')
+for dirpath, dirs, files in os.walk(data_dir):
   for filename in files:
     if filename.endswith('.in'):
       full_path = os.path.join(dirpath, filename)
