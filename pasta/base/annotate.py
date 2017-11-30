@@ -49,6 +49,8 @@ def spaced(f):
     self.suffix(node, oneline=True)
   return wrapped
 
+class AnnotationError(Exception):
+  """An exception for when we failed to annotate the tree."""
 
 class BaseVisitor(ast.NodeVisitor):
   """Walks a syntax tree in the order it appears in code.
@@ -66,7 +68,10 @@ class BaseVisitor(ast.NodeVisitor):
 
   def visit(self, node):
     ast_utils.setup_props(node)
-    super(BaseVisitor, self).visit(node)
+    try:
+      super(BaseVisitor, self).visit(node)
+    except (TypeError, ValueError, IndexError, KeyError) as e:
+      raise AnnotationError(e.message)
 
   def suffix(self, node, oneline=False):
     """Account for some amount of whitespace as the suffix to a node."""
