@@ -14,3 +14,6 @@ def k():
 @q(r, s, t=u)
 def v():
   w
+
+def x(y, z=a,):
+  b

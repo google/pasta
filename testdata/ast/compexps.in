@@ -9,3 +9,5 @@
 [  c    for      c    in  d    if       e  if f  ]
 
 [g for g in h if i if j for k in l for m in o]
+
+((p, q) for p, q in r)

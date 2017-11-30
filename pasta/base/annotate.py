@@ -116,8 +116,8 @@ class BaseVisitor(ast.NodeVisitor):
       self.suffix(elt)
       if elt != node.elts[-1]:
         self.token(',')
-    if node.elts:
-      self.optional_suffix(node, 'extracomma', ',')
+      else:
+        self.optional_suffix(node, 'extracomma', ',')
 
   @parenthesizable
   def visit_Assign(self, node):
@@ -471,6 +471,12 @@ class BaseVisitor(ast.NodeVisitor):
   @spaced
   def visit_Global(self, node):
     self.token('global')
+    identifiers = []
+    for ident in node.names:
+      if ident != node.names[0]:
+        identifiers.extend([self.ws, ','])
+      identifiers.extend([self.ws, ident])
+    self.attr(node, 'names', identifiers)
 
   @parenthesizable
   def visit_Name(self, node):
@@ -508,8 +514,7 @@ class BaseVisitor(ast.NodeVisitor):
     else:
       self.attr(node, 'lowerspace', [self.ws])
 
-    if node.lower or node.upper:
-      self.token(':')
+    self.token(':')
 
     if node.upper:
       self.visit(node.upper)
@@ -629,6 +634,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.func)
     self.suffix(node.func)
     self.token('(')
+    self.attr(node, 'args_prefix', [self.ws])
     num_items = (len(node.args) + len(node.keywords) +
                  (1 if node.starargs else 0) + (1 if node.kwargs else 0))
 
@@ -711,6 +717,9 @@ class BaseVisitor(ast.NodeVisitor):
       else:
         self.token(node.kwarg)
         self.attr(node, 'kwarg_suffix', [self.ws])
+
+    if positional or keyword or node.vararg or node.kwarg:
+      self.optional_suffix(node, 'extracomma', ',')
 
   @spaced
   def visit_arg(self, node):

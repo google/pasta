@@ -281,4 +281,12 @@ def _scope_helper(node):
     return (node,) + _scope_helper(node.values[0])
   if isinstance(node, ast.BinOp):
     return (node,) + _scope_helper(node.left)
+  if isinstance(node, ast.Tuple) and node.elts:
+    return (node,) + _scope_helper(node.elts[0])
+  if isinstance(node, ast.Call):
+    return (node,) + _scope_helper(node.func)
+  if isinstance(node, ast.GeneratorExp):
+    return (node,) + _scope_helper(node.elt)
+  if isinstance(node, ast.IfExp):
+    return (node,) + _scope_helper(node.body)
   return (node,)
