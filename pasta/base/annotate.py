@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Annotate python syntax trees with formatting from the soruce file."""
+"""Annotate python syntax trees with formatting from the source file."""
 # Copyright 2017 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -94,7 +94,7 @@ class BaseVisitor(ast.NodeVisitor):
     """Account for a specific token."""
 
   @abc.abstractmethod
-  def optional_suffix(node, attr_name, token_val):
+  def optional_token(node, attr_name, token_val):
     """Account for a suffix that may or may not occur."""
 
   @spaced
@@ -122,7 +122,7 @@ class BaseVisitor(ast.NodeVisitor):
       if elt != node.elts[-1]:
         self.token(',')
       else:
-        self.optional_suffix(node, 'extracomma', ',')
+        self.optional_token(node, 'extracomma', ',')
 
   @parenthesizable
   def visit_Assign(self, node):
@@ -550,7 +550,7 @@ class BaseVisitor(ast.NodeVisitor):
       if elt != node.elts[-1]:
         self.token(',')
     if node.elts:
-      self.optional_suffix(node, 'extracomma', ',')
+      self.optional_token(node, 'extracomma', ',')
 
     self.attr(node, 'close_prefix', [self.ws])
     self.token(']')
@@ -565,7 +565,7 @@ class BaseVisitor(ast.NodeVisitor):
       if elt != node.elts[-1]:
         self.token(',')
     if node.elts:
-      self.optional_suffix(node, 'extracomma', ',')
+      self.optional_token(node, 'extracomma', ',')
 
     self.token('}')
 
@@ -581,7 +581,7 @@ class BaseVisitor(ast.NodeVisitor):
       if value != node.values[-1]:
         self.suffix(value)
         self.token(',')
-    self.optional_suffix(node, 'extracomma', ',')
+    self.optional_token(node, 'extracomma', ',')
     self.attr(node, 'close_prefix', [self.ws])
     self.token('}')
 
@@ -677,7 +677,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.suffix(node.kwargs)
 
     if num_items > 0:
-      self.optional_suffix(node, 'extracomma', ',')
+      self.optional_token(node, 'extracomma', ',')
 
     self.token(')')
 
@@ -728,7 +728,7 @@ class BaseVisitor(ast.NodeVisitor):
         self.attr(node, 'kwarg_suffix', [self.ws])
 
     if positional or keyword or node.vararg or node.kwarg:
-      self.optional_suffix(node, 'extracomma', ',')
+      self.optional_token(node, 'extracomma', ',')
 
   @spaced
   def visit_arg(self, node):
@@ -816,13 +816,19 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'name_prefix', [self.ws], default=' ')
     self.token(node.name)
     self.attr(node, 'name_suffix', [self.ws])
-    self.token('(')
+    if node.bases:
+      self.token('(')
+    else:
+      self.optional_token(node, 'open_bases', '(')
     for base in node.bases:
       self.visit(base)
       self.suffix(base)
       if base != node.bases[-1]:
         self.token(',')
-    self.token(')')
+    if node.bases:
+      self.token(')')
+    else:
+      self.optional_token(node, 'close_bases', ')')
     self.token(':')
 
     for expr in node.body:
@@ -968,8 +974,8 @@ class AstAnnotator(BaseVisitor):
 
     return token[1]
 
-  def optional_suffix(self, node, attr_name, token_val):
-    """Try to parse a suffix and attach it to the node."""
+  def optional_token(self, node, attr_name, token_val):
+    """Try to parse a token and attach it to the node."""
     token = self.tokens.peek()
     if token and token[1] == token_val:
       self.tokens.next()
@@ -1021,7 +1027,7 @@ class AstAnnotator(BaseVisitor):
     """Return a context manager to handle a parenthesized scope."""
     return self.tokens.scope(node)
 
-  def _optional_suffix(self, token_type, token_val):
+  def _optional_token(self, token_type, token_val):
     token = self.tokens.peek()
     if token[0] != token_type or token[1] != token_val:
       return ''

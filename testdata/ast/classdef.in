@@ -5,3 +5,9 @@ class a(object):
 @c()
 class   d  (   e ,  f):
   pass
+
+class g:
+  pass
+
+class h():
+  pass

@@ -57,7 +57,7 @@ class Printer(annotate.BaseVisitor):
   def token(self, value):
     self.code += value
 
-  def optional_suffix(self, node, attr_name, token_val):
+  def optional_token(self, node, attr_name, token_val):
     del token_val
     if not hasattr(node, 'a'):
       return
