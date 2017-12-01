@@ -26,6 +26,10 @@ from pasta.base import ast_utils
 # TODO: Handle indentation correctly on inserted nodes
 
 
+class PrintError(Exception):
+  """An exception for when we failed to print the tree."""
+
+
 class Printer(annotate.BaseVisitor):
   """Traverses an AST and generates formatted python source code.
   
@@ -41,7 +45,10 @@ class Printer(annotate.BaseVisitor):
 
   def visit(self, node):
     node._printer_info = collections.defaultdict(lambda: False)
-    super(Printer, self).visit(node)
+    try:
+      super(Printer, self).visit(node)
+    except (TypeError, ValueError, IndexError, KeyError) as e:
+      raise PrintError(e)
     del node._printer_info
 
   def visit_Num(self, node):

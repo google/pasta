@@ -49,8 +49,6 @@ def spaced(f):
     self.suffix(node, oneline=True)
   return wrapped
 
-class AnnotationError(Exception):
-  """An exception for when we failed to annotate the tree."""
 
 class BaseVisitor(ast.NodeVisitor):
   """Walks a syntax tree in the order it appears in code.
@@ -68,10 +66,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   def visit(self, node):
     ast_utils.setup_props(node)
-    try:
-      super(BaseVisitor, self).visit(node)
-    except (TypeError, ValueError, IndexError, KeyError) as e:
-      raise AnnotationError(e.message)
+    super(BaseVisitor, self).visit(node)
 
   def suffix(self, node, oneline=False):
     """Account for some amount of whitespace as the suffix to a node."""
@@ -949,10 +944,20 @@ class BaseVisitor(ast.NodeVisitor):
     yield
 
 
+class AnnotationError(Exception):
+  """An exception for when we failed to annotate the tree."""
+
+
 class AstAnnotator(BaseVisitor):
 
   def __init__(self, source):
     self.tokens = token_generator.TokenGenerator(source)
+
+  def visit(self, node):
+    try:
+      super(AstAnnotator, self).visit(node)
+    except (TypeError, ValueError, IndexError, KeyError) as e:
+      raise AnnotationError(e)
 
   @parenthesizable
   def visit_Num(self, node):
@@ -985,7 +990,7 @@ class AstAnnotator(BaseVisitor):
     """Parse a single token with exactly the given value."""
     token = self.tokens.next()
     if token[1] != token_val:
-      raise ValueError("Expected %r but found %r\nline %d: %s" % (
+      raise AnnotationError("Expected %r but found %r\nline %d: %s" % (
           token_val, token[1], token[2][0], self.tokens._lines[token[2][0] - 1]))
 
     # If the token opens or closes a parentheses scope, keep track of it
