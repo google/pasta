@@ -534,10 +534,9 @@ class BaseVisitor(ast.NodeVisitor):
 
   @spaced
   def visit_Index(self, node):
-    self.token('[')
+    self.attr(node, 'index_open', ['[', self.ws], default='[')
     self.visit(node.value)
-    self.suffix(node.value)
-    self.token(']')
+    self.attr(node, 'index_close', [self.ws, ']'], default=']')
 
   @spaced
   def visit_Slice(self, node):
@@ -568,7 +567,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   @parenthesizable
   def visit_List(self, node):
-    self.token('[')
+    self.attr(node, 'list_open', ['[', self.ws], default='[')
 
     for elt in node.elts:
       self.visit(elt)
@@ -578,8 +577,7 @@ class BaseVisitor(ast.NodeVisitor):
     if node.elts:
       self.optional_token(node, 'extracomma', ',')
 
-    self.attr(node, 'close_prefix', [self.ws])
-    self.token(']')
+    self.attr(node, 'list_close', [self.ws, ']'], default=']')
 
   @parenthesizable
   def visit_Set(self, node):
@@ -613,11 +611,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   @parenthesizable
   def visit_GeneratorExp(self, node):
-    self.visit(node.elt)
-    self.suffix(node.elt)
-    for comp in node.generators:
-      self.token('for')
-      self.visit(comp)
+    self._comp_exp(node)
 
   @parenthesizable
   def visit_ListComp(self, node):
@@ -629,14 +623,15 @@ class BaseVisitor(ast.NodeVisitor):
 
   def _comp_exp(self, node, open_brace=None, close_brace=None):
     if open_brace:
-      self.token(open_brace)
+      self.attr(node, 'compexp_open', [open_brace, self.ws], default=open_brace)
     self.visit(node.elt)
     self.suffix(node.elt)
     for comp in node.generators:
       self.token('for')
       self.visit(comp)
     if close_brace:
-      self.token(close_brace)
+      self.attr(node, 'compexp_close', [self.ws, close_brace],
+                default=close_brace)
 
   @parenthesizable
   def visit_DictComp(self, node):
@@ -852,6 +847,7 @@ class BaseVisitor(ast.NodeVisitor):
       if base != node.bases[-1]:
         self.token(',')
     if node.bases:
+      self.optional_token(node, 'bases_extracomma', ',')
       self.token(')')
     else:
       self.optional_token(node, 'close_bases', ')')

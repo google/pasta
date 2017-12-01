@@ -11,3 +11,6 @@ class g:
 
 class h():
   pass
+
+class i(j, k,):
+  pass

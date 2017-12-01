@@ -269,6 +269,8 @@ def _scope_helper(node):
   """
   if isinstance(node, ast.Attribute):
     return (node,) + _scope_helper(node.value)
+  if isinstance(node, ast.Subscript):
+    return (node,) + _scope_helper(node.value)
   if isinstance(node, ast.Assign):
     return (node,) + _scope_helper(node.targets[0])
   if isinstance(node, ast.AugAssign):
