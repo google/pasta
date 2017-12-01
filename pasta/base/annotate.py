@@ -186,7 +186,7 @@ class BaseVisitor(ast.NodeVisitor):
     if node.module:
       parts = node.module.split('.')
       for part in parts[:-1]:
-        module_pattern += [self.ws, part, '.']
+        module_pattern += [self.ws, part, self.ws, '.']
       module_pattern += [self.ws, parts[-1]]
 
     self.attr(node, 'module', module_pattern,
@@ -307,7 +307,14 @@ class BaseVisitor(ast.NodeVisitor):
 
   @spaced
   def visit_alias(self, node):
-    self.token(node.name)
+    name_pattern = []
+    parts = node.name.split('.')
+    for part in parts[:-1]:
+      name_pattern += [self.ws, part, self.ws, '.']
+    name_pattern += [self.ws, parts[-1]]
+    self.attr(node, 'name', name_pattern,
+              deps=('name',),
+              default=node.name)
     if node.asname is not None:
       self.attr(node, 'asname', [self.ws, 'as', self.ws], default=' as ')
       self.token(node.asname)
