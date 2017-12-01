@@ -207,6 +207,10 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(op)
       self.visit(comparator)
 
+  @spaced
+  def visit_Ellipsis(self, node):
+    self.token('...')
+
   def visit_Add(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 

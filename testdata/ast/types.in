@@ -6,3 +6,6 @@ def e( f  :g.h =   i, *j: str, **k: int) -> bool:
 
 def l(m: Optional[n], o: Tuple[p, q]):
   pass
+
+def r(s: Tuple[t, ...]):
+  pass
