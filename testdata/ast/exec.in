@@ -1,0 +1,7 @@
+exec a
+
+exec b in c
+
+exec     d     in   e,f
+
+exec g in h   ,  i

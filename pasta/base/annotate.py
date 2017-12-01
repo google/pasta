@@ -407,7 +407,9 @@ class BaseVisitor(ast.NodeVisitor):
 
   @spaced
   def visit_Repr(self, node):
-    raise NotImplementedError()
+    self.attr(node, 'repr_open', ['repr', self.ws, '('], default='repr(')
+    self.visit(node.value)
+    self.attr(node, 'repr_close', [self.ws, ')'], default=')')
 
   @spaced
   def visit_With(self, node):
@@ -482,11 +484,28 @@ class BaseVisitor(ast.NodeVisitor):
 
   @spaced
   def visit_Exec(self, node):
-    raise NotImplementedError()
+    self.attr(node, 'exec', ['exec', self.ws], default='exec ')
+    self.visit(node.body)
+    if node.globals:
+      self.attr(node, 'in_globals', [self.ws, 'in', self.ws], default=' in ')
+      self.visit(node.globals)
+      if node.locals:
+        self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
+        self.visit(node.locals)
 
   @spaced
   def visit_Global(self, node):
     self.token('global')
+    identifiers = []
+    for ident in node.names:
+      if ident != node.names[0]:
+        identifiers.extend([self.ws, ','])
+      identifiers.extend([self.ws, ident])
+    self.attr(node, 'names', identifiers)
+
+  @spaced
+  def visit_Nonlocal(self, node):
+    self.token('nonlocal')
     identifiers = []
     for ident in node.names:
       if ident != node.names[0]:

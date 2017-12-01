@@ -1,0 +1,5 @@
+def a():
+  nonlocal b
+
+def c():
+  nonlocal   c,d,   e
