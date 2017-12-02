@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import collections
 
 from pasta.base import annotate
@@ -68,7 +69,7 @@ class Printer(annotate.BaseVisitor):
     del token_val
     if not hasattr(node, 'a'):
       return
-    self.code += ast_utils.prop(node, attr_name)
+    self.code += ast_utils.prop(node, attr_name) or ''
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Add the formatted data stored for a given attribute on this node.
@@ -85,8 +86,9 @@ class Printer(annotate.BaseVisitor):
         formatting data depends on.
       default: (string) Default formatted data for this attribute.
     """
+    print(node, attr_name, ast_utils.prop(node, attr_name), '[%s]' % default)
     del attr_vals
-    if not hasattr(node, '_printer_info') or node._printer_info[attr_name]:
+    if node._printer_info[attr_name]:
       return
     node._printer_info[attr_name] = True
     if (deps and
@@ -95,6 +97,8 @@ class Printer(annotate.BaseVisitor):
       self.code += default or ''
     else:
       val = ast_utils.prop(node, attr_name)
+      if isinstance(node, ast.Name) and attr_name == 'assign_suffix':
+        print('>>>>>>>>>>>>>>>>>>>>>>>>%r<<<<<<<<<<<<<<<<<<<<<' % val)
       self.code += val if val is not None else (default or '')
 
   def check_is_elif(self, node):

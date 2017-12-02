@@ -97,14 +97,14 @@ def space_between(from_loc, to_loc, line, lines):
 def setup_props(node):
   if not hasattr(node, 'a'):
     try:
-      node.a = collections.defaultdict(lambda: '')
+      node.a = {}
     except AttributeError:
       pass
 
 
 def prop(node, name):
   if hasattr(node, 'a'):
-    return node.a[name]
+    return node.a.get(name, None)
   return None
 
 
@@ -114,6 +114,8 @@ def setprop(node, name, value):
 
 
 def appendprop(node, name, value):
+  if name not in node.a:
+    node.a[name] = ''
   node.a[name] += value
 
 

@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Tests for annotate."""
+"""Tests for codegen."""
 # Copyright 2017 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,17 +20,11 @@ from __future__ import print_function
 
 import ast
 import difflib
-import os.path
+import os
 import unittest
 
-import pasta
-from pasta.base import annotate
-from pasta.base import ast_utils
 from pasta.base import codegen
 from pasta.base import test_utils
-
-TESTDATA_DIR = os.path.realpath(
-    os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
 class SymmetricTest(test_utils.TestCase):
@@ -42,14 +36,10 @@ def symmetric_test_generator(filepath):
     with open(filepath, 'r') as handle:
       src = handle.read()
 
-    t = ast_utils.parse(src)
-    annotator = annotate.AstAnnotator(src)
-    annotator.visit(t)
-
+    t = ast.parse(src)
     output = codegen.to_str(t)
 
-    self.assertEqual([], annotator.tokens._parens, 'Unmatched parens')
-    self.assertMultiLineEqual(output, src)
+    self.assertMultiLineEqual(src, output)
   return test
 
 
@@ -62,12 +52,11 @@ def _is_syntax_valid(filepath):
   return True
 
 
-data_dir = os.path.join(TESTDATA_DIR, 'ast')
-for dirpath, dirs, files in os.walk(data_dir):
+for dirpath, dirs, files in os.walk('./testdata/codegen'):
   for filename in files:
     if filename.endswith('.in'):
       full_path = os.path.join(dirpath, filename)
-      setattr(SymmetricTest, 'test_symmetric_' + filename[:-3], unittest.skipIf(
+      setattr(SymmetricTest, 'test_codegen_' + filename[:-3], unittest.skipIf(
                 not _is_syntax_valid(full_path),
                 'Test contains syntax not supported by this version.',
               )(symmetric_test_generator(full_path)))

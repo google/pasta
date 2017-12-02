@@ -1,0 +1,6 @@
+for a in b:
+  a
+for c in d:
+  c
+else:
+  e

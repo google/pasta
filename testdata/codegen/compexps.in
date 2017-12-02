@@ -1,0 +1,3 @@
+{a for a in b}
+(c for c in d)
+[e for e in f for g in h if f if g]
