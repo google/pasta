@@ -33,7 +33,7 @@ from pasta.base import ast_utils
 
 # Alias for extracting token names
 TOKENS = tokenize
-Token = collections.namedtuple('Token', ('type', 's', 'start', 'end', 'line'))
+Token = collections.namedtuple('Token', ('type', 'src', 'start', 'end', 'line'))
 
 
 class TokenGenerator(object):
@@ -100,14 +100,14 @@ class TokenGenerator(object):
                                ((next_token,) if next_token else ())):
       result += self._space_between(self._loc, tok)
       if tok != next_token:
-        result += tok.s
+        result += tok.src
         self._loc = tok.end
       else:
         self._loc = tok.start
 
     # Eat a single newline character
     if next_token and next_token.type in (TOKENS.NL, TOKENS.NEWLINE):
-      result += self.next().s
+      result += self.next().src
 
     return result
 
@@ -144,7 +144,7 @@ class TokenGenerator(object):
 
     def predicate(token):
       return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                             TOKENS.INDENT) or token.s in '(')
+                             TOKENS.INDENT) or token.src in '(')
     whitespace = list(self.takewhile(predicate, advance=False))
     next_token = self.next(advance=False)
 
@@ -153,10 +153,10 @@ class TokenGenerator(object):
     last_paren_loc = None
     for tok in whitespace:
       result += self._space_between(prev_loc, tok)
-      result += tok.s
+      result += tok.src
       prev_loc = tok.end
 
-      if tok.s == '(':
+      if tok.src == '(':
         last_paren_loc = prev_loc
         parens.append(result)
         result = ''
@@ -180,7 +180,7 @@ class TokenGenerator(object):
 
     def predicate(token):
       return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                             TOKENS.INDENT, TOKENS.DEDENT) or token.s in ')')
+                             TOKENS.INDENT, TOKENS.DEDENT) or token.src in ')')
     whitespace = list(self.takewhile(predicate, advance=False))
 
     count = 0
@@ -191,10 +191,10 @@ class TokenGenerator(object):
         continue
 
       result += self._space_between(prev_loc, tok)
-      result += tok.s
+      result += tok.src
       prev_loc = tok.end
 
-      if tok.s == ')':
+      if tok.src == ')':
         self._scope_stack.pop()
         ast_utils.prependprop(node, 'prefix', self._parens.pop())
         ast_utils.appendprop(node, 'suffix', result)
@@ -235,7 +235,7 @@ class TokenGenerator(object):
     tok = None
     for tok in self.takewhile(predicate, advance=False):
       content += self._space_between(prev_loc, tok)
-      content += tok.s
+      content += tok.src
       prev_loc = tok.end
 
     if tok:
@@ -267,7 +267,7 @@ class TokenGenerator(object):
     token = self.next()
     if token.type != token_type:
       raise ValueError("Expected %r but found %r\nline %d: %s" % (
-          tokenize.tok_name[token_type], token.s, token.start[0],
+          tokenize.tok_name[token_type], token.src, token.start[0],
           self._lines[token.start[0] - 1]))
     return token
 

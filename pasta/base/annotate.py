@@ -986,7 +986,7 @@ class AstAnnotator(BaseVisitor):
   def visit_Num(self, node):
     """Annotate a Num node with the exact number format."""
     token_number_type = token_generator.TOKENS.NUMBER
-    contentargs = [lambda: self.tokens.next_of_type(token_number_type).s]
+    contentargs = [lambda: self.tokens.next_of_type(token_number_type).src]
     if node.n < 0:
       contentargs.insert(0, '-')
     self.attr(node, 'content', contentargs, deps=('n',), default=str(node.n))
@@ -999,11 +999,11 @@ class AstAnnotator(BaseVisitor):
   def check_is_elif(self, node):
     """Return True iff the If node is an `elif` in the source."""
     next_tok = self.tokens.next_name()
-    return isinstance(node, ast.If) and next_tok.s == 'elif'
+    return isinstance(node, ast.If) and next_tok.src == 'elif'
 
   def check_is_continued_with(self, node):
     """Return True iff the With node is a continued `with` in the source."""
-    return isinstance(node, ast.With) and self.tokens.peek().s == ','
+    return isinstance(node, ast.With) and self.tokens.peek().src == ','
 
   def ws(self, oneline=False):
     """Parse some whitespace from the source tokens and return it."""
@@ -1015,24 +1015,24 @@ class AstAnnotator(BaseVisitor):
   def token(self, token_val):
     """Parse a single token with exactly the given value."""
     token = self.tokens.next()
-    if token.s != token_val:
+    if token.src != token_val:
       raise AnnotationError("Expected %r but found %r\nline %d: %s" % (
-          token_val, token.s, token.start[0], token.line))
+          token_val, token.src, token.start[0], token.line))
 
     # If the token opens or closes a parentheses scope, keep track of it
-    if token.s in '({[':
+    if token.src in '({[':
       self.tokens.hint_open()
-    elif token.s in ')}]':
+    elif token.src in ')}]':
       self.tokens.hint_closed()
 
-    return token.s
+    return token.src
 
   def optional_token(self, node, attr_name, token_val):
     """Try to parse a token and attach it to the node."""
     token = self.tokens.peek()
-    if token and token.s == token_val:
+    if token and token.src == token_val:
       self.tokens.next()
-      ast_utils.appendprop(node, attr_name, token.s + self.ws())
+      ast_utils.appendprop(node, attr_name, token.src + self.ws())
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Parses some source and sets an attribute on the given node.
@@ -1082,8 +1082,8 @@ class AstAnnotator(BaseVisitor):
 
   def _optional_token(self, token_type, token_val):
     token = self.tokens.peek()
-    if not token or token.type != token_type or token.s != token_val:
+    if not token or token.type != token_type or token.src != token_val:
       return ''
     else:
       self.tokens.next()
-      return token.s + self.ws()
+      return token.src + self.ws()
