@@ -21,6 +21,7 @@ from __future__ import print_function
 import ast
 import difflib
 import os.path
+import textwrap
 import unittest
 
 import pasta
@@ -34,7 +35,61 @@ TESTDATA_DIR = os.path.realpath(
 
 
 class SymmetricTest(test_utils.TestCase):
-  pass
+
+  def test_block_suffix(self):
+    src_tpl = textwrap.dedent('''\
+        {open_block}
+          pass #a
+          #b
+            #c
+
+          #d
+        #e
+        a
+        ''')
+    test_cases = (
+        'def x():',
+        'class X:',
+        'if x:',
+        'if x:\n  y\nelse:',
+        'if x:\n  y\nelif y:',
+        'while x:',
+        'while x:\n  y\nelse:',
+        'try:\n  x\nfinally:',
+        'try:\n  x\nexcept:',
+        'try:\n  x\nexcept:\n  y\nelse:',
+        'with x:',
+        'with x, y:',
+        'with x:\n with y:',
+        'for x in y:',
+    )
+    def is_node_for_suffix(node):
+      # Return True if this node contains the 'pass' statement
+      for attr in dir(node):
+        attr_val = getattr(node, attr)
+        if (isinstance(attr_val, list) and
+            any(isinstance(child, ast.Pass) for child in attr_val)):
+          return True
+      return False
+    node_finder = ast_utils.FindNodeVisitor(is_node_for_suffix)
+
+    for open_block in test_cases:
+      src = src_tpl.format(open_block=open_block)
+      t = pasta.parse(src)
+      node_finder.results = []
+      node_finder.visit(t)
+      node = node_finder.results[0]
+      expected = '  #b\n    #c\n\n  #d\n'
+      actual = ast_utils.prop(node, 'suffix')
+      self.assertMultiLineEqual(
+          expected, actual,
+          'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' % (
+              src, node, node.lineno, '\n'.join(get_diff(actual, expected))))
+
+  def test_no_block_suffix_for_single_line_statement(self):
+    src = 'if x:  return y\n  #a\n#b\n'
+    t = pasta.parse(src)
+    self.assertEqual('', ast_utils.prop(t.body[0], 'suffix'))
 
 
 def symmetric_test_generator(filepath):

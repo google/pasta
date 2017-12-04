@@ -45,7 +45,6 @@ class TokenGenerator(object):
     self._lines = source.splitlines(True)
     self._len = len(self._tokens)
     self._i = -1
-    self._eaten = -1
     self._loc = self.loc_begin()
 
   def loc_begin(self):
@@ -62,7 +61,7 @@ class TokenGenerator(object):
 
   def peek(self):
     """Get the next token without advancing."""
-    if self._i >= self._len:
+    if self._i + 1 >= self._len:
       return None
     return self._tokens[self._i + 1]
 
@@ -95,7 +94,8 @@ class TokenGenerator(object):
     next_token = self.peek()
 
     result = ''
-    for tok in itertools.chain(whitespace, (next_token,)):
+    for tok in itertools.chain(whitespace,
+                               ((next_token,) if next_token else ())):
       result += self._space_between(self._loc, tok)
       if tok != next_token:
         result += tok[1]
@@ -104,10 +104,37 @@ class TokenGenerator(object):
         self._loc = tok[2]
 
     # Eat a single newline character
-    if next_token[0] in (TOKENS.NL, TOKENS.NEWLINE):
+    if next_token and next_token[0] in (TOKENS.NL, TOKENS.NEWLINE):
       result += self.next()[1]
 
     return result
+
+  def block_whitespace(self, indent_level):
+    """Parses whitespace from the current _loc to the end of the block."""
+    # Get the normal suffix lines, but don't advance the token index unless
+    # there is no indentation to account for
+    start_i = self._i
+    full_whitespace = self.whitespace()
+    if not indent_level:
+      return full_whitespace
+    self._i = start_i
+
+    # Trim the full whitespace into only lines that match the indentation level
+    lines = full_whitespace.splitlines(True)
+    try:
+      last_line_idx = next(i for i, line in reversed(list(enumerate(lines)))
+                           if line.startswith(indent_level + '#'))
+    except StopIteration:
+      # No comment lines at the end of this block
+      self._loc = self._tokens[self._i][3]
+      return ''
+    lines = lines[:last_line_idx + 1]
+
+    # Advance the current location to the last token in the lines we've read
+    end_line = self._tokens[self._i][3][0] + 1 + len(lines)
+    list(self.takewhile(lambda tok: tok[2][0] < end_line))
+    self._loc = self._tokens[self._i][3]
+    return ''.join(lines)
 
   def open_scope(self, node):
     """Open a parenthesized scope on the given node."""

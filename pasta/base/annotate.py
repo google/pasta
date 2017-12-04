@@ -29,8 +29,8 @@ from pasta.base import ast_utils
 from pasta.base import token_generator
 
 
-def parenthesizable(f):
-  """Decorates a function where the node visited can be wrapped in parens."""
+def expression(f):
+  """Decorates a function where the node is an expression."""
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
     with self.scope(node):
@@ -40,13 +40,30 @@ def parenthesizable(f):
   return wrapped
 
 
-def spaced(f):
-  """Decorates a function where the node visited can have space around it."""
+def statement(f):
+  """Decorates a function where the node is a statement."""
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
     self.prefix(node)
     f(self, node, *args, **kwargs)
     self.suffix(node, oneline=True)
+  return wrapped
+
+
+def block_statement(f):
+  """Decorates a function where the node is a statement with children."""
+  @contextlib.wraps(f)
+  def wrapped(self, node, *args, **kwargs):
+    self.prefix(node)
+    f(self, node, *args, **kwargs)
+    if hasattr(self, 'block_suffix'):
+      last_child = ast_utils.get_last_child(node)
+      # Workaround for ast.Module which does not have a lineno
+      if last_child.lineno != getattr(node, 'lineno', 0):
+        indent = (ast_utils.prop(last_child, 'prefix') or '\n').splitlines()[-1]
+        self.block_suffix(node, indent)
+    else:
+      self.suffix(node)
   return wrapped
 
 
@@ -84,15 +101,19 @@ class BaseVisitor(ast.NodeVisitor):
     """
     return ''
 
+  def ws_oneline(self):
+    """Account for up to one line of whitespace."""
+    return self.ws(oneline=True)
+
   @abc.abstractmethod
-  def token():
+  def token(self):
     """Account for a specific token."""
 
   @abc.abstractmethod
   def optional_token(node, attr_name, token_val):
     """Account for a suffix that may or may not occur."""
 
-  @spaced
+  @block_statement
   def visit_Module(self, node):
     self.generic_visit(node)
     self.attr(node, 'suffix', [self.ws])
@@ -105,11 +126,11 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Num(self, node):
     pass
 
-  @parenthesizable
+  @expression
   def visit_Expr(self, node):
     self.visit(node.value)
 
-  @parenthesizable
+  @expression
   def visit_Tuple(self, node):
     for elt in node.elts:
       self.visit(elt)
@@ -119,7 +140,7 @@ class BaseVisitor(ast.NodeVisitor):
       else:
         self.optional_token(node, 'extracomma', ',')
 
-  @parenthesizable
+  @expression
   def visit_Assign(self, node):
     for target in node.targets:
       self.visit(target)
@@ -127,7 +148,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.token('=')
     self.visit(node.value)
 
-  @parenthesizable
+  @expression
   def visit_AugAssign(self, node):
     self.visit(node.target)
     self.suffix(node.target)
@@ -135,7 +156,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.token(op_token)
     self.visit(node.value)
 
-  @parenthesizable
+  @expression
   def visit_BinOp(self, node):
     self.visit(node.left)
     self.suffix(node.left)
@@ -143,7 +164,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.right)
     self.suffix(node.right)
 
-  @parenthesizable
+  @expression
   def visit_BoolOp(self, node):
     for value in node.values:
       self.visit(value)
@@ -151,28 +172,28 @@ class BaseVisitor(ast.NodeVisitor):
         self.suffix(value)
         self.visit(node.op)
 
-  @parenthesizable
+  @expression
   def visit_UnaryOp(self, node):
     self.visit(node.op)
     self.visit(node.operand)
 
-  @parenthesizable
+  @expression
   def visit_Lambda(self, node):
     self.token('lambda')
     self.visit(node.args)
     self.token(':')
     self.visit(node.body)
 
-  @spaced
+  @statement
   def visit_Import(self, node):
-    self.token('import')
-    for alias in node.names:
+    self.attr(node, 'open_import', ['import', self.ws], default='import ')
+    for i, alias in enumerate(node.names):
       self.visit(alias)
       if alias != node.names[-1]:
-        self.suffix(alias)
-        self.token(',')
+        self.attr(node, 'alias_sep_%d' % i, [self.ws, ',', self.ws],
+                  default=', ')
 
-  @spaced
+  @statement
   def visit_ImportFrom(self, node):
     self.token('from')
     self.attr(node, 'module_prefix', [self.ws], default=' ')
@@ -195,14 +216,14 @@ class BaseVisitor(ast.NodeVisitor):
       if alias != node.names[-1]:
         self.token(',')
 
-  @parenthesizable
+  @expression
   def visit_Compare(self, node):
     self.visit(node.left)
     for op, comparator in zip(node.ops, node.comparators):
       self.visit(op)
       self.visit(comparator)
 
-  @spaced
+  @statement
   def visit_Ellipsis(self, node):
     self.token('...')
 
@@ -260,47 +281,47 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Or(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_Eq(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_NotEq(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_Lt(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_LtE(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_Gt(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_GtE(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_Is(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_IsNot(self, node):
     self.attr(node, 'content', ['is', self.ws, 'not'], default='is not')
 
-  @spaced
+  @statement
   def visit_In(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @spaced
+  @statement
   def visit_NotIn(self, node):
     self.attr(node, 'content', ['not', self.ws, 'in'], default='not in')
 
-  @spaced
+  @statement
   def visit_alias(self, node):
     name_pattern = []
     parts = node.name.split('.')
@@ -314,11 +335,12 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'asname', [self.ws, 'as', self.ws], default=' as ')
       self.token(node.asname)
 
-  @spaced
+  @block_statement
   def visit_If(self, node):
     self.token('elif' if ast_utils.prop(node, 'is_elif') else 'if')
     self.visit(node.test)
-    self.attr(node, 'testsuffix', [self.ws, ':', self.ws], default=':')
+    self.attr(node, 'testsuffix', [self.ws, ':', self.ws_oneline],
+              default=':')
     for stmt in node.body:
       self.visit(stmt)
 
@@ -330,7 +352,8 @@ class BaseVisitor(ast.NodeVisitor):
       else:
         self.attr(node, 'elseprefix', [self.ws])
         self.token('else')
-        self.attr(node, 'elsesuffix', [self.ws, ':', self.ws], default=':')
+        self.attr(node, 'elsesuffix', [self.ws, ':', self.ws_oneline],
+                  default=':')
         for stmt in node.orelse:
           self.visit(stmt)
 
@@ -355,7 +378,7 @@ class BaseVisitor(ast.NodeVisitor):
     This method should return True for the 'if b' node if it has the first form.
     """
 
-  @parenthesizable
+  @expression
   def visit_IfExp(self, node):
     self.visit(node.body)
     self.suffix(node.body)
@@ -365,22 +388,23 @@ class BaseVisitor(ast.NodeVisitor):
     self.token('else')
     self.visit(node.orelse)
 
-  @spaced
+  @block_statement
   def visit_While(self, node):
     self.token('while')
     self.visit(node.test)
-    self.attr(node, 'testsuffix', [self.ws, ':', self.ws], default=':')
+    self.attr(node, 'testsuffix', [self.ws, ':', self.ws_oneline], default=':')
     for stmt in node.body:
       self.visit(stmt)
 
     if node.orelse:
       self.attr(node, 'elseprefix', [self.ws])
       self.token('else')
-      self.attr(node, 'elsesuffix', [self.ws, ':', self.ws], default=':')
+      self.attr(node, 'elsesuffix', [self.ws, ':', self.ws_oneline],
+                default=':')
       for stmt in node.orelse:
         self.visit(stmt)
 
-  @spaced
+  @block_statement
   def visit_For(self, node):
     self.token('for')
     self.visit(node.target)
@@ -400,24 +424,22 @@ class BaseVisitor(ast.NodeVisitor):
       for stmt in node.orelse:
         self.visit(stmt)
 
-  @spaced
+  @statement
   def visit_Repr(self, node):
     self.attr(node, 'repr_open', ['repr', self.ws, '('], default='repr(')
     self.visit(node.value)
     self.attr(node, 'repr_close', [self.ws, ')'], default=')')
 
-  @spaced
+  @block_statement
   def visit_With(self, node):
     if hasattr(node, 'items'):
       return self.visit_With_3(node)
     if not getattr(node, 'is_continued', False):
       self.token('with')
     self.visit(node.context_expr)
-    self.suffix(node.context_expr)
     if node.optional_vars:
       self.token('as')
       self.visit(node.optional_vars)
-      self.suffix(node.optional_vars)
 
     if self.check_is_continued_with(node.body[0]):
       node.body[0].is_continued = True
@@ -447,7 +469,6 @@ class BaseVisitor(ast.NodeVisitor):
     This method should return True for the `with b` and `with c` nodes.
     """
 
-  @spaced
   def visit_With_3(self, node):
     self.token('with')
 
@@ -456,11 +477,11 @@ class BaseVisitor(ast.NodeVisitor):
       if i != len(node.items) - 1:
         self.token(',')
 
-    self.token(':')
+    self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
     for stmt in node.body:
       self.visit(stmt)
 
-  @spaced
+  @statement
   def visit_withitem(self, node):
     self.visit(node.context_expr)
     self.suffix(node.context_expr)
@@ -469,7 +490,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(node.optional_vars)
       self.suffix(node.optional_vars)
 
-  @spaced
+  @statement
   def visit_Assert(self, node):
     self.token('assert')
     self.visit(node.test)
@@ -477,7 +498,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.token(',')
       self.visit(node.msg)
 
-  @spaced
+  @statement
   def visit_Exec(self, node):
     self.attr(node, 'exec', ['exec', self.ws], default='exec ')
     self.visit(node.body)
@@ -488,7 +509,7 @@ class BaseVisitor(ast.NodeVisitor):
         self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
         self.visit(node.locals)
 
-  @spaced
+  @statement
   def visit_Global(self, node):
     self.token('global')
     identifiers = []
@@ -498,7 +519,7 @@ class BaseVisitor(ast.NodeVisitor):
       identifiers.extend([self.ws, ident])
     self.attr(node, 'names', identifiers)
 
-  @spaced
+  @statement
   def visit_Nonlocal(self, node):
     self.token('nonlocal')
     identifiers = []
@@ -508,32 +529,32 @@ class BaseVisitor(ast.NodeVisitor):
       identifiers.extend([self.ws, ident])
     self.attr(node, 'names', identifiers)
 
-  @parenthesizable
+  @expression
   def visit_Name(self, node):
     self.token(node.id)
 
-  @parenthesizable
+  @expression
   def visit_NameConstant(self, node):
     self.token(str(node.value))
 
-  @parenthesizable
+  @expression
   def visit_Attribute(self, node):
     self.visit(node.value)
     self.attr(node, 'dot', [self.ws, '.', self.ws], default='.')
     self.token(node.attr)
 
-  @parenthesizable
+  @expression
   def visit_Subscript(self, node):
     self.visit(node.value)
     self.visit(node.slice)
 
-  @spaced
+  @statement
   def visit_Index(self, node):
     self.attr(node, 'index_open', ['[', self.ws], default='[')
     self.visit(node.value)
     self.attr(node, 'index_close', [self.ws, ']'], default=']')
 
-  @spaced
+  @statement
   def visit_Slice(self, node):
     self.token('[')
 
@@ -560,7 +581,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     self.token(']')
 
-  @parenthesizable
+  @expression
   def visit_List(self, node):
     self.attr(node, 'list_open', ['[', self.ws], default='[')
 
@@ -574,7 +595,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     self.attr(node, 'list_close', [self.ws, ']'], default=']')
 
-  @parenthesizable
+  @expression
   def visit_Set(self, node):
     self.token('{')
 
@@ -588,7 +609,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     self.token('}')
 
-  @parenthesizable
+  @expression
   def visit_Dict(self, node):
     self.token('{')
 
@@ -604,15 +625,15 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'close_prefix', [self.ws])
     self.token('}')
 
-  @parenthesizable
+  @expression
   def visit_GeneratorExp(self, node):
     self._comp_exp(node)
 
-  @parenthesizable
+  @expression
   def visit_ListComp(self, node):
     self._comp_exp(node, open_brace='[', close_brace=']')
 
-  @parenthesizable
+  @expression
   def visit_SetComp(self, node):
     self._comp_exp(node, open_brace='{', close_brace='}')
 
@@ -628,7 +649,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'compexp_close', [self.ws, close_brace],
                 default=close_brace)
 
-  @parenthesizable
+  @expression
   def visit_DictComp(self, node):
     self.token('{')
     self.visit(node.key)
@@ -641,7 +662,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(comp)
     self.token('}')
 
-  @spaced
+  @statement
   def visit_comprehension(self, node):
     self.visit(node.target)
     self.suffix(node.target)
@@ -654,7 +675,7 @@ class BaseVisitor(ast.NodeVisitor):
       if if_expr != node.ifs[-1]:
         self.suffix(if_expr)
 
-  @parenthesizable
+  @expression
   def visit_Call(self, node):
     self.visit(node.func)
     self.suffix(node.func)
@@ -697,7 +718,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     self.token(')')
 
-  @spaced
+  @statement
   def visit_arguments(self, node):
     total_args = (len(node.args) +
                   (1 if node.vararg else 0) +
@@ -746,7 +767,7 @@ class BaseVisitor(ast.NodeVisitor):
     if positional or keyword or node.vararg or node.kwarg:
       self.optional_token(node, 'extracomma', ',')
 
-  @spaced
+  @statement
   def visit_arg(self, node):
     self.token(node.arg)
     self.suffix(node)
@@ -754,7 +775,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.token(':')
       self.visit(node.annotation)
 
-  @spaced
+  @block_statement
   def visit_FunctionDef(self, node):
     for decorator in node.decorator_list:
       self.token('@')
@@ -778,25 +799,25 @@ class BaseVisitor(ast.NodeVisitor):
     for expr in node.body:
       self.visit(expr)
 
-  @spaced
+  @statement
   def visit_keyword(self, node):
     self.token(node.arg)
     self.attr(node, 'eq', [self.ws, '='], default='=')
     self.visit(node.value)
 
-  @spaced
+  @statement
   def visit_Return(self, node):
     self.token('return')
     if node.value:
       self.visit(node.value)
 
-  @spaced
+  @statement
   def visit_Yield(self, node):
     self.token('yield')
     if node.value:
       self.visit(node.value)
 
-  @spaced
+  @statement
   def visit_Delete(self, node):
     self.token('del')
     for target in node.targets:
@@ -805,7 +826,7 @@ class BaseVisitor(ast.NodeVisitor):
       if target != node.targets[-1]:
         self.token(',')
 
-  @spaced
+  @statement
   def visit_Print(self, node):
     self.token('print')
     self.attr(node, 'print_suffix', [self.ws], default=' ')
@@ -822,7 +843,7 @@ class BaseVisitor(ast.NodeVisitor):
         self.suffix(value)
         self.token(',')
 
-  @spaced
+  @block_statement
   def visit_ClassDef(self, node):
     for decorator in node.decorator_list:
       self.token('@')
@@ -851,44 +872,47 @@ class BaseVisitor(ast.NodeVisitor):
     for expr in node.body:
       self.visit(expr)
 
-  @spaced
+  @statement
   def visit_Pass(self, node):
     self.token('pass')
 
-  @spaced
+  @statement
   def visit_Break(self, node):
     self.token('break')
 
-  @spaced
+  @statement
   def visit_Continue(self, node):
     self.token('continue')
 
-  @spaced
+  @block_statement
   def visit_TryFinally(self, node):
     # Try with except and finally is a TryFinally with the first statement as a
     # TryExcept in Python2
     if not isinstance(node.body[0], ast.TryExcept):
-      self.attr(node, 'open_try', ['try', self.ws, ':'], default='try:')
+      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+                default='try:')
     for stmt in node.body:
       self.visit(stmt)
-    self.attr(node, 'open_finally', ['finally', self.ws, ':'],
+    self.attr(node, 'open_finally', ['finally', self.ws, ':', self.ws_oneline],
               default='finally:')
     for stmt in node.finalbody:
       self.visit(stmt)
 
-  @spaced
+  @block_statement
   def visit_TryExcept(self, node):
-    self.attr(node, 'open_try', ['try', self.ws, ':'], default='try:')
+    self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+              default='try:')
     for stmt in node.body:
       self.visit(stmt)
     for handler in node.handlers:
       self.visit(handler)
     if node.orelse:
-      self.attr(node, 'open_else', ['else', self.ws, ':'], default='else:')
+      self.attr(node, 'open_else', ['else', self.ws, ':', self.ws_oneline],
+                default='else:')
       for stmt in node.orelse:
         self.visit(stmt)
 
-  @spaced
+  @block_statement
   def visit_Try(self, node):
     # Python 3
     self.attr(node, 'open_try', ['try', self.ws, ':'], default='try:')
@@ -906,7 +930,7 @@ class BaseVisitor(ast.NodeVisitor):
       for stmt in node.finalbody:
         self.visit(stmt)
 
-  @spaced
+  @block_statement
   def visit_ExceptHandler(self, node):
     self.token('except')
     if node.type:
@@ -919,12 +943,11 @@ class BaseVisitor(ast.NodeVisitor):
         self.visit(node.name)
       else:
         self.token(node.name)
-        self.attr(node, 'name_suffix', [self.ws])
-    self.token(':')
+    self.attr(node, 'open_except', [self.ws, ':', self.ws_oneline], default=':')
     for stmt in node.body:
       self.visit(stmt)
 
-  @spaced
+  @statement
   def visit_Raise(self, node):
     self.token('raise')
     if node.type:
@@ -959,7 +982,7 @@ class AstAnnotator(BaseVisitor):
     except (TypeError, ValueError, IndexError, KeyError) as e:
       raise AnnotationError(e)
 
-  @parenthesizable
+  @expression
   def visit_Num(self, node):
     """Annotate a Num node with the exact number format."""
     token_number_type = token_generator.TOKENS.NUMBER
@@ -968,7 +991,7 @@ class AstAnnotator(BaseVisitor):
       contentargs.insert(0, '-')
     self.attr(node, 'content', contentargs, deps=('n',), default=str(node.n))
 
-  @parenthesizable
+  @expression
   def visit_Str(self, node):
     """Annotate a Str node with the exact string format."""
     self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
@@ -985,6 +1008,9 @@ class AstAnnotator(BaseVisitor):
   def ws(self, oneline=False):
     """Parse some whitespace from the source tokens and return it."""
     return self.tokens.whitespace(oneline=oneline)
+
+  def block_suffix(self, node, indent_level):
+    ast_utils.setprop(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
   def token(self, token_val):
     """Parse a single token with exactly the given value."""
@@ -1056,7 +1082,7 @@ class AstAnnotator(BaseVisitor):
 
   def _optional_token(self, token_type, token_val):
     token = self.tokens.peek()
-    if token[0] != token_type or token[1] != token_val:
+    if not token or token[0] != token_type or token[1] != token_val:
       return ''
     else:
       self.tokens.next()
