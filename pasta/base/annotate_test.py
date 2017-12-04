@@ -86,6 +86,11 @@ class SymmetricTest(test_utils.TestCase):
           'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' % (
               src, node, node.lineno, '\n'.join(get_diff(actual, expected))))
 
+  def test_no_block_suffix_for_single_line_statement(self):
+    src = 'if x:  return y\n  #a\n#b\n'
+    t = pasta.parse(src)
+    self.assertEqual('', ast_utils.prop(t.body[0], 'suffix'))
+
 
 def symmetric_test_generator(filepath):
   def test(self):

@@ -140,6 +140,24 @@ class FindNodeVisitor(ast.NodeVisitor):
 
 
 def get_last_child(node):
+  """Get the last child node of a block statement.
+
+  The input must be a block statement (e.g. ast.For, ast.With, etc).
+
+  Examples:
+    1. with first():
+         second()
+         last()
+
+    2. try:
+         first()
+       except:
+         second()
+       finally:
+         last()
+
+  In both cases, the last child is the node for `last`.
+  """
   if isinstance(node, ast.If):
     if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
         prop(node.orelse[0], 'is_elif')):

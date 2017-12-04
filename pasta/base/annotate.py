@@ -58,7 +58,10 @@ def block_statement(f):
     f(self, node, *args, **kwargs)
     if hasattr(self, 'block_suffix'):
       last_child = ast_utils.get_last_child(node)
-      self.block_suffix(node, (last_child.a['prefix'].splitlines() or [''])[-1])
+      # Workaround for ast.Module which does not have a lineno
+      if last_child.lineno != getattr(node, 'lineno', 0):
+        indent = (ast_utils.prop(last_child, 'prefix') or '\n').splitlines()[-1]
+        self.block_suffix(node, indent)
     else:
       self.suffix(node)
   return wrapped
