@@ -113,11 +113,11 @@ class TokenGenerator(object):
     """Parses whitespace from the current _loc to the end of the block."""
     # Get the normal suffix lines, but don't advance the token index unless
     # there is no indentation to account for
-    starti = self._i
+    start_i = self._i
     full_whitespace = self.whitespace()
     if not indent_level:
       return full_whitespace
-    self._i = starti
+    self._i = start_i
 
     # Trim the full whitespace into only lines that match the indentation level
     lines = full_whitespace.splitlines(True)
