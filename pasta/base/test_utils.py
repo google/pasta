@@ -26,13 +26,6 @@ class TestCase(unittest.TestCase):
   pass
 
 
-if not hasattr(TestCase, 'assertMultiLineEqual'):
-  def assertMultiLineEqual(self, before, after):
-    self.assertEqual(before, after, 'Output does not match expected\n' +
-                     '\n'.join(get_diff(before, after)))
-  setattr(TestCase, 'assertMultiLineEqual', assertMultiLineEqual)
-
-
 if not hasattr(TestCase, 'assertItemsEqual'):
   setattr(TestCase, 'assertItemsEqual', TestCase.assertCountEqual)
 
