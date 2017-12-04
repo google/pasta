@@ -23,6 +23,7 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import collections
 import contextlib
 import itertools
 import tokenize
@@ -32,13 +33,14 @@ from pasta.base import ast_utils
 
 # Alias for extracting token names
 TOKENS = tokenize
+Token = collections.namedtuple('Token', ('type', 'src', 'start', 'end', 'line'))
 
 
 class TokenGenerator(object):
 
   def __init__(self, source):
-    self._tokens = list(
-        tokenize.generate_tokens(StringIO(source).readline))
+    _token_generator = tokenize.generate_tokens(StringIO(source).readline)
+    self._tokens = list(Token(*tok) for tok in _token_generator)
     self._parens = []
     self._hints = 0
     self._scope_stack = []
@@ -51,13 +53,13 @@ class TokenGenerator(object):
     """Get the start column of the current location parsed to."""
     if self._i < 0:
       return (1, 0)
-    return self._tokens[self._i][2]
+    return self._tokens[self._i].start
 
   def loc_end(self):
     """Get the end column of the current location parsed to."""
     if self._i < 0:
       return (1, 0)
-    return self._tokens[self._i][3]
+    return self._tokens[self._i].end
 
   def peek(self):
     """Get the next token without advancing."""
@@ -71,7 +73,7 @@ class TokenGenerator(object):
     if self._i >= self._len:
       return None
     if advance:
-      self._loc = self._tokens[self._i][3]
+      self._loc = self._tokens[self._i].end
     return self._tokens[self._i]
 
   def rewind(self, amount=1):
@@ -88,8 +90,8 @@ class TokenGenerator(object):
       `_loc' is exactly at the character that was parsed to.
     """
     def predicate(token):
-      return (token[0] in (TOKENS.COMMENT, TOKENS.INDENT, TOKENS.DEDENT) or
-              not oneline and token[0] in (TOKENS.NL, TOKENS.NEWLINE))
+      return (token.type in (TOKENS.COMMENT, TOKENS.INDENT, TOKENS.DEDENT) or
+              not oneline and token.type in (TOKENS.NL, TOKENS.NEWLINE))
     whitespace = list(self.takewhile(predicate, advance=False))
     next_token = self.peek()
 
@@ -98,14 +100,14 @@ class TokenGenerator(object):
                                ((next_token,) if next_token else ())):
       result += self._space_between(self._loc, tok)
       if tok != next_token:
-        result += tok[1]
-        self._loc = tok[3]
+        result += tok.src
+        self._loc = tok.end
       else:
-        self._loc = tok[2]
+        self._loc = tok.start
 
     # Eat a single newline character
-    if next_token and next_token[0] in (TOKENS.NL, TOKENS.NEWLINE):
-      result += self.next()[1]
+    if next_token and next_token.type in (TOKENS.NL, TOKENS.NEWLINE):
+      result += self.next().src
 
     return result
 
@@ -126,14 +128,14 @@ class TokenGenerator(object):
                            if line.startswith(indent_level + '#'))
     except StopIteration:
       # No comment lines at the end of this block
-      self._loc = self._tokens[self._i][3]
+      self._loc = self._tokens[self._i].end
       return ''
     lines = lines[:last_line_idx + 1]
 
     # Advance the current location to the last token in the lines we've read
-    end_line = self._tokens[self._i][3][0] + 1 + len(lines)
-    list(self.takewhile(lambda tok: tok[2][0] < end_line))
-    self._loc = self._tokens[self._i][3]
+    end_line = self._tokens[self._i].end[0] + 1 + len(lines)
+    list(self.takewhile(lambda tok: tok.start[0] < end_line))
+    self._loc = self._tokens[self._i].end
     return ''.join(lines)
 
   def open_scope(self, node):
@@ -141,8 +143,8 @@ class TokenGenerator(object):
     prev_loc = self._loc
 
     def predicate(token):
-      return (token[0] in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                           TOKENS.INDENT) or token[1] in '(')
+      return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
+                             TOKENS.INDENT) or token.src in '(')
     whitespace = list(self.takewhile(predicate, advance=False))
     next_token = self.next(advance=False)
 
@@ -151,10 +153,10 @@ class TokenGenerator(object):
     last_paren_loc = None
     for tok in whitespace:
       result += self._space_between(prev_loc, tok)
-      result += tok[1]
-      prev_loc = tok[3]
+      result += tok.src
+      prev_loc = tok.end
 
-      if tok[1] == '(':
+      if tok.src == '(':
         last_paren_loc = prev_loc
         parens.append(result)
         result = ''
@@ -165,7 +167,7 @@ class TokenGenerator(object):
       for paren in parens:
         self._parens.append(paren)
         self._scope_stack.append(_scope_helper(node))
-      self._loc = next_token[2]
+      self._loc = next_token.start
       self.rewind(1)
     else:
       self.rewind(len(whitespace) + 1)
@@ -177,8 +179,8 @@ class TokenGenerator(object):
     prev_loc = self._loc
 
     def predicate(token):
-      return (token[0] in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                           TOKENS.INDENT, TOKENS.DEDENT) or token[1] in ')')
+      return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
+                             TOKENS.INDENT, TOKENS.DEDENT) or token.src in ')')
     whitespace = list(self.takewhile(predicate, advance=False))
 
     count = 0
@@ -189,16 +191,16 @@ class TokenGenerator(object):
         continue
 
       result += self._space_between(prev_loc, tok)
-      result += tok[1]
-      prev_loc = tok[3]
+      result += tok.src
+      prev_loc = tok.end
 
-      if tok[1] == ')':
+      if tok.src == ')':
         self._scope_stack.pop()
         ast_utils.prependprop(node, 'prefix', self._parens.pop())
         ast_utils.appendprop(node, 'suffix', result)
         result = ''
         count = 0
-        self._loc = tok[3]
+        self._loc = tok.end
     self.rewind(count)
 
   def hint_open(self):
@@ -225,35 +227,35 @@ class TokenGenerator(object):
   def str(self):
     """Parse a full string literal from the input."""
     def predicate(token):
-      return (token[0] in (TOKENS.STRING, TOKENS.COMMENT) or
-              self.is_in_scope() and token[0] in (TOKENS.NL, TOKENS.NEWLINE))
+      return (token.type in (TOKENS.STRING, TOKENS.COMMENT) or
+              self.is_in_scope() and token.type in (TOKENS.NL, TOKENS.NEWLINE))
 
     content = ''
     prev_loc = self._loc
     tok = None
     for tok in self.takewhile(predicate, advance=False):
       content += self._space_between(prev_loc, tok)
-      content += tok[1]
-      prev_loc = tok[3]
+      content += tok.src
+      prev_loc = tok.end
 
     if tok:
-      self._loc = tok[3]
+      self._loc = tok.end
     return content
 
   def _space_between(self, prev_loc, tok):
     """Parse the space between a location and the next token"""
-    if prev_loc > tok[2]:
-      raise ValueError('prev_loc > token start', prev_loc, tok[2])
+    if prev_loc > tok.start:
+      raise ValueError('prev_loc > token start', prev_loc, tok.start)
     if prev_loc[0] > len(self._lines):
       return ''
-    return ast_utils.space_between(prev_loc, tok[2],
+    return ast_utils.space_between(prev_loc, tok.start,
                                    self._lines[prev_loc[0] - 1], self._lines)
 
   def next_name(self):
     """Parse the next name token."""
     last_i = self._i
     def predicate(token):
-      return token[0] != TOKENS.NAME
+      return token.type != TOKENS.NAME
 
     unused_tokens = list(self.takewhile(predicate, advance=False))
     result = self.next(advance=False)
@@ -263,10 +265,10 @@ class TokenGenerator(object):
   def next_of_type(self, token_type):
     """Parse a token of the given type and return it."""
     token = self.next()
-    if token[0] != token_type:
+    if token.type != token_type:
       raise ValueError("Expected %r but found %r\nline %d: %s" % (
-          tokenize.tok_name[token_type], token[1], token[2][0],
-          self._lines[token[2][0] - 1]))
+          tokenize.tok_name[token_type], token.src, token.start[0],
+          self._lines[token.start[0] - 1]))
     return token
 
   def takewhile(self, condition, advance=True):
