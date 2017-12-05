@@ -18,9 +18,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import copy
 
 from pasta.augment import errors
+from pasta.base import scope
 
 
 def split_import(sc, node, alias_to_remove):
@@ -53,3 +55,34 @@ def split_import(sc, node, alias_to_remove):
 
   parent_list.insert(idx + 1, new_import)
   return new_import
+
+def get_unused_imports(tree):
+  """Get the import nodes that aren't used.
+
+  Arguments:
+    tree: (ast.AST) An ast tree to find imports in.
+
+  Returns:
+    A list of ast.AST representing nodes that are imports or parts of imports
+    (aliases) that can be removed because they are unused.
+  """
+  sc = scope.analyze(tree)
+  unused_aliases = set()
+  for node in ast.walk(tree):
+    if isinstance(node, ast.alias):
+      name = sc.lookup_name(
+          node.asname if node.asname is not None else node.name)
+      if not name.reads:
+        unused_aliases.add(node)
+
+  unused_imports = []
+  for node in ast.walk(tree):
+    if isinstance(node, ast.Import) or isinstance(node, ast.ImportFrom):
+      for alias in node.names:
+        if alias in unused_aliases:
+          if len(node.names) == 1:
+            unused_imports.append(node)
+          else:
+            unused_imports.append(alias)
+
+  return unused_imports

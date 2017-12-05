@@ -116,6 +116,41 @@ class SplitImportTest(test_utils.TestCase):
         self.fail('Failed while executing case:\n%s\nCaused by:\n%s' % 
                   (src, traceback.format_exc()))
 
+class GetUnusedImportsTest(test_utils.TestCase):
+
+  def test_normal_imports(self):
+    src = """\
+import a
+import b
+
+a.foo()
+"""
+    tree = ast.parse(src)
+    self.assertItemsEqual(import_utils.get_unused_imports(tree),
+                          [tree.body[1]])
+
+  def test_import_from(self):
+    src = """\
+from my_module import a
+import b
+from my_module import c
+
+b.foo()
+c.bar()
+"""
+    tree = ast.parse(src)
+    self.assertItemsEqual(import_utils.get_unused_imports(tree),
+                          [tree.body[0]])
+
+  def test_import_from_alias(self):
+    src = """\
+from my_module import a, b
+
+b.foo()
+"""
+    tree = ast.parse(src)
+    self.assertItemsEqual(import_utils.get_unused_imports(tree),
+                          [tree.body[0].names[0]])
 
 def suite():
   result = unittest.TestSuite()
