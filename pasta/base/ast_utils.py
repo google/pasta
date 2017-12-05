@@ -22,6 +22,8 @@ import ast
 import collections
 import itertools
 
+from pasta.augment import errors
+
 
 def find_starargs(call_node):
   """Finds the index of starargs in a call's arguments, if present.
@@ -182,3 +184,14 @@ def get_last_child(node):
     if node.handlers:
       return get_last_child(node.handlers[-1])
   return node.body[-1]
+
+def remove_child(parent, child):
+  for _, field_value in ast.iter_fields(parent):
+    if isinstance(field_value, list) and child in field_value:
+      field_value.remove(child)
+      return
+  else:
+    raise errors.InvalidAstError('Unable to find list containing child %r on '
+                                 'parent node %r' % (child, parent))
+
+ 
