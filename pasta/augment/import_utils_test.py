@@ -122,39 +122,106 @@ class GetUnusedImportsTest(test_utils.TestCase):
     src = """\
 import a
 import b
-
 a.foo()
 """
     tree = ast.parse(src)
-    self.assertItemsEqual(import_utils.get_unused_imports(tree),
-                          [tree.body[1]])
+    self.assertItemsEqual(import_utils.get_unused_import_aliases(tree),
+                          [tree.body[1].names[0]])
 
   def test_import_from(self):
     src = """\
 from my_module import a
 import b
 from my_module import c
-
 b.foo()
 c.bar()
 """
     tree = ast.parse(src)
-    self.assertItemsEqual(import_utils.get_unused_imports(tree),
-                          [tree.body[0]])
+    self.assertItemsEqual(import_utils.get_unused_import_aliases(tree),
+                          [tree.body[0].names[0]])
 
   def test_import_from_alias(self):
     src = """\
 from my_module import a, b
-
 b.foo()
 """
     tree = ast.parse(src)
-    self.assertItemsEqual(import_utils.get_unused_imports(tree),
+    self.assertItemsEqual(import_utils.get_unused_import_aliases(tree),
                           [tree.body[0].names[0]])
+
+  def test_import_asname(self):
+    src = """\
+from my_module import a as a_mod, b as unused_b_mod
+import c as c_mod, d as unused_d_mod
+a_mod.foo()
+c_mod.foo()
+"""
+    tree = ast.parse(src)
+    self.assertItemsEqual(import_utils.get_unused_import_aliases(tree),
+                          [tree.body[0].names[1],
+                           tree.body[1].names[1]])
+
+
+class RemoveImportsTest(test_utils.TestCase):
+  # Note that we don't test any 'asname' examples but as far as remove_imports
+  # is concerned its not a different case because its still just an alias type
+  # and we don't care about the internals of the alias we're trying to remove.
+  def test_remove_just_alias(self):
+    src = "import a, b"
+    tree = ast.parse(src)
+    sc = scope.analyze(tree)
+
+    unused_b_node = tree.body[0].names[1]
+
+    import_utils.remove_imports(sc, unused_b_node)
+
+    self.assertEqual(len(tree.body), 1)
+    self.assertEqual(type(tree.body[0]), ast.Import)
+    self.assertEqual(len(tree.body[0].names), 1)
+    self.assertEqual(tree.body[0].names[0].name, 'a')
+
+  def test_remove_just_alias_import_from(self):
+    src = "from m import a, b"
+    tree = ast.parse(src)
+    sc = scope.analyze(tree)
+
+    unused_b_node = tree.body[0].names[1]
+
+    import_utils.remove_imports(sc, unused_b_node)
+
+    self.assertEqual(len(tree.body), 1)
+    self.assertEqual(type(tree.body[0]), ast.ImportFrom)
+    self.assertEqual(len(tree.body[0].names), 1)
+    self.assertEqual(tree.body[0].names[0].name, 'a')
+
+  def test_remove_full_import(self):
+    src = "import a"
+    tree = ast.parse(src)
+    sc = scope.analyze(tree)
+
+    a_node = tree.body[0].names[0]
+
+    import_utils.remove_imports(sc, a_node)
+
+    self.assertEqual(len(tree.body), 0)
+
+  def test_remove_full_importfrom(self):
+    src = "from m import a"
+    tree = ast.parse(src)
+    sc = scope.analyze(tree)
+
+    a_node = tree.body[0].names[0]
+
+    import_utils.remove_imports(sc, a_node)
+
+    self.assertEqual(len(tree.body), 0)
+
 
 def suite():
   result = unittest.TestSuite()
   result.addTests(unittest.makeSuite(SplitImportTest))
+  result.addTests(unittest.makeSuite(GetUnusedImportsTest))
+  result.addTests(unittest.makeSuite(RemoveImportsTest))
   return result
 
 if __name__ == '__main__':
