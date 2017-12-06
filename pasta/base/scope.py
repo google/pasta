@@ -92,11 +92,12 @@ class ScopeVisitor(ast.NodeVisitor):
     self.generic_visit(node)
 
   def visit_FunctionDef(self, node):
+    self.visit_in_order(node, 'decorator_list')
+    self.scope.define_name(node.name, node)
     try:
-      self.scope.define_name(node.name, node)
       self.scope = Scope(self.scope)
       # Visit decorator list first to avoid declarations in args
-      self.visit_in_order(node, 'decorator_list', 'args', 'returns', 'body')
+      self.visit_in_order(node, 'args', 'returns', 'body')
     finally:
       self.scope = self.scope.parent_scope
 
@@ -109,10 +110,11 @@ class ScopeVisitor(ast.NodeVisitor):
     self.generic_visit(node)
 
   def visit_ClassDef(self, node):
+    self.visit_in_order(node, 'decorator_list', 'bases')
+    self.scope.define_name(node.name, node)
     try:
-      self.scope.define_name(node.name, node)
       self.scope = Scope(self.scope)
-      self.generic_visit(node)
+      self.visit_in_order(node, 'body')
     finally:
       self.scope = self.scope.parent_scope
 

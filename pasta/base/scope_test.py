@@ -205,6 +205,7 @@ class ScopeTest(test_utils.TestCase):
   def test_import_reads_in_functiondef(self):
     source = textwrap.dedent("""\
         import aaa
+        @aaa.x
         def foo(bar):
           return aaa
         """)
@@ -212,12 +213,33 @@ class ScopeTest(test_utils.TestCase):
     nodes = tree.body
 
     return_value = nodes[1].body[0].value
+    decorator = nodes[1].decorator_list[0].value
 
     s = scope.analyze(tree)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
-    self.assertItemsEqual(s.names['aaa'].reads, [return_value])
+    self.assertItemsEqual(s.names['aaa'].reads, [decorator, return_value])
+
+  def test_import_reads_in_classdef(self):
+    source = textwrap.dedent("""\
+        import aaa
+        @aaa.x
+        class Foo(aaa.Bar):
+          pass
+        """)
+    tree = ast.parse(source)
+    nodes = tree.body
+
+    node_aaa = nodes[0].names[0]
+    decorator = nodes[1].decorator_list[0].value
+    base = nodes[1].bases[0].value
+
+    s = scope.analyze(tree)
+
+    self.assertItemsEqual(s.names.keys(), {'aaa', 'Foo'})
+    self.assertItemsEqual(s.external_references.keys(), {'aaa'})
+    self.assertItemsEqual(s.names['aaa'].reads, [decorator, base])
 
   def test_import_masked_by_function_arg(self):
     source = textwrap.dedent("""\
