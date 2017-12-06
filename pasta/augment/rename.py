@@ -21,6 +21,7 @@ from __future__ import print_function
 import ast
 import copy
 import itertools
+import six
 
 from pasta.augment import import_utils
 from pasta.base import ast_utils
@@ -87,7 +88,7 @@ def rename_external(t, old_name, new_name):
         already_changed.append(node)
         has_changed = True
 
-  for rename_old, rename_new in renames.iteritems():
+  for rename_old, rename_new in six.iteritems(renames):
     _rename_reads(sc, t, rename_old, rename_new)
   return has_changed
 
