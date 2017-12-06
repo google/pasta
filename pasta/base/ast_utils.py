@@ -185,13 +185,37 @@ def get_last_child(node):
       return get_last_child(node.handlers[-1])
   return node.body[-1]
 
+
 def remove_child(parent, child):
   for _, field_value in ast.iter_fields(parent):
     if isinstance(field_value, list) and child in field_value:
       field_value.remove(child)
       return
-  else:
-    raise errors.InvalidAstError('Unable to find list containing child %r on '
-                                 'parent node %r' % (child, parent))
+  raise errors.InvalidAstError('Unable to find list containing child %r on '
+                               'parent node %r' % (child, parent))
 
- 
+
+def replace_child(parent, node, replace_with):
+  """Replace a node's child with another node while preserving formatting.
+
+  Arguments:
+    parent: (ast.AST) Parent node to replace a child of.
+    node: (ast.AST) Child node to replace.
+    replace_with: (ast.AST) New child node.
+  """
+  # TODO(soupytwist): Don't refer to the formatting dict directly
+  if hasattr(node, 'a'):
+    setprop(replace_with, 'prefix', prop(node, 'prefix'))
+    setprop(replace_with, 'suffix', prop(node, 'suffix'))
+  for field in parent._fields:
+    field_val = getattr(parent, field, None)
+    if field_val == node:
+      setattr(parent, field, replace_with)
+      return
+    elif isinstance(field_val, list):
+      try:
+        field_val[field_val.index(node)] = replace_with
+        return
+      except IndexError:
+        pass
+  raise errors.InvalidAstError('Node %r is not a child of %r' % (child, parent))

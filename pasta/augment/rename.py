@@ -23,6 +23,7 @@ import copy
 import itertools
 
 from pasta.augment import import_utils
+from pasta.base import ast_utils
 from pasta.base import scope
 
 
@@ -52,12 +53,17 @@ def rename_external(t, old_name, new_name):
       and potentially new Import/ImportFrom nodes added.
     old_name: (string) Fully-qualified path of the name to replace.
     new_name: (string) Fully-qualified path of the name to update to.
+
+  Returns:
+    True if any changes were made, False otherwise.
   """
   sc = scope.analyze(t)
 
   if old_name not in sc.external_references:
     return False
 
+  has_changed = False
+  renames = {}
   already_changed = []
   for node in sc.external_references[old_name]:
     if isinstance(node, ast.alias):
@@ -67,15 +73,23 @@ def rename_external(t, old_name, new_name):
       # may also need to be updated.
       if isinstance(parent, ast.ImportFrom) and parent not in already_changed:
         assert _rename_name_in_importfrom(sc, parent, old_name, new_name)
+        renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
         already_changed.append(parent)
       else:
         node.name = new_name + node.name[len(old_name):]
+        if not node.asname:
+          renames[old_name] = new_name
+      has_changed = True
     elif isinstance(node, ast.ImportFrom):
       if node not in already_changed:
         assert _rename_name_in_importfrom(sc, node, old_name, new_name)
+        renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
         already_changed.append(node)
+        has_changed = True
 
-  return True
+  for rename_old, rename_new in renames.iteritems():
+    _rename_reads(sc, t, rename_old, rename_new)
+  return has_changed
 
 
 def _rename_name_in_importfrom(sc, node, old_name, new_name):
@@ -109,3 +123,33 @@ def _rename_name_in_importfrom(sc, node, old_name, new_name):
       node.module = '.'.join(new_parts[:-1])
 
   return True
+
+
+def _rename_reads(sc, t, old_name, new_name):
+  """Updates all locations in the module where the given name is read.
+
+  Arguments:
+    sc: (scope.Scope) Scope to work in. This should be the scope of `t`.
+    t: (ast.AST) The AST to perform updates in.
+    old_name: (string) Dotted name to update.
+    new_name: (string) Dotted name to replace it with.
+
+  Returns:
+    True if any changes were made, False otherwise.
+  """
+  name_parts = old_name.split('.')
+  try:
+    name = sc.names[name_parts[0]]
+    for part in name_parts[1:]:
+      name = name.attrs[part]
+  except KeyError:
+    return False
+
+  has_changed = False
+  for ref_node in name.reads:
+    if isinstance(ref_node, (ast.Name, ast.Attribute)):
+      ast_utils.replace_child(sc.parent(ref_node), ref_node,
+                              ast.parse(new_name).body[0].value)
+      has_changed = True
+
+  return has_changed
