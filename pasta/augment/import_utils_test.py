@@ -163,7 +163,7 @@ c_mod.foo()
 
 
 class RemoveImportsTest(test_utils.TestCase):
-  # Note that we don't test any 'asname' examples but as far as remove_imports
+  # Note that we don't test any 'asname' examples but as far as remove_import
   # is concerned its not a different case because its still just an alias type
   # and we don't care about the internals of the alias we're trying to remove.
   def test_remove_just_alias(self):
@@ -173,7 +173,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     unused_b_node = tree.body[0].names[1]
 
-    import_utils.remove_imports(sc, unused_b_node)
+    import_utils.remove_import(sc, unused_b_node)
 
     self.assertEqual(len(tree.body), 1)
     self.assertEqual(type(tree.body[0]), ast.Import)
@@ -187,7 +187,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     unused_b_node = tree.body[0].names[1]
 
-    import_utils.remove_imports(sc, unused_b_node)
+    import_utils.remove_import(sc, unused_b_node)
 
     self.assertEqual(len(tree.body), 1)
     self.assertEqual(type(tree.body[0]), ast.ImportFrom)
@@ -201,7 +201,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     a_node = tree.body[0].names[0]
 
-    import_utils.remove_imports(sc, a_node)
+    import_utils.remove_import(sc, a_node)
 
     self.assertEqual(len(tree.body), 0)
 
@@ -212,7 +212,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     a_node = tree.body[0].names[0]
 
-    import_utils.remove_imports(sc, a_node)
+    import_utils.remove_import(sc, a_node)
 
     self.assertEqual(len(tree.body), 0)
 
