@@ -82,7 +82,7 @@ def get_unused_import_aliases(tree, sc=None):
   return unused_aliases
 
 
-def remove_imports(sc, alias_to_remove):
+def remove_import(sc, alias_to_remove):
   """Remove an alias and if applicable remove their entire import.
 
   Arguments:
