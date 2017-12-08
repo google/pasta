@@ -893,7 +893,8 @@ class BaseVisitor(ast.NodeVisitor):
                 default='try:')
     for stmt in node.body:
       self.visit(stmt)
-    self.attr(node, 'open_finally', ['finally', self.ws, ':', self.ws_oneline],
+    self.attr(node, 'open_finally',
+              [self.ws, 'finally', self.ws, ':', self.ws_oneline],
               default='finally:')
     for stmt in node.finalbody:
       self.visit(stmt)
@@ -907,7 +908,8 @@ class BaseVisitor(ast.NodeVisitor):
     for handler in node.handlers:
       self.visit(handler)
     if node.orelse:
-      self.attr(node, 'open_else', ['else', self.ws, ':', self.ws_oneline],
+      self.attr(node, 'open_else',
+                [self.ws, 'else', self.ws, ':', self.ws_oneline],
                 default='else:')
       for stmt in node.orelse:
         self.visit(stmt)
@@ -915,17 +917,18 @@ class BaseVisitor(ast.NodeVisitor):
   @block_statement
   def visit_Try(self, node):
     # Python 3
-    self.attr(node, 'open_try', ['try', self.ws, ':'], default='try:')
+    self.attr(node, 'open_try', [self.ws, 'try', self.ws, ':'], default='try:')
     for stmt in node.body:
       self.visit(stmt)
     for handler in node.handlers:
       self.visit(handler)
     if node.orelse:
-      self.attr(node, 'open_else', ['else', self.ws, ':'], default='else:')
+      self.attr(node, 'open_else', [self.ws, 'else', self.ws, ':'],
+                default='else:')
       for stmt in node.orelse:
         self.visit(stmt)
     if node.finalbody:
-      self.attr(node, 'open_finally', ['finally', self.ws, ':'],
+      self.attr(node, 'open_finally', [self.ws, 'finally', self.ws, ':'],
                 default='finally:')
       for stmt in node.finalbody:
         self.visit(stmt)
@@ -953,12 +956,10 @@ class BaseVisitor(ast.NodeVisitor):
     if node.type:
       self.visit(node.type)
     if node.inst:
-      self.suffix(node.type)
-      self.token(',')
+      self.attr(node, 'inst_prefix', [self.ws, ',', self.ws], default=', ')
       self.visit(node.inst)
     if node.tback:
-      self.suffix(node.inst)
-      self.token(',')
+      self.attr(node, 'tback_prefix', [self.ws, ',', self.ws], default=', ')
       self.visit(node.tback)
 
   @contextlib.contextmanager

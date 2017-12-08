@@ -1,0 +1,14 @@
+raise a
+
+raise  b
+
+try:
+  c
+except:
+  try:
+    d
+  except:
+    raise e
+  raise
+finally:
+  f
