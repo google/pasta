@@ -80,8 +80,12 @@ class TokenGenerator(object):
     """Rewind the token iterator."""
     self._i -= amount
 
-  def whitespace(self, oneline=False):
+  def whitespace(self, max_lines=None):
     """Parses whitespace from the current _loc to the next non-whitespace.
+
+    Arguments:
+      max_lines: (optional int) Maximum number of lines to consider as part of
+        the whitespace. Valid values are None, 0 and 1.
 
     Pre-condition:
       `_loc' represents the point before which everything has been parsed and
@@ -91,7 +95,7 @@ class TokenGenerator(object):
     """
     def predicate(token):
       return (token.type in (TOKENS.COMMENT, TOKENS.INDENT, TOKENS.DEDENT) or
-              not oneline and token.type in (TOKENS.NL, TOKENS.NEWLINE))
+              max_lines is None and token.type in (TOKENS.NL, TOKENS.NEWLINE))
     whitespace = list(self.takewhile(predicate, advance=False))
     next_token = self.peek()
 
@@ -106,7 +110,8 @@ class TokenGenerator(object):
         self._loc = tok.start
 
     # Eat a single newline character
-    if next_token and next_token.type in (TOKENS.NL, TOKENS.NEWLINE):
+    if ((max_lines is None or max_lines > 0) and
+        next_token and next_token.type in (TOKENS.NL, TOKENS.NEWLINE)):
       result += self.next().src
 
     return result
