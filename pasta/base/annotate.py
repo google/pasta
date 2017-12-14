@@ -36,7 +36,7 @@ def expression(f):
     with self.scope(node):
       self.prefix(node)
       f(self, node, *args, **kwargs)
-      self.suffix(node, oneline=True)
+      self.suffix(node, max_lines=0)
   return wrapped
 
 
@@ -46,7 +46,7 @@ def statement(f):
   def wrapped(self, node, *args, **kwargs):
     self.prefix(node)
     f(self, node, *args, **kwargs)
-    self.suffix(node, oneline=True)
+    self.suffix(node, max_lines=1)
   return wrapped
 
 
@@ -85,25 +85,25 @@ class BaseVisitor(ast.NodeVisitor):
     ast_utils.setup_props(node)
     super(BaseVisitor, self).visit(node)
 
-  def suffix(self, node, oneline=False):
+  def suffix(self, node, max_lines=None):
     """Account for some amount of whitespace as the suffix to a node."""
-    self.attr(node, 'suffix', [lambda: self.ws(oneline=oneline)])
+    self.attr(node, 'suffix', [lambda: self.ws(max_lines=max_lines)])
 
   def prefix(self, node):
     """Account for some amount of whitespace as the prefix to a node."""
     self.attr(node, 'prefix', [self.ws])
 
-  def ws(self, oneline=False):
+  def ws(self, max_lines=None):
     """Account for some amount of whitespace.
 
     Arguments:
-      oneline: (bool) Whether the whitespace can span more than one line.
+      max_lines: (int) Maximum number of newlines to consider.
     """
     return ''
 
   def ws_oneline(self):
     """Account for up to one line of whitespace."""
-    return self.ws(oneline=True)
+    return self.ws(max_lines=1)
 
   @abc.abstractmethod
   def token(self):
@@ -126,7 +126,7 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Num(self, node):
     pass
 
-  @expression
+  @statement
   def visit_Expr(self, node):
     self.visit(node.value)
 
@@ -140,7 +140,7 @@ class BaseVisitor(ast.NodeVisitor):
       else:
         self.optional_token(node, 'extracomma', ',')
 
-  @expression
+  @statement
   def visit_Assign(self, node):
     for target in node.targets:
       self.visit(target)
@@ -148,7 +148,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.token('=')
     self.visit(node.value)
 
-  @expression
+  @statement
   def visit_AugAssign(self, node):
     self.visit(node.target)
     self.suffix(node.target)
@@ -1006,9 +1006,9 @@ class AstAnnotator(BaseVisitor):
     """Return True iff the With node is a continued `with` in the source."""
     return isinstance(node, ast.With) and self.tokens.peek().src == ','
 
-  def ws(self, oneline=False):
+  def ws(self, max_lines=None):
     """Parse some whitespace from the source tokens and return it."""
-    return self.tokens.whitespace(oneline=oneline)
+    return self.tokens.whitespace(max_lines=max_lines)
 
   def block_suffix(self, node, indent_level):
     ast_utils.setprop(node, 'suffix', self.tokens.block_whitespace(indent_level))

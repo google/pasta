@@ -91,6 +91,18 @@ class SymmetricTest(test_utils.TestCase):
     t = pasta.parse(src)
     self.assertEqual('', ast_utils.prop(t.body[0], 'suffix'))
 
+  def test_expression_prefix_suffix(self):
+    src = 'a\n\nfoo\n\n\nb\n'
+    t = pasta.parse(src)
+    self.assertEqual('\n', ast_utils.prop(t.body[1], 'prefix'))
+    self.assertEqual('\n', ast_utils.prop(t.body[1], 'suffix'))
+
+  def test_statement_prefix_suffix(self):
+    src = 'a\n\ndef foo():\n  return bar\n\n\nb\n'
+    t = pasta.parse(src)
+    self.assertEqual('\n', ast_utils.prop(t.body[1], 'prefix'))
+    self.assertEqual('', ast_utils.prop(t.body[1], 'suffix'))
+
 
 def symmetric_test_generator(filepath):
   def test(self):
