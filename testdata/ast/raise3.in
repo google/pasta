@@ -13,6 +13,4 @@ except:
 finally:
   f
 
-raise g  ,  h
-
-raise i, j, k
+raise g  from  h

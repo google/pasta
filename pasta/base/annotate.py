@@ -952,6 +952,9 @@ class BaseVisitor(ast.NodeVisitor):
 
   @statement
   def visit_Raise(self, node):
+    if hasattr(node, 'cause'):
+      return self.visit_Raise_3(node)
+
     self.token('raise')
     if node.type:
       self.visit(node.type)
@@ -961,6 +964,17 @@ class BaseVisitor(ast.NodeVisitor):
     if node.tback:
       self.attr(node, 'tback_prefix', [self.ws, ',', self.ws], default=', ')
       self.visit(node.tback)
+
+  def visit_Raise_3(self, node):
+    if node.exc:
+      self.attr(node, 'open_raise', ['raise', self.ws], default='raise ')
+      self.visit(node.exc)
+      if node.cause:
+        self.attr(node, 'cause_prefix', [self.ws, 'from', self.ws],
+                  default=' from ')
+        self.visit(node.cause)
+    else:
+      self.token('raise')
 
   @contextlib.contextmanager
   def scope(self, node):
