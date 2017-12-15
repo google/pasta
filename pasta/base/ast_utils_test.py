@@ -28,6 +28,32 @@ from pasta.base import test_utils
 from pasta.base import scope
 
 
+class UtilsTest(test_utils.TestCase):
+
+  def test_sanitize_source(self):
+    coding_lines = (
+        '# -*- coding: latin-1 -*-',
+        '# -*- coding: iso-8859-15 -*-',
+        '# vim: set fileencoding=ascii :',
+        '# This Python file uses the following encoding: utf-8',
+    )
+    src_template = '{coding}\na = 123\n'
+    sanitized_src = '# (removed coding)\na = 123\n'
+    for line in coding_lines:
+      src = src_template.format(coding=line)
+
+      # Replaced on lines 1 and 2
+      self.assertEqual(sanitized_src, ast_utils.sanitize_source(src))
+      src_prefix = '"""Docstring."""\n'
+      self.assertEqual(src_prefix + sanitized_src,
+                       ast_utils.sanitize_source(src_prefix + src))
+
+      # Unchanged on line 3
+      src_prefix = '"""Docstring."""\n# line 2\n'
+      self.assertEqual(src_prefix + src,
+                       ast_utils.sanitize_source(src_prefix + src))
+
+
 class RemoveChildTest(test_utils.TestCase):
 
   # TODO(soupytwist): enable this when the unrelated formatting bug that is
