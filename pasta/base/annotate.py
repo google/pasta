@@ -162,7 +162,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.suffix(node.left)
     self.visit(node.op)
     self.visit(node.right)
-    self.suffix(node.right)
+    self.suffix(node.right, max_lines=0)
 
   @expression
   def visit_BoolOp(self, node):
@@ -845,21 +845,19 @@ class BaseVisitor(ast.NodeVisitor):
 
   @block_statement
   def visit_ClassDef(self, node):
-    for decorator in node.decorator_list:
-      self.token('@')
+    for i, decorator in enumerate(node.decorator_list):
+      self.attr(node, 'decorator_prefix_%d' % i, [self.ws, '@'], default='@')
       self.visit(decorator)
-      self.suffix(decorator)
-    self.token('class')
-    self.attr(node, 'name_prefix', [self.ws], default=' ')
-    self.token(node.name)
-    self.attr(node, 'name_suffix', [self.ws])
+      self.attr(node, 'decorator_suffix_%d' % i, [self.ws], default='\n')
+    self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
+              default='class %s' + node.name, deps=('name',))
     if node.bases:
       self.token('(')
     else:
       self.optional_token(node, 'open_bases', '(')
-    for base in node.bases:
+    for i, base in enumerate(node.bases):
       self.visit(base)
-      self.suffix(base)
+      self.attr(node, 'base_suffix_%d' % i, [self.ws])
       if base != node.bases[-1]:
         self.token(',')
     if node.bases:
@@ -867,7 +865,10 @@ class BaseVisitor(ast.NodeVisitor):
       self.token(')')
     else:
       self.optional_token(node, 'close_bases', ')')
-    self.token(':')
+    self.attr(node, 'open_class', [self.ws, ':'], default=':')
+
+    if node.body[0].lineno > node.lineno:
+      self.attr(node, 'body_prefix', [self.ws_oneline], default='\n')
 
     for expr in node.body:
       self.visit(expr)
