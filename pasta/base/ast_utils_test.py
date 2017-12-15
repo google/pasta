@@ -56,9 +56,7 @@ class UtilsTest(test_utils.TestCase):
 
 class RemoveChildTest(test_utils.TestCase):
 
-  # TODO(soupytwist): enable this when the unrelated formatting bug that is
-  # breaking it is fixed.
-  def disabled_testRemoveChildMethod(self):
+  def testRemoveChildMethod(self):
     src = """\
 class C():
   def f(x):
