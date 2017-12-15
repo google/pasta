@@ -29,36 +29,46 @@ from pasta.base import ast_utils
 from pasta.base import token_generator
 
 
-def expression(f):
-  """Decorates a function where the node is an expression."""
+# ==============================================================================
+# == Helper functions for decorating nodes with prefix + suffix               ==
+# ==============================================================================
+
+def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
+                 max_suffix_lines=None):
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
-    with self.scope(node):
-      self.prefix(node)
+    with (self.scope(node) if scope else _noop_context()):
+      if prefix:
+        self.prefix(node)
       f(self, node, *args, **kwargs)
-      self.suffix(node, max_lines=0)
+      if suffix:
+        self.suffix(node, max_lines=max_suffix_lines)
   return wrapped
+
+
+@contextlib.contextmanager
+def _noop_context():
+  yield
+
+
+def expression(f):
+  """Decorates a function where the node is an expression."""
+  return _gen_wrapper(f, max_suffix_lines=0)
 
 
 def space_around(f):
   """Decorates a function where the node has whitespace prefix and suffix."""
-  @contextlib.wraps(f)
-  def wrapped(self, node, *args, **kwargs):
-    self.prefix(node)
-    f(self, node, *args, **kwargs)
-    self.suffix(node, max_lines=0)
-  return wrapped
+  return _gen_wrapper(f, scope=False)
+
+
+def space_left(f):
+  """Decorates a function where the node has whitespace prefix."""
+  return _gen_wrapper(f, scope=False, suffix=False)
 
 
 def statement(f):
   """Decorates a function where the node is a statement."""
-  @contextlib.wraps(f)
-  def wrapped(self, node, *args, **kwargs):
-    self.prefix(node)
-    f(self, node, *args, **kwargs)
-    self.suffix(node, max_lines=1)
-  return wrapped
-
+  return _gen_wrapper(f, scope=False, max_suffix_lines=1)
 
 
 def block_statement(f):
@@ -78,6 +88,10 @@ def block_statement(f):
   return wrapped
 
 
+# ==============================================================================
+# == NodeVisitors for annotating an AST                                       ==
+# ==============================================================================
+
 class BaseVisitor(ast.NodeVisitor):
   """Walks a syntax tree in the order it appears in code.
 
@@ -96,13 +110,22 @@ class BaseVisitor(ast.NodeVisitor):
     ast_utils.setup_props(node)
     super(BaseVisitor, self).visit(node)
 
+  def prefix(self, node):
+    """Account for some amount of whitespace as the prefix to a node."""
+    self.attr(node, 'prefix', [self.ws])
+
   def suffix(self, node, max_lines=None):
     """Account for some amount of whitespace as the suffix to a node."""
     self.attr(node, 'suffix', [lambda: self.ws(max_lines=max_lines)])
 
-  def prefix(self, node):
-    """Account for some amount of whitespace as the prefix to a node."""
-    self.attr(node, 'prefix', [self.ws])
+  @contextlib.contextmanager
+  def scope(self, node):
+    """Context manager to handle a parenthesized scope."""
+    yield
+
+  @abc.abstractmethod
+  def token(self):
+    """Account for a specific token."""
 
   def ws(self, max_lines=None):
     """Account for some amount of whitespace.
@@ -112,44 +135,317 @@ class BaseVisitor(ast.NodeVisitor):
     """
     return ''
 
+  @abc.abstractmethod
+  def optional_token(node, attr_name, token_val):
+    """Account for a suffix that may or may not occur."""
+
   def ws_oneline(self):
     """Account for up to one line of whitespace."""
     return self.ws(max_lines=1)
 
-  @abc.abstractmethod
-  def token(self):
-    """Account for a specific token."""
-
-  @abc.abstractmethod
-  def optional_token(node, attr_name, token_val):
-    """Account for a suffix that may or may not occur."""
+  # ============================================================================
+  # == BLOCK STATEMENTS: Statements that contain a list of statements         ==
+  # ============================================================================
 
   @block_statement
   def visit_Module(self, node):
     self.generic_visit(node)
     self.attr(node, 'suffix', [self.ws])
 
-  @abc.abstractmethod
-  def visit_Str(self, node):
-    pass
+  @block_statement
+  def visit_If(self, node):
+    self.token('elif' if ast_utils.prop(node, 'is_elif') else 'if')
+    self.visit(node.test)
+    self.attr(node, 'testsuffix', [self.ws, ':', self.ws_oneline],
+              default=':')
+    for stmt in node.body:
+      self.visit(stmt)
+
+    if node.orelse:
+      if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
+          self.check_is_elif(node.orelse[0])):
+        ast_utils.setprop(node.orelse[0], 'is_elif', True)
+        self.visit(node.orelse[0])
+      else:
+        self.attr(node, 'elseprefix', [self.ws])
+        self.token('else')
+        self.attr(node, 'elsesuffix', [self.ws, ':', self.ws_oneline],
+                  default=':')
+        for stmt in node.orelse:
+          self.visit(stmt)
 
   @abc.abstractmethod
-  def visit_Num(self, node):
-    pass
+  def check_is_elif(self):
+    """Return True if the node continues a previous `if` statement as `elif`.
+
+    In python 2.x, `elif` statments get parsed as If nodes. E.g, the following
+    two syntax forms are indistinguishable in the ast in python 2.
+
+    if a:
+      do_something()
+    elif b:
+      do_something_else()
+
+    if a:
+      do_something()
+    else:
+      if b:
+        do_something_else()
+
+    This method should return True for the 'if b' node if it has the first form.
+    """
+
+  @block_statement
+  def visit_While(self, node):
+    self.token('while')
+    self.visit(node.test)
+    self.attr(node, 'testsuffix', [self.ws, ':', self.ws_oneline], default=':')
+    for stmt in node.body:
+      self.visit(stmt)
+
+    if node.orelse:
+      self.attr(node, 'elseprefix', [self.ws])
+      self.token('else')
+      self.attr(node, 'elsesuffix', [self.ws, ':', self.ws_oneline],
+                default=':')
+      for stmt in node.orelse:
+        self.visit(stmt)
+
+  @block_statement
+  def visit_For(self, node):
+    self.token('for')
+    self.visit(node.target)
+    self.suffix(node.target)
+    self.token('in')
+    self.visit(node.iter)
+    self.suffix(node.iter)
+    self.token(':')
+    for stmt in node.body:
+      self.visit(stmt)
+
+    if node.orelse:
+      self.attr(node, 'orelseprefix', [self.ws])
+      self.token('else')
+      self.token(':')
+
+      for stmt in node.orelse:
+        self.visit(stmt)
+
+  @block_statement
+  def visit_With(self, node):
+    if hasattr(node, 'items'):
+      return self.visit_With_3(node)
+    if not getattr(node, 'is_continued', False):
+      self.token('with')
+    self.visit(node.context_expr)
+    if node.optional_vars:
+      self.token('as')
+      self.visit(node.optional_vars)
+
+    if self.check_is_continued_with(node.body[0]):
+      node.body[0].is_continued = True
+      self.token(',')
+    else:
+      self.token(':')
+
+    for stmt in node.body:
+      self.visit(stmt)
+
+  @abc.abstractmethod
+  def check_is_continued_with(self, node):
+    """Return True if the node continues a previous `with` statement.
+
+    In python 2.x, `with` statments with many context expressions get parsed as
+    a tree of With nodes. E.g, the following two syntax forms are
+    indistinguishable in the ast in python 2.
+
+    with a, b, c:
+      do_something()
+
+    with a:
+      with b:
+        with c:
+          do_something()
+
+    This method should return True for the `with b` and `with c` nodes.
+    """
+
+  def visit_With_3(self, node):
+    self.token('with')
+
+    for i, withitem in enumerate(node.items):
+      self.visit(withitem)
+      if i != len(node.items) - 1:
+        self.token(',')
+
+    self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
+    for stmt in node.body:
+      self.visit(stmt)
+
+  @space_around
+  def visit_withitem(self, node):
+    self.visit(node.context_expr)
+    if node.optional_vars:
+      self.attr(node, 'as', [self.ws, 'as', self.ws], default=' as ')
+      self.visit(node.optional_vars)
+
+  @block_statement
+  def visit_ClassDef(self, node):
+    for i, decorator in enumerate(node.decorator_list):
+      self.attr(node, 'decorator_prefix_%d' % i, [self.ws, '@'], default='@')
+      self.visit(decorator)
+      self.attr(node, 'decorator_suffix_%d' % i, [self.ws], default='\n')
+    self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
+              default='class %s' + node.name, deps=('name',))
+    if node.bases:
+      self.token('(')
+    else:
+      self.optional_token(node, 'open_bases', '(')
+    for i, base in enumerate(node.bases):
+      self.visit(base)
+      self.attr(node, 'base_suffix_%d' % i, [self.ws])
+      if base != node.bases[-1]:
+        self.token(',')
+    if node.bases:
+      self.optional_token(node, 'bases_extracomma', ',')
+      self.token(')')
+    else:
+      self.optional_token(node, 'close_bases', ')')
+    self.attr(node, 'open_class', [self.ws, ':'], default=':')
+
+    if node.body[0].lineno > node.lineno:
+      self.attr(node, 'body_prefix', [self.ws_oneline], default='\n')
+
+    for expr in node.body:
+      self.visit(expr)
+
+  @block_statement
+  def visit_FunctionDef(self, node):
+    for decorator in node.decorator_list:
+      self.token('@')
+      self.visit(decorator)
+      self.suffix(decorator)
+    self.token('def')
+    self.attr(node, 'name_prefix', [self.ws])
+    self.token(node.name)
+    self.attr(node, 'name_suffix', [self.ws])
+    self.token('(')
+    self.visit(node.args)
+    self.token(')')
+
+    if getattr(node, 'returns', None):
+      self.attr(node, 'returns_prefix', [self.ws, '->', self.ws],
+                deps=('returns',), default=' -> ')
+      self.visit(node.returns)
+
+    self.token(':')
+
+    for expr in node.body:
+      self.visit(expr)
+
+  @block_statement
+  def visit_TryFinally(self, node):
+    # Try with except and finally is a TryFinally with the first statement as a
+    # TryExcept in Python2
+    if not isinstance(node.body[0], ast.TryExcept):
+      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+                default='try:')
+    for stmt in node.body:
+      self.visit(stmt)
+    self.attr(node, 'open_finally',
+              [self.ws, 'finally', self.ws, ':', self.ws_oneline],
+              default='finally:')
+    for stmt in node.finalbody:
+      self.visit(stmt)
+
+  @block_statement
+  def visit_TryExcept(self, node):
+    self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+              default='try:')
+    for stmt in node.body:
+      self.visit(stmt)
+    for handler in node.handlers:
+      self.visit(handler)
+    if node.orelse:
+      self.attr(node, 'open_else',
+                [self.ws, 'else', self.ws, ':', self.ws_oneline],
+                default='else:')
+      for stmt in node.orelse:
+        self.visit(stmt)
+
+  @block_statement
+  def visit_Try(self, node):
+    # Python 3
+    self.attr(node, 'open_try', [self.ws, 'try', self.ws, ':'], default='try:')
+    for stmt in node.body:
+      self.visit(stmt)
+    for handler in node.handlers:
+      self.visit(handler)
+    if node.orelse:
+      self.attr(node, 'open_else', [self.ws, 'else', self.ws, ':'],
+                default='else:')
+      for stmt in node.orelse:
+        self.visit(stmt)
+    if node.finalbody:
+      self.attr(node, 'open_finally', [self.ws, 'finally', self.ws, ':'],
+                default='finally:')
+      for stmt in node.finalbody:
+        self.visit(stmt)
+
+  @block_statement
+  def visit_ExceptHandler(self, node):
+    self.token('except')
+    if node.type:
+      self.visit(node.type)
+      self.suffix(node.type)
+    if node.type and node.name:
+      self.attr(node, 'as', [self.ws, 'as', self.ws], default=' as ')
+    if node.name:
+      if isinstance(node.name, ast.AST):
+        self.visit(node.name)
+      else:
+        self.token(node.name)
+    self.attr(node, 'open_except', [self.ws, ':', self.ws_oneline], default=':')
+    for stmt in node.body:
+      self.visit(stmt)
 
   @statement
-  def visit_Expr(self, node):
-    self.visit(node.value)
+  def visit_Raise(self, node):
+    if hasattr(node, 'cause'):
+      return self.visit_Raise_3(node)
 
-  @expression
-  def visit_Tuple(self, node):
-    for elt in node.elts:
-      self.visit(elt)
-      self.suffix(elt)
-      if elt != node.elts[-1]:
-        self.token(',')
-      else:
-        self.optional_token(node, 'extracomma', ',')
+    self.token('raise')
+    if node.type:
+      self.visit(node.type)
+    if node.inst:
+      self.attr(node, 'inst_prefix', [self.ws, ',', self.ws], default=', ')
+      self.visit(node.inst)
+    if node.tback:
+      self.attr(node, 'tback_prefix', [self.ws, ',', self.ws], default=', ')
+      self.visit(node.tback)
+
+  def visit_Raise_3(self, node):
+    if node.exc:
+      self.attr(node, 'open_raise', ['raise', self.ws], default='raise ')
+      self.visit(node.exc)
+      if node.cause:
+        self.attr(node, 'cause_prefix', [self.ws, 'from', self.ws],
+                  default=' from ')
+        self.visit(node.cause)
+    else:
+      self.token('raise')
+
+  # ============================================================================
+  # == STATEMENTS: Instructions without a return value                        ==
+  # ============================================================================
+
+  @statement
+  def visit_Assert(self, node):
+    self.token('assert')
+    self.visit(node.test)
+    if node.msg:
+      self.token(',')
+      self.visit(node.msg)
 
   @statement
   def visit_Assign(self, node):
@@ -166,33 +462,47 @@ class BaseVisitor(ast.NodeVisitor):
               default=' %s ' % op_token)
     self.visit(node.value)
 
-  @expression
-  def visit_BinOp(self, node):
-    self.visit(node.left)
-    self.visit(node.op)
-    self.visit(node.right)
-    self.suffix(node.right, max_lines=0)
+  @statement
+  def visit_Break(self, node):
+    self.token('break')
 
-  @expression
-  def visit_BoolOp(self, node):
-    op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
-    for i, value in enumerate(node.values):
-      self.visit(value)
-      if value is not node.values[-1]:
-        self.attr(node, 'op_%d' % i, [self.ws, op_symbol, self.ws],
-                  default=' %s ' % op_symbol, deps=('op',))
+  @statement
+  def visit_Continue(self, node):
+    self.token('continue')
 
-  @expression
-  def visit_UnaryOp(self, node):
-    self.visit(node.op)
-    self.visit(node.operand)
+  @statement
+  def visit_Delete(self, node):
+    self.token('del')
+    for target in node.targets:
+      self.visit(target)
+      self.suffix(target)
+      if target != node.targets[-1]:
+        self.token(',')
 
-  @expression
-  def visit_Lambda(self, node):
-    self.token('lambda')
-    self.visit(node.args)
-    self.token(':')
+  @statement
+  def visit_Exec(self, node):
+    self.attr(node, 'exec', ['exec', self.ws], default='exec ')
     self.visit(node.body)
+    if node.globals:
+      self.attr(node, 'in_globals', [self.ws, 'in', self.ws], default=' in ')
+      self.visit(node.globals)
+      if node.locals:
+        self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
+        self.visit(node.locals)
+
+  @statement
+  def visit_Expr(self, node):
+    self.visit(node.value)
+
+  @statement
+  def visit_Global(self, node):
+    self.token('global')
+    identifiers = []
+    for ident in node.names:
+      if ident != node.names[0]:
+        identifiers.extend([self.ws, ','])
+      identifiers.extend([self.ws, ident])
+    self.attr(node, 'names', identifiers)
 
   @statement
   def visit_Import(self, node):
@@ -226,6 +536,118 @@ class BaseVisitor(ast.NodeVisitor):
       if alias != node.names[-1]:
         self.token(',')
 
+  @statement
+  def visit_Nonlocal(self, node):
+    self.token('nonlocal')
+    identifiers = []
+    for ident in node.names:
+      if ident != node.names[0]:
+        identifiers.extend([self.ws, ','])
+      identifiers.extend([self.ws, ident])
+    self.attr(node, 'names', identifiers)
+
+  @statement
+  def visit_Pass(self, node):
+    self.token('pass')
+
+  @statement
+  def visit_Print(self, node):
+    self.token('print')
+    self.attr(node, 'print_suffix', [self.ws], default=' ')
+    if node.dest:
+      self.token('>>')
+      self.visit(node.dest)
+      if node.values or not node.nl:
+        self.suffix(node.dest)
+        self.token(',')
+
+    for value in node.values:
+      self.visit(value)
+      if value != node.values[-1] or not node.nl:
+        self.suffix(value)
+        self.token(',')
+
+  @statement
+  def visit_Return(self, node):
+    self.token('return')
+    if node.value:
+      self.visit(node.value)
+
+  @statement
+  def visit_Yield(self, node):
+    self.token('yield')
+    if node.value:
+      self.visit(node.value)
+
+  # ============================================================================
+  # == EXPRESSIONS: Anything that evaluates and can be in parens              ==
+  # ============================================================================
+
+  @expression
+  def visit_Attribute(self, node):
+    self.visit(node.value)
+    self.attr(node, 'dot', [self.ws, '.', self.ws], default='.')
+    self.token(node.attr)
+
+  @expression
+  def visit_BinOp(self, node):
+    self.visit(node.left)
+    self.visit(node.op)
+    self.visit(node.right)
+    self.suffix(node.right, max_lines=0)
+
+  @expression
+  def visit_BoolOp(self, node):
+    op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+    for i, value in enumerate(node.values):
+      self.visit(value)
+      if value is not node.values[-1]:
+        self.attr(node, 'op_%d' % i, [self.ws, op_symbol, self.ws],
+                  default=' %s ' % op_symbol, deps=('op',))
+
+  @expression
+  def visit_Call(self, node):
+    self.visit(node.func)
+    self.suffix(node.func)
+    self.token('(')
+    self.attr(node, 'args_prefix', [self.ws])
+    num_items = (len(node.args) + len(node.keywords) +
+                 (1 if node.starargs else 0) + (1 if node.kwargs else 0))
+
+    i = 0
+    for arg in node.args:
+      self.visit(arg)
+      self.suffix(arg)
+      if i < num_items - 1:
+        self.token(',')
+      i += 1
+
+    starargs_idx = ast_utils.find_starargs(node)
+    kw_end = len(node.args) + len(node.keywords) + (1 if node.starargs else 0)
+    kw_idx = 0
+    while i < kw_end:
+      if i == starargs_idx:
+        self.attr(node, 'starargs_prefix', [self.ws, '*'], default='*')
+        self.visit(node.starargs)
+        self.suffix(node.starargs)
+      else:
+        self.visit(node.keywords[kw_idx])
+        self.suffix(node.keywords[kw_idx])
+        kw_idx += 1
+      if i < num_items - 1:
+        self.token(',')
+      i += 1
+
+    if node.kwargs:
+      self.attr(node, 'kwargs_prefix', [self.ws, '**'], default='**')
+      self.visit(node.kwargs)
+      self.suffix(node.kwargs)
+
+    if num_items > 0:
+      self.optional_token(node, 'extracomma', ',')
+
+    self.token(')')
+
   @expression
   def visit_Compare(self, node):
     self.visit(node.left)
@@ -233,7 +655,149 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(op)
       self.visit(comparator)
 
-  @statement
+  @expression
+  def visit_Dict(self, node):
+    self.token('{')
+
+    for key, value in zip(node.keys, node.values):
+      self.visit(key)
+      self.suffix(key)
+      self.token(':')
+      self.visit(value)
+      if value != node.values[-1]:
+        self.suffix(value)
+        self.token(',')
+    self.optional_token(node, 'extracomma', ',')
+    self.attr(node, 'close_prefix', [self.ws])
+    self.token('}')
+
+  @expression
+  def visit_DictComp(self, node):
+    self.attr(node, 'open_dict', ['{', self.ws], default='{')
+    self.visit(node.key)
+    self.attr(node, 'key_val_sep', [self.ws, ':', self.ws], default=': ')
+    self.visit(node.value)
+    for i, comp in enumerate(node.generators):
+      self.attr(node, 'for_%d' % i, [self.ws, 'for', self.ws], default=' for ')
+      self.visit(comp)
+    self.attr(node, 'close_dict', [self.ws, '}'], default='}')
+
+  @expression
+  def visit_GeneratorExp(self, node):
+    self._comp_exp(node)
+
+  @expression
+  def visit_IfExp(self, node):
+    self.visit(node.body)
+    self.suffix(node.body)
+    self.token('if')
+    self.visit(node.test)
+    self.suffix(node.test)
+    self.token('else')
+    self.visit(node.orelse)
+
+  @expression
+  def visit_Lambda(self, node):
+    self.token('lambda')
+    self.visit(node.args)
+    self.token(':')
+    self.visit(node.body)
+
+  @expression
+  def visit_List(self, node):
+    self.attr(node, 'list_open', ['[', self.ws], default='[')
+
+    for elt in node.elts:
+      self.visit(elt)
+      self.suffix(elt)
+      if elt != node.elts[-1]:
+        self.token(',')
+    if node.elts:
+      self.optional_token(node, 'extracomma', ',')
+
+    self.attr(node, 'list_close', [self.ws, ']'], default=']')
+
+  @expression
+  def visit_ListComp(self, node):
+    self._comp_exp(node, open_brace='[', close_brace=']')
+
+  def _comp_exp(self, node, open_brace=None, close_brace=None):
+    if open_brace:
+      self.attr(node, 'compexp_open', [open_brace, self.ws], default=open_brace)
+    self.visit(node.elt)
+    self.suffix(node.elt)
+    for comp in node.generators:
+      self.token('for')
+      self.visit(comp)
+    if close_brace:
+      self.attr(node, 'compexp_close', [self.ws, close_brace],
+                default=close_brace)
+
+  @expression
+  def visit_Name(self, node):
+    self.token(node.id)
+
+  @abc.abstractmethod
+  def visit_Num(self, node):
+    """Numbers require special annotating, implemented in subclass."""
+
+  @expression
+  def visit_NameConstant(self, node):
+    self.token(str(node.value))
+
+  @expression
+  def visit_Repr(self, node):
+    self.attr(node, 'repr_open', ['repr', self.ws, '('], default='repr(')
+    self.visit(node.value)
+    self.attr(node, 'repr_close', [self.ws, ')'], default=')')
+
+  @expression
+  def visit_Set(self, node):
+    self.token('{')
+
+    for elt in node.elts:
+      self.visit(elt)
+      self.suffix(elt)
+      if elt != node.elts[-1]:
+        self.token(',')
+    if node.elts:
+      self.optional_token(node, 'extracomma', ',')
+
+    self.token('}')
+
+  @expression
+  def visit_SetComp(self, node):
+    self._comp_exp(node, open_brace='{', close_brace='}')
+
+  @abc.abstractmethod
+  def visit_Str(self, node):
+    """Strings require special annotating, implemented in subclass."""
+
+  @expression
+  def visit_Subscript(self, node):
+    self.visit(node.value)
+    self.visit(node.slice)
+
+  @expression
+  def visit_Tuple(self, node):
+    for elt in node.elts:
+      self.visit(elt)
+      self.suffix(elt)
+      if elt != node.elts[-1]:
+        self.token(',')
+      else:
+        self.optional_token(node, 'extracomma', ',')
+
+  @expression
+  def visit_UnaryOp(self, node):
+    self.visit(node.op)
+    self.visit(node.operand)
+
+  # ============================================================================
+  # == OPERATORS AND TOKENS: Anything that's just whitespace and tokens       ==
+  # ============================================================================
+
+  @space_around
   def visit_Ellipsis(self, node):
     self.token('...')
 
@@ -341,6 +905,10 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_NotIn(self, node):
     self.attr(node, 'content', ['not', self.ws, 'in'], default='not in')
 
+  # ============================================================================
+  # == MISC NODES: Nodes which are neither statements nor expressions         ==
+  # ============================================================================
+
   @space_around
   def visit_alias(self, node):
     name_pattern = []
@@ -355,390 +923,15 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'asname', [self.ws, 'as', self.ws], default=' as ')
       self.token(node.asname)
 
-  @block_statement
-  def visit_If(self, node):
-    self.token('elif' if ast_utils.prop(node, 'is_elif') else 'if')
-    self.visit(node.test)
-    self.attr(node, 'testsuffix', [self.ws, ':', self.ws_oneline],
-              default=':')
-    for stmt in node.body:
-      self.visit(stmt)
-
-    if node.orelse:
-      if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
-          self.check_is_elif(node.orelse[0])):
-        ast_utils.setprop(node.orelse[0], 'is_elif', True)
-        self.visit(node.orelse[0])
-      else:
-        self.attr(node, 'elseprefix', [self.ws])
-        self.token('else')
-        self.attr(node, 'elsesuffix', [self.ws, ':', self.ws_oneline],
-                  default=':')
-        for stmt in node.orelse:
-          self.visit(stmt)
-
-  @abc.abstractmethod
-  def check_is_elif(self):
-    """Return True if the node continues a previous `if` statement as `elif`.
-
-    In python 2.x, `elif` statments get parsed as If nodes. E.g, the following
-    two syntax forms are indistinguishable in the ast in python 2.
-
-    if a:
-      do_something()
-    elif b:
-      do_something_else()
-
-    if a:
-      do_something()
-    else:
-      if b:
-        do_something_else()
-
-    This method should return True for the 'if b' node if it has the first form.
-    """
-
-  @expression
-  def visit_IfExp(self, node):
-    self.visit(node.body)
-    self.suffix(node.body)
-    self.token('if')
-    self.visit(node.test)
-    self.suffix(node.test)
-    self.token('else')
-    self.visit(node.orelse)
-
-  @block_statement
-  def visit_While(self, node):
-    self.token('while')
-    self.visit(node.test)
-    self.attr(node, 'testsuffix', [self.ws, ':', self.ws_oneline], default=':')
-    for stmt in node.body:
-      self.visit(stmt)
-
-    if node.orelse:
-      self.attr(node, 'elseprefix', [self.ws])
-      self.token('else')
-      self.attr(node, 'elsesuffix', [self.ws, ':', self.ws_oneline],
-                default=':')
-      for stmt in node.orelse:
-        self.visit(stmt)
-
-  @block_statement
-  def visit_For(self, node):
-    self.token('for')
-    self.visit(node.target)
-    self.suffix(node.target)
-    self.token('in')
-    self.visit(node.iter)
-    self.suffix(node.iter)
-    self.token(':')
-    for stmt in node.body:
-      self.visit(stmt)
-
-    if node.orelse:
-      self.attr(node, 'orelseprefix', [self.ws])
-      self.token('else')
+  @space_around
+  def visit_arg(self, node):
+    self.token(node.arg)
+    self.suffix(node)
+    if node.annotation is not None:
       self.token(':')
+      self.visit(node.annotation)
 
-      for stmt in node.orelse:
-        self.visit(stmt)
-
-  @statement
-  def visit_Repr(self, node):
-    self.attr(node, 'repr_open', ['repr', self.ws, '('], default='repr(')
-    self.visit(node.value)
-    self.attr(node, 'repr_close', [self.ws, ')'], default=')')
-
-  @block_statement
-  def visit_With(self, node):
-    if hasattr(node, 'items'):
-      return self.visit_With_3(node)
-    if not getattr(node, 'is_continued', False):
-      self.token('with')
-    self.visit(node.context_expr)
-    if node.optional_vars:
-      self.token('as')
-      self.visit(node.optional_vars)
-
-    if self.check_is_continued_with(node.body[0]):
-      node.body[0].is_continued = True
-      self.token(',')
-    else:
-      self.token(':')
-
-    for stmt in node.body:
-      self.visit(stmt)
-
-  @abc.abstractmethod
-  def check_is_continued_with(self, node):
-    """Return True if the node continues a previous `with` statement.
-
-    In python 2.x, `with` statments with many context expressions get parsed as
-    a tree of With nodes. E.g, the following two syntax forms are
-    indistinguishable in the ast in python 2.
-
-    with a, b, c:
-      do_something()
-
-    with a:
-      with b:
-        with c:
-          do_something()
-
-    This method should return True for the `with b` and `with c` nodes.
-    """
-
-  def visit_With_3(self, node):
-    self.token('with')
-
-    for i, withitem in enumerate(node.items):
-      self.visit(withitem)
-      if i != len(node.items) - 1:
-        self.token(',')
-
-    self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
-    for stmt in node.body:
-      self.visit(stmt)
-
-  @statement
-  def visit_withitem(self, node):
-    self.visit(node.context_expr)
-    self.suffix(node.context_expr)
-    if node.optional_vars:
-      self.token('as')
-      self.visit(node.optional_vars)
-      self.suffix(node.optional_vars)
-
-  @statement
-  def visit_Assert(self, node):
-    self.token('assert')
-    self.visit(node.test)
-    if node.msg:
-      self.token(',')
-      self.visit(node.msg)
-
-  @statement
-  def visit_Exec(self, node):
-    self.attr(node, 'exec', ['exec', self.ws], default='exec ')
-    self.visit(node.body)
-    if node.globals:
-      self.attr(node, 'in_globals', [self.ws, 'in', self.ws], default=' in ')
-      self.visit(node.globals)
-      if node.locals:
-        self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
-        self.visit(node.locals)
-
-  @statement
-  def visit_Global(self, node):
-    self.token('global')
-    identifiers = []
-    for ident in node.names:
-      if ident != node.names[0]:
-        identifiers.extend([self.ws, ','])
-      identifiers.extend([self.ws, ident])
-    self.attr(node, 'names', identifiers)
-
-  @statement
-  def visit_Nonlocal(self, node):
-    self.token('nonlocal')
-    identifiers = []
-    for ident in node.names:
-      if ident != node.names[0]:
-        identifiers.extend([self.ws, ','])
-      identifiers.extend([self.ws, ident])
-    self.attr(node, 'names', identifiers)
-
-  @expression
-  def visit_Name(self, node):
-    self.token(node.id)
-
-  @expression
-  def visit_NameConstant(self, node):
-    self.token(str(node.value))
-
-  @expression
-  def visit_Attribute(self, node):
-    self.visit(node.value)
-    self.attr(node, 'dot', [self.ws, '.', self.ws], default='.')
-    self.token(node.attr)
-
-  @expression
-  def visit_Subscript(self, node):
-    self.visit(node.value)
-    self.visit(node.slice)
-
-  @statement
-  def visit_Index(self, node):
-    self.attr(node, 'index_open', ['[', self.ws], default='[')
-    self.visit(node.value)
-    self.attr(node, 'index_close', [self.ws, ']'], default=']')
-
-  @statement
-  def visit_Slice(self, node):
-    self.token('[')
-
-    if node.lower:
-      self.visit(node.lower)
-      self.suffix(node.lower)
-    else:
-      self.attr(node, 'lowerspace', [self.ws])
-
-    self.token(':')
-
-    if node.upper:
-      self.visit(node.upper)
-      self.suffix(node.upper)
-    else:
-      self.attr(node, 'upperspace', [self.ws])
-
-    if node.step:
-      self.token(':')
-      self.visit(node.step)
-      self.suffix(node.step)
-    else:
-      self.attr(node, 'stepspace', [self.ws])
-
-    self.token(']')
-
-  @expression
-  def visit_List(self, node):
-    self.attr(node, 'list_open', ['[', self.ws], default='[')
-
-    for elt in node.elts:
-      self.visit(elt)
-      self.suffix(elt)
-      if elt != node.elts[-1]:
-        self.token(',')
-    if node.elts:
-      self.optional_token(node, 'extracomma', ',')
-
-    self.attr(node, 'list_close', [self.ws, ']'], default=']')
-
-  @expression
-  def visit_Set(self, node):
-    self.token('{')
-
-    for elt in node.elts:
-      self.visit(elt)
-      self.suffix(elt)
-      if elt != node.elts[-1]:
-        self.token(',')
-    if node.elts:
-      self.optional_token(node, 'extracomma', ',')
-
-    self.token('}')
-
-  @expression
-  def visit_Dict(self, node):
-    self.token('{')
-
-    for key, value in zip(node.keys, node.values):
-      self.visit(key)
-      self.suffix(key)
-      self.token(':')
-      self.visit(value)
-      if value != node.values[-1]:
-        self.suffix(value)
-        self.token(',')
-    self.optional_token(node, 'extracomma', ',')
-    self.attr(node, 'close_prefix', [self.ws])
-    self.token('}')
-
-  @expression
-  def visit_GeneratorExp(self, node):
-    self._comp_exp(node)
-
-  @expression
-  def visit_ListComp(self, node):
-    self._comp_exp(node, open_brace='[', close_brace=']')
-
-  @expression
-  def visit_SetComp(self, node):
-    self._comp_exp(node, open_brace='{', close_brace='}')
-
-  def _comp_exp(self, node, open_brace=None, close_brace=None):
-    if open_brace:
-      self.attr(node, 'compexp_open', [open_brace, self.ws], default=open_brace)
-    self.visit(node.elt)
-    self.suffix(node.elt)
-    for comp in node.generators:
-      self.token('for')
-      self.visit(comp)
-    if close_brace:
-      self.attr(node, 'compexp_close', [self.ws, close_brace],
-                default=close_brace)
-
-  @expression
-  def visit_DictComp(self, node):
-    self.token('{')
-    self.visit(node.key)
-    self.suffix(node.key)
-    self.token(':')
-    self.visit(node.value)
-    self.suffix(node.value)
-    for comp in node.generators:
-      self.token('for')
-      self.visit(comp)
-    self.token('}')
-
-  @statement
-  def visit_comprehension(self, node):
-    self.visit(node.target)
-    self.suffix(node.target)
-    self.token('in')
-    self.visit(node.iter)
-    self.suffix(node.iter)
-    for if_expr in node.ifs:
-      self.token('if')
-      self.visit(if_expr)
-      if if_expr != node.ifs[-1]:
-        self.suffix(if_expr)
-
-  @expression
-  def visit_Call(self, node):
-    self.visit(node.func)
-    self.suffix(node.func)
-    self.token('(')
-    self.attr(node, 'args_prefix', [self.ws])
-    num_items = (len(node.args) + len(node.keywords) +
-                 (1 if node.starargs else 0) + (1 if node.kwargs else 0))
-
-    i = 0
-    for arg in node.args:
-      self.visit(arg)
-      self.suffix(arg)
-      if i < num_items - 1:
-        self.token(',')
-      i += 1
-
-    starargs_idx = ast_utils.find_starargs(node)
-    kw_end = len(node.args) + len(node.keywords) + (1 if node.starargs else 0)
-    kw_idx = 0
-    while i < kw_end:
-      if i == starargs_idx:
-        self.attr(node, 'starargs_prefix', [self.ws, '*'], default='*')
-        self.visit(node.starargs)
-        self.suffix(node.starargs)
-      else:
-        self.visit(node.keywords[kw_idx])
-        self.suffix(node.keywords[kw_idx])
-        kw_idx += 1
-      if i < num_items - 1:
-        self.token(',')
-      i += 1
-
-    if node.kwargs:
-      self.attr(node, 'kwargs_prefix', [self.ws, '**'], default='**')
-      self.visit(node.kwargs)
-      self.suffix(node.kwargs)
-
-    if num_items > 0:
-      self.optional_token(node, 'extracomma', ',')
-
-    self.token(')')
-
-  @statement
+  @space_around
   def visit_arguments(self, node):
     total_args = (len(node.args) +
                   (1 if node.vararg else 0) +
@@ -787,220 +980,53 @@ class BaseVisitor(ast.NodeVisitor):
     if positional or keyword or node.vararg or node.kwarg:
       self.optional_token(node, 'extracomma', ',')
 
-  @statement
-  def visit_arg(self, node):
-    self.token(node.arg)
-    self.suffix(node)
-    if node.annotation is not None:
-      self.token(':')
-      self.visit(node.annotation)
+  @space_around
+  def visit_comprehension(self, node):
+    self.visit(node.target)
+    self.attr(node, 'in', [self.ws, 'in', self.ws], default=' in ')
+    self.visit(node.iter)
+    for i, if_expr in enumerate(node.ifs):
+      self.attr(node, 'if_%d' % i, [self.ws, 'if', self.ws], default=' if ')
+      self.visit(if_expr)
 
-  @block_statement
-  def visit_FunctionDef(self, node):
-    for decorator in node.decorator_list:
-      self.token('@')
-      self.visit(decorator)
-      self.suffix(decorator)
-    self.token('def')
-    self.attr(node, 'name_prefix', [self.ws])
-    self.token(node.name)
-    self.attr(node, 'name_suffix', [self.ws])
-    self.token('(')
-    self.visit(node.args)
-    self.token(')')
-
-    if getattr(node, 'returns', None):
-      self.attr(node, 'returns_prefix', [self.ws, '->', self.ws],
-                deps=('returns',), default=' -> ')
-      self.visit(node.returns)
-
-    self.token(':')
-
-    for expr in node.body:
-      self.visit(expr)
-
-  @statement
+  @space_around
   def visit_keyword(self, node):
     self.token(node.arg)
     self.attr(node, 'eq', [self.ws, '='], default='=')
     self.visit(node.value)
 
-  @statement
-  def visit_Return(self, node):
-    self.token('return')
-    if node.value:
-      self.visit(node.value)
+  @space_left
+  def visit_Index(self, node):
+    self.attr(node, 'index_open', ['[', self.ws], default='[')
+    self.visit(node.value)
+    self.attr(node, 'index_close', [self.ws, ']'], default=']')
 
-  @statement
-  def visit_Yield(self, node):
-    self.token('yield')
-    if node.value:
-      self.visit(node.value)
+  @space_left
+  def visit_Slice(self, node):
+    self.token('[')
 
-  @statement
-  def visit_Delete(self, node):
-    self.token('del')
-    for target in node.targets:
-      self.visit(target)
-      self.suffix(target)
-      if target != node.targets[-1]:
-        self.token(',')
-
-  @statement
-  def visit_Print(self, node):
-    self.token('print')
-    self.attr(node, 'print_suffix', [self.ws], default=' ')
-    if node.dest:
-      self.token('>>')
-      self.visit(node.dest)
-      if node.values or not node.nl:
-        self.suffix(node.dest)
-        self.token(',')
-
-    for value in node.values:
-      self.visit(value)
-      if value != node.values[-1] or not node.nl:
-        self.suffix(value)
-        self.token(',')
-
-  @block_statement
-  def visit_ClassDef(self, node):
-    for i, decorator in enumerate(node.decorator_list):
-      self.attr(node, 'decorator_prefix_%d' % i, [self.ws, '@'], default='@')
-      self.visit(decorator)
-      self.attr(node, 'decorator_suffix_%d' % i, [self.ws], default='\n')
-    self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
-              default='class %s' + node.name, deps=('name',))
-    if node.bases:
-      self.token('(')
+    if node.lower:
+      self.visit(node.lower)
+      self.suffix(node.lower)
     else:
-      self.optional_token(node, 'open_bases', '(')
-    for i, base in enumerate(node.bases):
-      self.visit(base)
-      self.attr(node, 'base_suffix_%d' % i, [self.ws])
-      if base != node.bases[-1]:
-        self.token(',')
-    if node.bases:
-      self.optional_token(node, 'bases_extracomma', ',')
-      self.token(')')
+      self.attr(node, 'lowerspace', [self.ws])
+
+    self.token(':')
+
+    if node.upper:
+      self.visit(node.upper)
+      self.suffix(node.upper)
     else:
-      self.optional_token(node, 'close_bases', ')')
-    self.attr(node, 'open_class', [self.ws, ':'], default=':')
+      self.attr(node, 'upperspace', [self.ws])
 
-    if node.body[0].lineno > node.lineno:
-      self.attr(node, 'body_prefix', [self.ws_oneline], default='\n')
-
-    for expr in node.body:
-      self.visit(expr)
-
-  @statement
-  def visit_Pass(self, node):
-    self.token('pass')
-
-  @statement
-  def visit_Break(self, node):
-    self.token('break')
-
-  @statement
-  def visit_Continue(self, node):
-    self.token('continue')
-
-  @block_statement
-  def visit_TryFinally(self, node):
-    # Try with except and finally is a TryFinally with the first statement as a
-    # TryExcept in Python2
-    if not isinstance(node.body[0], ast.TryExcept):
-      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
-                default='try:')
-    for stmt in node.body:
-      self.visit(stmt)
-    self.attr(node, 'open_finally',
-              [self.ws, 'finally', self.ws, ':', self.ws_oneline],
-              default='finally:')
-    for stmt in node.finalbody:
-      self.visit(stmt)
-
-  @block_statement
-  def visit_TryExcept(self, node):
-    self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
-              default='try:')
-    for stmt in node.body:
-      self.visit(stmt)
-    for handler in node.handlers:
-      self.visit(handler)
-    if node.orelse:
-      self.attr(node, 'open_else',
-                [self.ws, 'else', self.ws, ':', self.ws_oneline],
-                default='else:')
-      for stmt in node.orelse:
-        self.visit(stmt)
-
-  @block_statement
-  def visit_Try(self, node):
-    # Python 3
-    self.attr(node, 'open_try', [self.ws, 'try', self.ws, ':'], default='try:')
-    for stmt in node.body:
-      self.visit(stmt)
-    for handler in node.handlers:
-      self.visit(handler)
-    if node.orelse:
-      self.attr(node, 'open_else', [self.ws, 'else', self.ws, ':'],
-                default='else:')
-      for stmt in node.orelse:
-        self.visit(stmt)
-    if node.finalbody:
-      self.attr(node, 'open_finally', [self.ws, 'finally', self.ws, ':'],
-                default='finally:')
-      for stmt in node.finalbody:
-        self.visit(stmt)
-
-  @block_statement
-  def visit_ExceptHandler(self, node):
-    self.token('except')
-    if node.type:
-      self.visit(node.type)
-      self.suffix(node.type)
-    if node.type and node.name:
-      self.attr(node, 'as', [self.ws, 'as', self.ws], default=' as ')
-    if node.name:
-      if isinstance(node.name, ast.AST):
-        self.visit(node.name)
-      else:
-        self.token(node.name)
-    self.attr(node, 'open_except', [self.ws, ':', self.ws_oneline], default=':')
-    for stmt in node.body:
-      self.visit(stmt)
-
-  @statement
-  def visit_Raise(self, node):
-    if hasattr(node, 'cause'):
-      return self.visit_Raise_3(node)
-
-    self.token('raise')
-    if node.type:
-      self.visit(node.type)
-    if node.inst:
-      self.attr(node, 'inst_prefix', [self.ws, ',', self.ws], default=', ')
-      self.visit(node.inst)
-    if node.tback:
-      self.attr(node, 'tback_prefix', [self.ws, ',', self.ws], default=', ')
-      self.visit(node.tback)
-
-  def visit_Raise_3(self, node):
-    if node.exc:
-      self.attr(node, 'open_raise', ['raise', self.ws], default='raise ')
-      self.visit(node.exc)
-      if node.cause:
-        self.attr(node, 'cause_prefix', [self.ws, 'from', self.ws],
-                  default=' from ')
-        self.visit(node.cause)
+    if node.step:
+      self.token(':')
+      self.visit(node.step)
+      self.suffix(node.step)
     else:
-      self.token('raise')
+      self.attr(node, 'stepspace', [self.ws])
 
-  @contextlib.contextmanager
-  def scope(self, node):
-    """Context manager to handle a parenthesized scope."""
-    yield
+    self.token(']')
 
 
 class AnnotationError(Exception):
