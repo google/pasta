@@ -40,6 +40,16 @@ def expression(f):
   return wrapped
 
 
+def space_around(f):
+  """Decorates a function where the node has whitespace prefix and suffix."""
+  @contextlib.wraps(f)
+  def wrapped(self, node, *args, **kwargs):
+    self.prefix(node)
+    f(self, node, *args, **kwargs)
+    self.suffix(node, max_lines=0)
+  return wrapped
+
+
 def statement(f):
   """Decorates a function where the node is a statement."""
   @contextlib.wraps(f)
@@ -48,6 +58,7 @@ def statement(f):
     f(self, node, *args, **kwargs)
     self.suffix(node, max_lines=1)
   return wrapped
+
 
 
 def block_statement(f):
@@ -142,35 +153,34 @@ class BaseVisitor(ast.NodeVisitor):
 
   @statement
   def visit_Assign(self, node):
-    for target in node.targets:
+    for i, target in enumerate(node.targets):
       self.visit(target)
-      self.suffix(target)
-      self.token('=')
+      self.attr(node, 'equal_%d' % i, [self.ws, '=', self.ws], default=' = ')
     self.visit(node.value)
 
   @statement
   def visit_AugAssign(self, node):
     self.visit(node.target)
-    self.suffix(node.target)
     op_token = '%s=' % ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
-    self.token(op_token)
+    self.attr(node, 'operator', [self.ws, op_token, self.ws],
+              default=' %s ' % op_token)
     self.visit(node.value)
 
   @expression
   def visit_BinOp(self, node):
     self.visit(node.left)
-    self.suffix(node.left)
     self.visit(node.op)
     self.visit(node.right)
     self.suffix(node.right, max_lines=0)
 
   @expression
   def visit_BoolOp(self, node):
-    for value in node.values:
+    op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+    for i, value in enumerate(node.values):
       self.visit(value)
-      if value != node.values[-1]:
-        self.suffix(value)
-        self.visit(node.op)
+      if value is not node.values[-1]:
+        self.attr(node, 'op_%d' % i, [self.ws, op_symbol, self.ws],
+                  default=' %s ' % op_symbol, deps=('op',))
 
   @expression
   def visit_UnaryOp(self, node):
@@ -227,101 +237,111 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Ellipsis(self, node):
     self.token('...')
 
+  @space_around
   def visit_Add(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Sub(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Mult(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Div(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Mod(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Pow(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_LShift(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_RShift(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_BitAnd(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_BitOr(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_BitXor(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_FloorDiv(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Invert(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_Not(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_UAdd(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
+  @space_around
   def visit_USub(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  def visit_And(self, node):
-    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
-
-  def visit_Or(self, node):
-    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
-
-  @statement
+  @space_around
   def visit_Eq(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_NotEq(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_Lt(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_LtE(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_Gt(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_GtE(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_Is(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_IsNot(self, node):
     self.attr(node, 'content', ['is', self.ws, 'not'], default='is not')
 
-  @statement
+  @space_around
   def visit_In(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @statement
+  @space_around
   def visit_NotIn(self, node):
     self.attr(node, 'content', ['not', self.ws, 'in'], default='not in')
 
-  @statement
+  @space_around
   def visit_alias(self, node):
     name_pattern = []
     parts = node.name.split('.')
