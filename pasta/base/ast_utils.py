@@ -28,6 +28,8 @@ from pasta.augment import errors
 # From PEP-0263 -- https://www.python.org/dev/peps/pep-0263/
 _CODING_PATTERN = re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
 
+PASTA_DICT = '__pasta__'
+
 
 def find_starargs(call_node):
   """Finds the index of starargs in a call's arguments, if present.
@@ -113,30 +115,30 @@ def space_between(from_loc, to_loc, line, lines):
 
 
 def setup_props(node):
-  if not hasattr(node, 'a'):
+  if not hasattr(node, PASTA_DICT):
     try:
-      node.a = collections.defaultdict(lambda: '')
+      setattr(node, PASTA_DICT, collections.defaultdict(lambda: ''))
     except AttributeError:
       pass
 
 
 def prop(node, name):
-  if hasattr(node, 'a'):
-    return node.a[name]
+  if hasattr(node, PASTA_DICT):
+    return getattr(node, PASTA_DICT)[name]
   return None
 
 
 def setprop(node, name, value):
   setup_props(node)
-  node.a[name] = value
+  getattr(node, PASTA_DICT)[name] = value
 
 
 def appendprop(node, name, value):
-  node.a[name] += value
+  getattr(node, PASTA_DICT)[name] += value
 
 
 def prependprop(node, name, value):
-  node.a[name] = value + node.a[name]
+  getattr(node, PASTA_DICT)[name] = value + getattr(node, PASTA_DICT)[name]
 
 
 def find_nodes_by_type(node, accept_types):
@@ -220,7 +222,7 @@ def replace_child(parent, node, replace_with):
     replace_with: (ast.AST) New child node.
   """
   # TODO(soupytwist): Don't refer to the formatting dict directly
-  if hasattr(node, 'a'):
+  if hasattr(node, PASTA_DICT):
     setprop(replace_with, 'prefix', prop(node, 'prefix'))
     setprop(replace_with, 'suffix', prop(node, 'suffix'))
   for field in parent._fields:

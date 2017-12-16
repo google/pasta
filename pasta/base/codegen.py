@@ -53,12 +53,14 @@ class Printer(annotate.BaseVisitor):
 
   def visit_Num(self, node):
     self.prefix(node)
-    self.code += node.a.get('content', repr(node.n))
+    content = ast_utils.prop(node, 'content')
+    self.code += content if content is not None else repr(node.n)
     self.suffix(node)
 
   def visit_Str(self, node):
     self.prefix(node)
-    self.code += node.a.get('content', repr(node.s))
+    content = ast_utils.prop(node, 'content')
+    self.code += content if content is not None else repr(node.s)
     self.suffix(node)
 
   def token(self, value):
@@ -66,7 +68,7 @@ class Printer(annotate.BaseVisitor):
 
   def optional_token(self, node, attr_name, token_val):
     del token_val
-    if not hasattr(node, 'a'):
+    if not hasattr(node, ast_utils.PASTA_DICT):
       return
     self.code += ast_utils.prop(node, attr_name)
 
