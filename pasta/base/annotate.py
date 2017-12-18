@@ -106,9 +106,14 @@ class BaseVisitor(ast.NodeVisitor):
 
   __metaclass__ = abc.ABCMeta
 
+  def __init__(self):
+    self._stack = []
+
   def visit(self, node):
+    self._stack.append(node)
     ast_utils.setup_props(node)
     super(BaseVisitor, self).visit(node)
+    assert node is self._stack.pop()
 
   def prefix(self, node):
     """Account for some amount of whitespace as the prefix to a node."""
@@ -996,14 +1001,27 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.value)
 
   @space_left
-  def visit_Index(self, node):
-    self.attr(node, 'index_open', ['[', self.ws], default='[')
+  def visit_Index(self, node, in_ext=False):
+    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
+      self.attr(node, 'index_open', ['[', self.ws], default='[')
     self.visit(node.value)
-    self.attr(node, 'index_close', [self.ws, ']'], default=']')
+    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
+      self.attr(node, 'index_close', [self.ws, ']'], default=']')
+
+  @space_left
+  def visit_ExtSlice(self, node):
+    self.token('[')
+    for i, dim in enumerate(node.dims):
+      self.visit(dim)
+      if dim is not node.dims[-1]:
+        self.attr(node, 'dim_sep_%d' % i, [self.ws, ',', self.ws], default=', ')
+
+    self.token(']')
 
   @space_left
   def visit_Slice(self, node):
-    self.token('[')
+    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
+      self.attr(node, 'index_open', ['[', self.ws], default='[')
 
     if node.lower:
       self.visit(node.lower)
@@ -1026,7 +1044,8 @@ class BaseVisitor(ast.NodeVisitor):
     else:
       self.attr(node, 'stepspace', [self.ws])
 
-    self.token(']')
+    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
+      self.attr(node, 'index_close', [self.ws, ']'], default=']')
 
 
 class AnnotationError(Exception):
@@ -1036,6 +1055,7 @@ class AnnotationError(Exception):
 class AstAnnotator(BaseVisitor):
 
   def __init__(self, source):
+    super(AstAnnotator, self).__init__()
     self.tokens = token_generator.TokenGenerator(source)
 
   def visit(self, node):
@@ -1057,6 +1077,16 @@ class AstAnnotator(BaseVisitor):
   def visit_Str(self, node):
     """Annotate a Str node with the exact string format."""
     self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
+
+  @space_around
+  def visit_Ellipsis(self, node):
+    # Ellipsis is sometimes split into 3 tokens and other times a single token
+    # Account for both forms when parsing the input.
+    if self.tokens.peek().src == '...':
+      self.token('...')
+    else:
+      for i in range(3):
+        self.token('.')
 
   def check_is_elif(self, node):
     """Return True iff the If node is an `elif` in the source."""

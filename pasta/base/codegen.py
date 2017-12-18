@@ -41,6 +41,7 @@ class Printer(annotate.BaseVisitor):
   """
 
   def __init__(self):
+    super(Printer, self).__init__()
     self.code = ''
 
   def visit(self, node):
