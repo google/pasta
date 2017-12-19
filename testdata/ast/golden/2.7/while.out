@@ -1,0 +1,19 @@
+(-1, -1)     Module               	prefix=||	suffix=||
+(1, 0)       While                	prefix=||	suffix=||
+(5, 0)       While                	prefix=|\n|	suffix=||
+(1, 6)       Name True            	prefix=| |	suffix=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(3, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(5, 6)       Name True            	prefix=| |	suffix=||
+(6, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(8, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(-1, -1)     Load                 	prefix=||	suffix=||
+(2, 2)       Name a               	prefix=||	suffix=||
+(3, 2)       Name b               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(6, 2)       Name c               	prefix=||	suffix=||
+(8, 2)       Name d               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||

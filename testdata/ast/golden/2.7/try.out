@@ -1,0 +1,55 @@
+(-1, -1)     Module               	prefix=||	suffix=||
+(1, 0)       TryExcept            	prefix=||	suffix=||
+(6, 0)       TryExcept            	prefix=|\n|	suffix=||
+(13, 0)      TryFinally           	prefix=|\n|	suffix=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(3, 0)       ExceptHandler        	prefix=||	suffix=||
+(7, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(8, 0)       ExceptHandler        	prefix=||	suffix=||
+(11, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(13, 0)      TryExcept            	prefix=||	suffix=||
+(22, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(23, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(2, 2)       Name a               	prefix=||	suffix=||
+(4, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(7, 2)       Name c               	prefix=||	suffix=||
+(8, 7)       Name d               	prefix=| |	suffix=| |
+(8, 12)      Name e               	prefix=||	suffix=|  |
+(9, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(11, 2)      Name g               	prefix=||	suffix=||
+(14, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(15, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(16, 0)      ExceptHandler        	prefix=||	suffix=||
+(19, 0)      ExceptHandler        	prefix=||	suffix=||
+(22, 2)      Name p               	prefix=||	suffix=||
+(23, 2)      Name q               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(4, 2)       Name b               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Store                	prefix=||	suffix=||
+(9, 2)       Name f               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(14, 2)      Name h               	prefix=||	suffix=||
+(15, 2)      Name i               	prefix=||	suffix=||
+(16, 9)      Name j               	prefix=|   |	suffix=|   |
+(16, 19)     Name k               	prefix=||	suffix=||
+(17, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(18, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(19, 8)      Name n               	prefix=|  |	suffix=||
+(20, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Store                	prefix=||	suffix=||
+(17, 2)      Name l               	prefix=||	suffix=||
+(18, 2)      Name m               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(20, 2)      Name o               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||

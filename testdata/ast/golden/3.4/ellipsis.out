@@ -1,0 +1,5 @@
+(-1, -1)     Module               	prefix=||	suffix=||
+(1, 0)       FunctionDef a        	prefix=||	suffix=||
+(-1, -1)     arguments            	prefix=||	suffix=||
+(2, 2)       Expr                 	prefix=|\n  |	suffix=||
+(2, 2)       Ellipsis             	prefix=||	suffix=|\n|
