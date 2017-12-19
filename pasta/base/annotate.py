@@ -914,7 +914,7 @@ class BaseVisitor(ast.NodeVisitor):
   # == MISC NODES: Nodes which are neither statements nor expressions         ==
   # ============================================================================
 
-  @space_around
+  @space_left
   def visit_alias(self, node):
     name_pattern = []
     parts = node.name.split('.')
