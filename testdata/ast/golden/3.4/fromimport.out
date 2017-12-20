@@ -1,0 +1,11 @@
+(-1, -1)     Module               	prefix=||	suffix=||
+(1, 0)       ImportFrom a         	prefix=||	suffix=|\n|
+(3, 0)       ImportFrom c         	prefix=|\n|	suffix=|\n|
+(5, 0)       ImportFrom           	prefix=|\n|	suffix=|\n|
+(7, 0)       ImportFrom g.h.i     	prefix=|\n|	suffix=|\n|
+(9, 0)       ImportFrom           	prefix=|\n|	suffix=|\n|
+(-1, -1)     alias b              	prefix=| |	suffix=||
+(-1, -1)     alias d              	prefix=| |	suffix=||
+(-1, -1)     alias f              	prefix=| |	suffix=||
+(-1, -1)     alias j              	prefix=| |	suffix=||
+(-1, -1)     alias l              	prefix=| |	suffix=||
