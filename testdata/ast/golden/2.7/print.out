@@ -7,16 +7,16 @@
 (11, 0)      Print                	prefix=|\n|	suffix=|\n|
 (1, 6)       Name a               	prefix=||	suffix=||
 (3, 6)       Name b               	prefix=||	suffix=||
-(3, 9)       Name c               	prefix=| |	suffix=||
+(3, 9)       Name c               	prefix=||	suffix=||
 (5, 8)       Name d               	prefix=||	suffix=|   |
 (5, 13)      Name e               	prefix=||	suffix=|   |
-(5, 20)      Name f               	prefix=|  |	suffix=||
+(5, 20)      Name f               	prefix=||	suffix=||
 (7, 6)       Attribute h          	prefix=||	suffix=||
-(9, 11)      Name i               	prefix=|  |	suffix=|  |
-(9, 16)      Name j               	prefix=| |	suffix=| |
-(9, 21)      Name k               	prefix=|  |	suffix=||
+(9, 11)      Name i               	prefix=||	suffix=|  |
+(9, 16)      Name j               	prefix=||	suffix=| |
+(9, 21)      Name k               	prefix=||	suffix=||
 (11, 8)      Name l               	prefix=||	suffix=||
-(11, 11)     Name m               	prefix=| |	suffix=||
+(11, 11)     Name m               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

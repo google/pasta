@@ -6,13 +6,13 @@
 (3, 3)       GeneratorExp         	prefix=|(  |	suffix=|)|
 (5, 1)       GeneratorExp         	prefix=|(|	suffix=|)|
 (1, 1)       Name a               	prefix=||	suffix=| |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (3, 3)       Name c               	prefix=||	suffix=|    |
-(-1, -1)     comprehension        	prefix=|      |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (5, 1)       Name g               	prefix=||	suffix=| |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(-1, -1)     comprehension        	prefix=| |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (1, 7)       Name a               	prefix=||	suffix=| |
 (1, 12)      Name b               	prefix=||	suffix=||

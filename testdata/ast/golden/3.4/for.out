@@ -1,14 +1,14 @@
 (-1, -1)     Module               	prefix=||	suffix=||
 (1, 0)       For                  	prefix=||	suffix=||
 (4, 0)       For                  	prefix=|\n|	suffix=||
-(1, 4)       Name a               	prefix=| |	suffix=| |
-(1, 9)       Name b               	prefix=| |	suffix=||
-(2, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
-(4, 6)       Name d               	prefix=|   |	suffix=|    |
-(4, 21)      Name e               	prefix=|        |	suffix=|   |
-(5, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
+(1, 4)       Name a               	prefix=||	suffix=| |
+(1, 9)       Name b               	prefix=||	suffix=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|
+(4, 6)       Name d               	prefix=||	suffix=|    |
+(4, 21)      Name e               	prefix=||	suffix=|   |
+(5, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (6, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(8, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
+(8, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (9, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (-1, -1)     Store                	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

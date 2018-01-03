@@ -14,23 +14,23 @@
 (11, 1)      ListComp             	prefix=||	suffix=||
 (13, 1)      GeneratorExp         	prefix=|(|	suffix=|)|
 (1, 1)       Name a               	prefix=||	suffix=| |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (3, 3)       Name c               	prefix=||	suffix=|    |
-(-1, -1)     comprehension        	prefix=|      |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (5, 1)       Name g               	prefix=||	suffix=| |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(-1, -1)     comprehension        	prefix=| |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (7, 1)       Name a               	prefix=||	suffix=| |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (9, 3)       Name c               	prefix=||	suffix=|    |
-(-1, -1)     comprehension        	prefix=|      |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (11, 1)      Name g               	prefix=||	suffix=| |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(-1, -1)     comprehension        	prefix=| |	suffix=||
-(13, 2)      Tuple                	prefix=|(|	suffix=|) |
-(-1, -1)     comprehension        	prefix=| |	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(-1, -1)     comprehension        	prefix=||	suffix=||
+(13, 2)      Tuple                	prefix=|(|	suffix=|)|
+(-1, -1)     comprehension        	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (1, 7)       Name a               	prefix=||	suffix=| |
 (1, 12)      Name b               	prefix=||	suffix=||
@@ -66,7 +66,7 @@
 (11, 39)     Name m               	prefix=||	suffix=| |
 (11, 44)     Name o               	prefix=||	suffix=||
 (13, 2)      Name p               	prefix=||	suffix=||
-(13, 5)      Name q               	prefix=| |	suffix=||
+(13, 5)      Name q               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (13, 12)     Tuple                	prefix=||	suffix=||
 (13, 20)     Name r               	prefix=||	suffix=||
@@ -101,7 +101,7 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (13, 12)     Name p               	prefix=||	suffix=||
-(13, 15)     Name q               	prefix=| |	suffix=| |
+(13, 15)     Name q               	prefix=||	suffix=| |
 (-1, -1)     Store                	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Store                	prefix=||	suffix=||

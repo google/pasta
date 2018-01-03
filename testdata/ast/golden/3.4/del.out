@@ -1,13 +1,13 @@
 (-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       Delete               	prefix=||	suffix=||
-(3, 0)       Delete               	prefix=||	suffix=||
-(5, 0)       Delete               	prefix=||	suffix=||
-(1, 4)       Name a               	prefix=| |	suffix=|\n\n|
-(3, 4)       Name b               	prefix=| |	suffix=||
-(3, 7)       Name c               	prefix=| |	suffix=|\n\n|
-(5, 7)       Name d               	prefix=|    |	suffix=|  |
+(1, 0)       Delete               	prefix=||	suffix=|\n|
+(3, 0)       Delete               	prefix=|\n|	suffix=|\n|
+(5, 0)       Delete               	prefix=|\n|	suffix=|\n|
+(1, 4)       Name a               	prefix=||	suffix=||
+(3, 4)       Name b               	prefix=||	suffix=||
+(3, 7)       Name c               	prefix=||	suffix=||
+(5, 7)       Name d               	prefix=||	suffix=|  |
 (5, 11)      Name e               	prefix=||	suffix=|   |
-(5, 22)      Name f               	prefix=|      |	suffix=|\n|
+(5, 22)      Name f               	prefix=||	suffix=||
 (-1, -1)     Del                  	prefix=||	suffix=||
 (-1, -1)     Del                  	prefix=||	suffix=||
 (-1, -1)     Del                  	prefix=||	suffix=||

@@ -47,12 +47,12 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (5, 3)       Name g               	prefix=||	suffix=|   |
 (5, 8)       Name h               	prefix=||	suffix=||
-(5, 11)      Name i               	prefix=| |	suffix=| |
+(5, 11)      Name i               	prefix=||	suffix=| |
 (-1, -1)     Load                 	prefix=||	suffix=||
 (7, 4)       Name k               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
-(9, 6)       Name m               	prefix=| |	suffix=|  |
-(9, 11)      Name n               	prefix=| |	suffix=||
+(9, 6)       Name m               	prefix=||	suffix=|  |
+(9, 11)      Name n               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (11, 3)      Name p               	prefix=||	suffix=|   |
 (-1, -1)     Load                 	prefix=||	suffix=||

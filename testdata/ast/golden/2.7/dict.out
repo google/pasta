@@ -10,25 +10,25 @@
 (10, 0)      Dict                 	prefix=||	suffix=||
 (15, 0)      Dict                 	prefix=||	suffix=||
 (1, 1)       Name a               	prefix=||	suffix=||
-(1, 4)       Name b               	prefix=| |	suffix=||
+(1, 4)       Name b               	prefix=||	suffix=||
 (3, 3)       Name c               	prefix=|  |	suffix=||
-(3, 9)       Name e               	prefix=| |	suffix=||
-(3, 15)      Name g               	prefix=|  |	suffix=|   |
-(3, 6)       Name d               	prefix=| |	suffix=||
+(3, 9)       Name e               	prefix=||	suffix=||
+(3, 15)      Name g               	prefix=||	suffix=|   |
+(3, 6)       Name d               	prefix=||	suffix=||
 (3, 11)      Name f               	prefix=||	suffix=||
-(3, 22)      Name h               	prefix=|  |	suffix=|   |
+(3, 22)      Name h               	prefix=||	suffix=|   |
 (6, 3)       Name i               	prefix=|\n   |	suffix=||
-(7, 1)       Name k               	prefix=|\n |	suffix=|    |
-(8, 1)       Name n               	prefix=|\n |	suffix=||
-(8, 6)       Name p               	prefix=| |	suffix=||
-(6, 7)       Name j               	prefix=|  |	suffix=||
-(7, 11)      Name l               	prefix=|    |	suffix=|   |
+(7, 1)       Name k               	prefix=||	suffix=|    |
+(8, 1)       Name n               	prefix=||	suffix=||
+(8, 6)       Name p               	prefix=||	suffix=||
+(6, 7)       Name j               	prefix=||	suffix=||
+(7, 11)      Name l               	prefix=||	suffix=|   |
 (8, 3)       Name o               	prefix=||	suffix=||
 (8, 8)       Name q               	prefix=||	suffix=|   |
 (11, 3)      Name r               	prefix=|\n   |	suffix=||
-(12, 3)      Name t               	prefix=|\n   |	suffix=||
-(11, 6)      Name s               	prefix=| |	suffix=||
-(12, 6)      Name u               	prefix=| |	suffix=||
+(12, 3)      Name t               	prefix=||	suffix=||
+(11, 6)      Name s               	prefix=||	suffix=||
+(12, 6)      Name u               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

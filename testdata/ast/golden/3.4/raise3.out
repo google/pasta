@@ -5,9 +5,9 @@
 (16, 0)      Raise                	prefix=|\n|	suffix=|\n|
 (1, 6)       Name a               	prefix=||	suffix=||
 (3, 7)       Name b               	prefix=||	suffix=||
-(6, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
+(6, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (7, 0)       ExceptHandler        	prefix=||	suffix=||
-(14, 2)      Expr                 	prefix=|\n  |	suffix=|\n|
+(14, 2)      Expr                 	prefix=|  |	suffix=|\n|
 (16, 6)      Name g               	prefix=||	suffix=|  |
 (16, 15)     Name h               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
@@ -19,7 +19,7 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
-(9, 4)       Expr                 	prefix=|\n    |	suffix=|\n|
+(9, 4)       Expr                 	prefix=|    |	suffix=|\n|
 (10, 2)      ExceptHandler        	prefix=|  |	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (9, 4)       Name d               	prefix=||	suffix=||

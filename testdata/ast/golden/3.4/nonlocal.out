@@ -2,6 +2,6 @@
 (1, 0)       FunctionDef a        	prefix=||	suffix=||
 (4, 0)       FunctionDef c        	prefix=|\n|	suffix=||
 (-1, -1)     arguments            	prefix=||	suffix=||
-(2, 2)       Nonlocal             	prefix=|\n  |	suffix=|\n|
+(2, 2)       Nonlocal             	prefix=|  |	suffix=|\n|
 (-1, -1)     arguments            	prefix=||	suffix=||
-(5, 2)       Nonlocal             	prefix=|\n  |	suffix=|\n|
+(5, 2)       Nonlocal             	prefix=|  |	suffix=|\n|

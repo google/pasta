@@ -18,7 +18,7 @@
 (1, 2)       Name b               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (3, 6)       Name d               	prefix=||	suffix=||
-(3, 9)       Name e               	prefix=| |	suffix=| |
+(3, 9)       Name e               	prefix=||	suffix=| |
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Index                	prefix=|  |	suffix=||
 (-1, -1)     Ellipsis             	prefix=||	suffix=||
@@ -27,6 +27,6 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (5, 5)       Name g               	prefix=||	suffix=|  |
-(5, 17)      Name h               	prefix=| |	suffix=| |
+(5, 17)      Name h               	prefix=||	suffix=| |
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

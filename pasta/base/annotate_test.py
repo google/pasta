@@ -225,6 +225,8 @@ class PrefixSuffixGoldenTest(with_metaclass(PrefixSuffixGoldenTestMeta,
   python setup.py test -s pasta.base.annotate_test.generate_goldens
   """
 
+  maxDiff = None
+
 
 def _get_diff(before, after):
   return difflib.ndiff(after.splitlines(), before.splitlines())

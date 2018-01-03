@@ -5,27 +5,27 @@
 (12, 0)      FunctionDef v        	prefix=|\n|	suffix=||
 (18, 0)      FunctionDef x        	prefix=|\n|	suffix=||
 (-1, -1)     arguments            	prefix=||	suffix=||
-(2, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (-1, -1)     arguments            	prefix=|   |	suffix=||
-(5, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
+(5, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (-1, -1)     arguments            	prefix=||	suffix=||
-(8, 2)       Expr                 	prefix=|\n  |	suffix=|\n|
+(8, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (9, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (10, 2)      Return               	prefix=|  |	suffix=|\n|
 (-1, -1)     arguments            	prefix=||	suffix=||
-(16, 2)      Expr                 	prefix=|\n  |	suffix=|\n|
-(12, 0)      Call                 	prefix=||	suffix=|\n|
-(13, 1)      Name p               	prefix=||	suffix=|\n|
-(14, 1)      Call                 	prefix=||	suffix=|\n|
+(16, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(12, 0)      Call                 	prefix=||	suffix=||
+(13, 1)      Name p               	prefix=||	suffix=||
+(14, 1)      Call                 	prefix=||	suffix=||
 (-1, -1)     arguments            	prefix=||	suffix=||
-(19, 2)      Expr                 	prefix=|\n  |	suffix=|\n|
+(19, 2)      Expr                 	prefix=|  |	suffix=|\n|
 (1, 6)       arg b                	prefix=||	suffix=||
 (2, 2)       Name c               	prefix=||	suffix=||
 (4, 13)      arg e                	prefix=||	suffix=|  |
 (4, 17)      arg f                	prefix=||	suffix=||
 (4, 24)      arg h                	prefix=||	suffix=||
 (4, 31)      arg i                	prefix=||	suffix=| |
-(4, 20)      Name g               	prefix=| |	suffix=||
+(4, 20)      Name g               	prefix=||	suffix=||
 (5, 2)       Name j               	prefix=||	suffix=||
 (8, 2)       Name l               	prefix=||	suffix=||
 (9, 2)       Name m               	prefix=||	suffix=||
@@ -35,10 +35,10 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (14, 1)      Name q               	prefix=||	suffix=||
 (14, 3)      Name r               	prefix=||	suffix=||
-(14, 6)      Name s               	prefix=| |	suffix=||
-(-1, -1)     keyword t            	prefix=| |	suffix=||
+(14, 6)      Name s               	prefix=||	suffix=||
+(-1, -1)     keyword t            	prefix=||	suffix=||
 (18, 6)      arg y                	prefix=||	suffix=||
-(18, 9)      arg z                	prefix=| |	suffix=||
+(18, 9)      arg z                	prefix=||	suffix=||
 (18, 11)     Name a               	prefix=||	suffix=||
 (19, 2)      Name b               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

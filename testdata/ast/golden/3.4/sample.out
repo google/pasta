@@ -8,7 +8,7 @@
 (-1, -1)     Eq                   	prefix=| |	suffix=| |
 (1, 14)      Name c               	prefix=||	suffix=||
 (1, 5)       Name a               	prefix=||	suffix=||
-(1, 8)       Name b               	prefix=| |	suffix=||
+(1, 8)       Name b               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

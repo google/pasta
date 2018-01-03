@@ -49,7 +49,7 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
-(9, 0)       BinOp                	prefix=||	suffix=||
+(9, 0)       BinOp                	prefix=||	suffix=| |
 (-1, -1)     LShift               	prefix=||	suffix=|  |
 (9, 19)      Name n               	prefix=||	suffix=| |
 (-1, -1)     Load                 	prefix=||	suffix=||
@@ -57,7 +57,7 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (9, 0)       BinOp                	prefix=||	suffix=||
 (-1, -1)     Add                  	prefix=||	suffix=||
-(9, 8)       BinOp                	prefix=|(|	suffix=|) |
+(9, 8)       BinOp                	prefix=|(|	suffix=|)|
 (-1, -1)     Load                 	prefix=||	suffix=||
 (9, 0)       Name j               	prefix=||	suffix=||
 (-1, -1)     FloorDiv             	prefix=||	suffix=||
