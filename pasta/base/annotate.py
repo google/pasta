@@ -325,7 +325,8 @@ class BaseVisitor(ast.NodeVisitor):
   @block_statement
   def visit_FunctionDef(self, node):
     for i, decorator in enumerate(node.decorator_list):
-      self.attr(node, 'decorator_symbol_%d' % i, ['@', self.ws], default='@')
+      self.attr(node, 'decorator_symbol_%d' % i, [self.ws, '@', self.ws],
+                default='@')
       self.visit(decorator)
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws_oneline],
                 default='\n')

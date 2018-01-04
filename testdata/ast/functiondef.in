@@ -17,3 +17,9 @@ def v():
 
 def x(y, z=a,):
   b
+
+class A:
+  @b
+  @c
+  def d():
+    e
