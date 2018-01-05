@@ -1,0 +1,16 @@
+try:
+  a
+except b, c:
+  d
+
+try:
+  e
+except    d   ,e:
+  f
+
+try:
+  g
+except h, i:
+  j
+finally:
+  k

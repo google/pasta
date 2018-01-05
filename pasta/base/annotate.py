@@ -145,6 +145,10 @@ class BaseVisitor(ast.NodeVisitor):
   def optional_token(self, node, attr_name, token_val):
     """Account for a suffix that may or may not occur."""
 
+  def as_or_comma(self):
+    """Account for the symbol "as" or a comma, used in an except handler."""
+    return 'as'
+
   def ws_oneline(self):
     """Account for up to one line of whitespace."""
     return self.ws(max_lines=1)
@@ -404,7 +408,8 @@ class BaseVisitor(ast.NodeVisitor):
     if node.type:
       self.visit(node.type)
     if node.type and node.name:
-      self.attr(node, 'as', [self.ws, 'as', self.ws], default=' as ')
+      self.attr(node, 'as', [self.ws, self.as_or_comma, self.ws],
+                default=' as ')
     if node.name:
       if isinstance(node.name, ast.AST):
         self.visit(node.name)
@@ -1096,6 +1101,10 @@ class AstAnnotator(BaseVisitor):
     if token and token.src == token_val:
       self.tokens.next()
       ast_utils.appendprop(node, attr_name, token.src + self.ws())
+
+  def as_or_comma(self):
+    """Parse a symbol "as" or a comma, used in an except handler."""
+    return self.token(',' if self.tokens.peek().src == ',' else 'as')
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Parses some source and sets an attribute on the given node.
