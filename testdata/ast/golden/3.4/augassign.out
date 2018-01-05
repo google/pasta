@@ -1,20 +1,20 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       AugAssign            	prefix=||	suffix=|\n|
-(3, 0)       AugAssign            	prefix=|\n|	suffix=|\n|
-(5, 0)       Expr                 	prefix=|\n|	suffix=|\n|
-(1, 0)       Name a               	prefix=||	suffix=| |
-(-1, -1)     Add                  	prefix=||	suffix=||
-(1, 5)       Name b               	prefix=||	suffix=||
-(3, 0)       Name c               	prefix=||	suffix=||
-(-1, -1)     Sub                  	prefix=||	suffix=||
-(3, 3)       Name d               	prefix=||	suffix=||
-(5, 0)       Compare              	prefix=||	suffix=||
-(-1, -1)     Store                	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Store                	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(5, 0)       Name e               	prefix=||	suffix=|   |
-(-1, -1)     LtE                  	prefix=||	suffix=|  |
-(5, 8)       Name f               	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       AugAssign            	prefix=||	suffix=|\n|	indent=||
+(3, 0)       AugAssign            	prefix=|\n|	suffix=|\n|	indent=||
+(5, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(1, 0)       Name a               	prefix=||	suffix=| |	indent=||
+(-1, -1)     Add                  	prefix=||	suffix=||	indent=||
+(1, 5)       Name b               	prefix=||	suffix=||	indent=||
+(3, 0)       Name c               	prefix=||	suffix=||	indent=||
+(-1, -1)     Sub                  	prefix=||	suffix=||	indent=||
+(3, 3)       Name d               	prefix=||	suffix=||	indent=||
+(5, 0)       Compare              	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(5, 0)       Name e               	prefix=||	suffix=|   |	indent=||
+(-1, -1)     LtE                  	prefix=||	suffix=|  |	indent=||
+(5, 8)       Name f               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

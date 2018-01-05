@@ -1,29 +1,29 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       Raise                	prefix=||	suffix=|\n|
-(3, 0)       Raise                	prefix=|\n|	suffix=|\n|
-(5, 0)       Try                  	prefix=|\n|	suffix=||
-(16, 0)      Raise                	prefix=|\n|	suffix=|\n|
-(1, 6)       Name a               	prefix=||	suffix=||
-(3, 7)       Name b               	prefix=||	suffix=||
-(6, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(7, 0)       ExceptHandler        	prefix=||	suffix=||
-(14, 2)      Expr                 	prefix=|  |	suffix=|\n|
-(16, 6)      Name g               	prefix=||	suffix=|  |
-(16, 15)     Name h               	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(6, 2)       Name c               	prefix=||	suffix=||
-(8, 2)       Try                  	prefix=|  |	suffix=||
-(12, 2)      Raise                	prefix=|  |	suffix=|\n|
-(14, 2)      Name f               	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(9, 4)       Expr                 	prefix=|    |	suffix=|\n|
-(10, 2)      ExceptHandler        	prefix=|  |	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(9, 4)       Name d               	prefix=||	suffix=||
-(11, 4)      Raise                	prefix=|    |	suffix=|\n|
-(-1, -1)     Load                 	prefix=||	suffix=||
-(11, 10)     Name e               	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Raise                	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Raise                	prefix=|\n|	suffix=|\n|	indent=||
+(5, 0)       Try                  	prefix=|\n|	suffix=||	indent=||
+(16, 0)      Raise                	prefix=|\n|	suffix=|\n|	indent=||
+(1, 6)       Name a               	prefix=||	suffix=||	indent=||
+(3, 7)       Name b               	prefix=||	suffix=||	indent=||
+(6, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=||
+(7, 0)       ExceptHandler        	prefix=||	suffix=||	indent=||
+(14, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(16, 6)      Name g               	prefix=||	suffix=|  |	indent=||
+(16, 15)     Name h               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(6, 2)       Name c               	prefix=||	suffix=||	indent=||
+(8, 2)       Try                  	prefix=|  |	suffix=||	indent=|  |
+(12, 2)      Raise                	prefix=|  |	suffix=|\n|	indent=|  |
+(14, 2)      Name f               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(9, 4)       Expr                 	prefix=|    |	suffix=|\n|	indent=|  |
+(10, 2)      ExceptHandler        	prefix=|  |	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(9, 4)       Name d               	prefix=||	suffix=||	indent=|  |
+(11, 4)      Raise                	prefix=|    |	suffix=|\n|	indent=|    |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(11, 10)     Name e               	prefix=||	suffix=||	indent=|    |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

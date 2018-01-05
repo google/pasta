@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import ast
 import difflib
+import itertools
 import os.path
 from six import with_metaclass
 import sys
@@ -50,39 +51,37 @@ class PrefixSuffixTest(test_utils.TestCase):
         a
         ''')
     test_cases = (
-        'def x():',
-        'class X:',
-        'if x:',
-        'if x:\n  y\nelse:',
-        'if x:\n  y\nelif y:',
-        'while x:',
-        'while x:\n  y\nelse:',
-        'try:\n  x\nfinally:',
-        'try:\n  x\nexcept:',
-        'try:\n  x\nexcept:\n  y\nelse:',
-        'with x:',
-        'with x, y:',
-        'with x:\n with y:',
-        'for x in y:',
+        # first: attribute of the node with the last block
+        # second: code snippet to open a block
+        ('body', 'def x():'),
+        ('body', 'class X:'),
+        ('body', 'if x:'),
+        ('orelse', 'if x:\n  y\nelse:'),
+        ('body', 'if x:\n  y\nelif y:'),
+        ('body', 'while x:'),
+        ('orelse', 'while x:\n  y\nelse:'),
+        ('finalbody', 'try:\n  x\nfinally:'),
+        ('body', 'try:\n  x\nexcept:'),
+        ('orelse', 'try:\n  x\nexcept:\n  y\nelse:'),
+        ('body', 'with x:'),
+        ('body', 'with x, y:'),
+        ('body', 'with x:\n with y:'),
+        ('body', 'for x in y:'),
     )
-    def is_node_for_suffix(node):
+    def is_node_for_suffix(node, children_attr):
       # Return True if this node contains the 'pass' statement
-      for attr in dir(node):
-        attr_val = getattr(node, attr)
-        if (isinstance(attr_val, list) and
-            any(isinstance(child, ast.Pass) for child in attr_val)):
-          return True
-      return False
-    node_finder = ast_utils.FindNodeVisitor(is_node_for_suffix)
+      val = getattr(node, children_attr, None)
+      return isinstance(val, list) and type(val[0]) == ast.Pass
 
-    for open_block in test_cases:
+    for children_attr, open_block in test_cases:
       src = src_tpl.format(open_block=open_block)
       t = pasta.parse(src)
-      node_finder.results = []
+      node_finder = ast_utils.FindNodeVisitor(
+          lambda node: is_node_for_suffix(node, children_attr))
       node_finder.visit(t)
       node = node_finder.results[0]
       expected = '  #b\n    #c\n\n  #d\n'
-      actual = ast_utils.prop(node, 'suffix')
+      actual = str(ast_utils.prop(node, 'block_suffix_%s' % children_attr))
       self.assertMultiLineEqual(
           expected, actual,
           'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' % (
@@ -96,7 +95,7 @@ class PrefixSuffixTest(test_utils.TestCase):
   def test_no_block_suffix_for_single_line_statement(self):
     src = 'if x:  return y\n  #a\n#b\n'
     t = pasta.parse(src)
-    self.assertEqual('', ast_utils.prop(t.body[0], 'suffix'))
+    self.assertIsNone(ast_utils.prop(t.body[0], 'block_suffix_body'))
 
   def test_expression_prefix_suffix(self):
     src = 'a\n\nfoo\n\n\nb\n'
@@ -109,6 +108,61 @@ class PrefixSuffixTest(test_utils.TestCase):
     t = pasta.parse(src)
     self.assertEqual('\n', ast_utils.prop(t.body[1], 'prefix'))
     self.assertEqual('', ast_utils.prop(t.body[1], 'suffix'))
+
+
+class IndentationTest(test_utils.TestCase):
+
+  def test_indent_levels(self):
+    src = textwrap.dedent('''\
+        foo('begin')
+        if a:
+          foo('a1')
+          if b:
+            foo('b1')
+            if c:
+              foo('c1')
+            foo('b2')
+          foo('a2')
+        foo('end')
+        ''')
+    t = pasta.parse(src)
+    call_nodes = ast_utils.find_nodes_by_type(t, (ast.Call,))
+    call_nodes.sort(key=lambda node: node.lineno)
+    begin, a1, b1, c1, b2, a2, end = call_nodes
+
+    self.assertEqual('', ast_utils.prop(begin, 'indent'))
+    self.assertEqual('  ', ast_utils.prop(a1, 'indent'))
+    self.assertEqual('    ', ast_utils.prop(b1, 'indent'))
+    self.assertEqual('      ', ast_utils.prop(c1, 'indent'))
+    self.assertEqual('    ', ast_utils.prop(b2, 'indent'))
+    self.assertEqual('  ', ast_utils.prop(a2, 'indent'))
+    self.assertEqual('', ast_utils.prop(end, 'indent'))
+
+  def test_indent_levels_same_line(self):
+    src = 'if a: b; c\n'
+    t = pasta.parse(src)
+    if_node = t.body[0]
+    b, c = if_node.body
+    self.assertIsNone(ast_utils.prop(b, 'indent_diff'))
+    self.assertIsNone(ast_utils.prop(c, 'indent_diff'))
+
+  def test_indent_depths(self):
+    template = 'if a:\n{first}if b:\n{first}{second}foo()\n'
+    indents = (' ', ' ' * 2, ' ' * 4, ' ' * 8, '\t', '\t' * 2)
+
+    for first, second in itertools.product(indents, indents):
+      src = template.format(first=first, second=second)
+      t = pasta.parse(src)
+      outer_if_node = t.body[0]
+      inner_if_node = outer_if_node.body[0]
+      call_node = inner_if_node.body[0]
+
+      self.assertEqual('', ast_utils.prop(outer_if_node, 'indent'))
+      self.assertEqual('', ast_utils.prop(outer_if_node, 'indent_diff'))
+      self.assertEqual(first, ast_utils.prop(inner_if_node, 'indent'))
+      self.assertEqual(first, ast_utils.prop(inner_if_node, 'indent_diff'))
+      self.assertEqual(first + second, ast_utils.prop(call_node, 'indent'))
+      self.assertEqual(second, ast_utils.prop(call_node, 'indent_diff'))
 
   def test_scope_trailing_comma(self):
     template = 'def foo(a, b{trailing_comma}): pass'
@@ -199,11 +253,12 @@ class PrefixSuffixGoldenTestMeta(type):
           return '' if s is None else s.replace('\n', '\\n')
 
         result = '\n'.join(
-            "{0:12} {1:20} \tprefix=|{2}|\tsuffix=|{3}|".format(
+            "{0:12} {1:20} \tprefix=|{2}|\tsuffix=|{3}|\tindent=|{4}|".format(
                 str((getattr(n, 'lineno', -1), getattr(n, 'col_offset', -1))),
                 type(n).__name__ + ' ' + _get_node_identifier(n),
                 escape(ast_utils.prop(n, 'prefix')),
-                escape(ast_utils.prop(n, 'suffix')))
+                escape(ast_utils.prop(n, 'suffix')),
+                escape(ast_utils.prop(n, 'indent')))
             for n in ast.walk(t)) + '\n'
 
         # If specified, write the golden data instead of checking it

@@ -1,12 +1,12 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       Assert               	prefix=||	suffix=|\n|
-(3, 0)       Assert               	prefix=|\n|	suffix=|\n|
-(5, 0)       Assert               	prefix=|\n|	suffix=|\n|
-(1, 7)       Name a               	prefix=| |	suffix=||
-(3, 8)       Name b               	prefix=| (|	suffix=|)|
-(5, 9)       Name c               	prefix=|   |	suffix=|  |
-(5, 15)      Name d               	prefix=|  |	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Assert               	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Assert               	prefix=|\n|	suffix=|\n|	indent=||
+(5, 0)       Assert               	prefix=|\n|	suffix=|\n|	indent=||
+(1, 7)       Name a               	prefix=| |	suffix=||	indent=||
+(3, 8)       Name b               	prefix=| (|	suffix=|)|	indent=||
+(5, 9)       Name c               	prefix=|   |	suffix=|  |	indent=||
+(5, 15)      Name d               	prefix=|  |	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

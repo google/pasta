@@ -43,6 +43,7 @@ class Printer(annotate.BaseVisitor):
   def __init__(self):
     super(Printer, self).__init__()
     self.code = ''
+    self._indent = ''
 
   def visit(self, node):
     node._printer_info = collections.defaultdict(lambda: False)
@@ -72,7 +73,7 @@ class Printer(annotate.BaseVisitor):
     del token_val, allow_whitespace_prefix
     if not hasattr(node, ast_utils.PASTA_DICT):
       return
-    self.code += ast_utils.prop(node, attr_name)
+    self.code += ast_utils.prop(node, attr_name) or ''
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Add the formatted data stored for a given attribute on this node.
@@ -93,13 +94,12 @@ class Printer(annotate.BaseVisitor):
     if not hasattr(node, '_printer_info') or node._printer_info[attr_name]:
       return
     node._printer_info[attr_name] = True
-    if (deps and
+    val = ast_utils.prop(node, attr_name)
+    if (val is None or deps and
         any(getattr(node, dep, None) != ast_utils.prop(node, dep + '__src')
             for dep in deps)):
-      self.code += default or ''
-    else:
-      val = ast_utils.prop(node, attr_name)
-      self.code += val if val is not None else (default or '')
+      val = default
+    self.code += val if val is not None else ''
 
   def check_is_elif(self, node):
     try:

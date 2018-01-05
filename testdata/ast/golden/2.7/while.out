@@ -1,19 +1,19 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       While                	prefix=||	suffix=||
-(5, 0)       While                	prefix=|\n|	suffix=||
-(1, 6)       Name True            	prefix=||	suffix=||
-(2, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(3, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(5, 6)       Name True            	prefix=||	suffix=||
-(6, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(8, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(-1, -1)     Load                 	prefix=||	suffix=||
-(2, 2)       Name a               	prefix=||	suffix=||
-(3, 2)       Name b               	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(6, 2)       Name c               	prefix=||	suffix=||
-(8, 2)       Name d               	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       While                	prefix=||	suffix=||	indent=||
+(5, 0)       While                	prefix=|\n|	suffix=||	indent=||
+(1, 6)       Name True            	prefix=||	suffix=||	indent=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(3, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(5, 6)       Name True            	prefix=||	suffix=||	indent=||
+(6, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(8, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(2, 2)       Name a               	prefix=||	suffix=||	indent=|  |
+(3, 2)       Name b               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(6, 2)       Name c               	prefix=||	suffix=||	indent=|  |
+(8, 2)       Name d               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

@@ -1,7 +1,7 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       FunctionDef a        	prefix=||	suffix=||
-(4, 0)       FunctionDef c        	prefix=|\n|	suffix=||
-(-1, -1)     arguments            	prefix=||	suffix=||
-(2, 2)       Nonlocal             	prefix=|  |	suffix=|\n|
-(-1, -1)     arguments            	prefix=||	suffix=||
-(5, 2)       Nonlocal             	prefix=|  |	suffix=|\n|
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       FunctionDef a        	prefix=||	suffix=||	indent=||
+(4, 0)       FunctionDef c        	prefix=|\n|	suffix=||	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(2, 2)       Nonlocal             	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(5, 2)       Nonlocal             	prefix=|  |	suffix=|\n|	indent=|  |
