@@ -124,9 +124,13 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'suffix', [lambda: self.ws(max_lines=max_lines)])
 
   @contextlib.contextmanager
-  def scope(self, node):
+  def scope(self, node, attr=None):
     """Context manager to handle a parenthesized scope."""
+    if attr:
+      self.attr(node, attr + '_prefix', [])
     yield
+    if attr:
+      self.attr(node, attr + '_suffix', [])
 
   def token(self, token_val):
     """Account for a specific token."""
@@ -1150,9 +1154,9 @@ class AstAnnotator(BaseVisitor):
         attr_parts.append(attr_val())
     ast_utils.setprop(node, attr_name, ''.join(attr_parts))
 
-  def scope(self, node):
+  def scope(self, node, attr=None):
     """Return a context manager to handle a parenthesized scope."""
-    return self.tokens.scope(node)
+    return self.tokens.scope(node, attr=attr)
 
   def _optional_token(self, token_type, token_val):
     token = self.tokens.peek()
