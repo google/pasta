@@ -1048,7 +1048,7 @@ class AstAnnotator(BaseVisitor):
     """Annotate a Num node with the exact number format."""
     token_number_type = token_generator.TOKENS.NUMBER
     contentargs = [lambda: self.tokens.next_of_type(token_number_type).src]
-    if node.n < 0:
+    if node.n < 0 or node.n == 0 and self.tokens.peek().src == '-':
       contentargs.insert(0, '-')
     self.attr(node, 'content', contentargs, deps=('n',), default=str(node.n))
 
