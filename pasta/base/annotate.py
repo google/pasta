@@ -545,10 +545,12 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'module_suffix', [self.ws], default=' ')
 
     self.token('import')
-    for alias in node.names:
-      self.visit(alias)
-      if alias != node.names[-1]:
-        self.token(',')
+    with self.scope(node, 'names'):
+      for alias in node.names:
+        self.visit(alias)
+        if alias != node.names[-1]:
+          self.token(',')
+
 
   @statement
   def visit_Nonlocal(self, node):
