@@ -9,3 +9,5 @@ from . ..  g.h.  i import j as   k
 from ..import l
 
 from m import(n)
+
+from o import (p)

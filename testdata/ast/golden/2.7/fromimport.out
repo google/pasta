@@ -4,10 +4,12 @@
 (5, 0)       ImportFrom           	prefix=|\n|	suffix=|\n|
 (7, 0)       ImportFrom g.h.i     	prefix=|\n|	suffix=|\n|
 (9, 0)       ImportFrom           	prefix=|\n|	suffix=|\n|
-(11, 0)      ImportFrom m         	prefix=|\n|	suffix=||
+(11, 0)      ImportFrom m         	prefix=|\n|	suffix=|\n|
+(13, 0)      ImportFrom o         	prefix=|\n|	suffix=||
 (-1, -1)     alias b              	prefix=| |	suffix=||
 (-1, -1)     alias d              	prefix=| |	suffix=||
 (-1, -1)     alias f              	prefix=| |	suffix=||
 (-1, -1)     alias j              	prefix=| |	suffix=||
 (-1, -1)     alias l              	prefix=| |	suffix=||
 (-1, -1)     alias n              	prefix=||	suffix=||
+(-1, -1)     alias p              	prefix=||	suffix=||
