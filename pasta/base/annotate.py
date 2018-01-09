@@ -80,7 +80,7 @@ def block_statement(f):
     if hasattr(self, 'block_suffix'):
       last_child = ast_utils.get_last_child(node)
       # Workaround for ast.Module which does not have a lineno
-      if last_child.lineno != getattr(node, 'lineno', 0):
+      if last_child and last_child.lineno != getattr(node, 'lineno', 0):
         indent = (ast_utils.prop(last_child, 'prefix') or '\n').splitlines()[-1]
         self.block_suffix(node, indent)
     else:
@@ -124,9 +124,13 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'suffix', [lambda: self.ws(max_lines=max_lines)])
 
   @contextlib.contextmanager
-  def scope(self, node):
+  def scope(self, node, attr=None):
     """Context manager to handle a parenthesized scope."""
+    if attr:
+      self.attr(node, attr + '_prefix', [])
     yield
+    if attr:
+      self.attr(node, attr + '_suffix', [])
 
   def token(self, token_val):
     """Account for a specific token."""
@@ -1046,7 +1050,7 @@ class AstAnnotator(BaseVisitor):
     """Annotate a Num node with the exact number format."""
     token_number_type = token_generator.TOKENS.NUMBER
     contentargs = [lambda: self.tokens.next_of_type(token_number_type).src]
-    if node.n < 0:
+    if node.n < 0 or node.n == 0 and self.tokens.peek().src == '-':
       contentargs.insert(0, '-')
     self.attr(node, 'content', contentargs, deps=('n',), default=str(node.n))
 
@@ -1152,9 +1156,9 @@ class AstAnnotator(BaseVisitor):
         attr_parts.append(attr_val())
     ast_utils.setprop(node, attr_name, ''.join(attr_parts))
 
-  def scope(self, node):
+  def scope(self, node, attr=None):
     """Return a context manager to handle a parenthesized scope."""
-    return self.tokens.scope(node)
+    return self.tokens.scope(node, attr=attr)
 
   def _optional_token(self, token_type, token_val):
     token = self.tokens.peek()

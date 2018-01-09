@@ -8,6 +8,7 @@
 (13, 0)      Expr                 	prefix=|\n|	suffix=|\n|
 (15, 0)      Expr                 	prefix=|\n|	suffix=|\n|
 (17, 0)      Expr                 	prefix=|\n|	suffix=|\n|
+(19, 0)      Expr                 	prefix=|\n|	suffix=|\n|
 (1, 0)       Num                  	prefix=||	suffix=||
 (3, 0)       Num                  	prefix=||	suffix=||
 (5, 0)       Num                  	prefix=||	suffix=||
@@ -17,3 +18,6 @@
 (13, 0)      Num                  	prefix=||	suffix=||
 (15, 0)      Num                  	prefix=||	suffix=||
 (17, 0)      Num                  	prefix=||	suffix=||
+(19, 0)      UnaryOp              	prefix=||	suffix=||
+(-1, -1)     USub                 	prefix=||	suffix=||
+(19, 1)      Num                  	prefix=||	suffix=||

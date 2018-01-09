@@ -178,6 +178,11 @@ def get_last_child(node):
 
   In both cases, the last child is the node for `last`.
   """
+  if isinstance(node, ast.Module):
+    try:
+      return node.body[-1]
+    except IndexError:
+      return None
   if isinstance(node, ast.If):
     if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
         prop(node.orelse[0], 'is_elif')):

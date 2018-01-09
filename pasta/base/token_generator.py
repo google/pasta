@@ -177,7 +177,7 @@ class TokenGenerator(object):
     else:
       self.rewind(len(whitespace) + 1)
 
-  def close_scope(self, node):
+  def close_scope(self, node, prefix_attr='prefix', suffix_attr='suffix'):
     """Close a parenthesized scope on the given node, if one is open."""
     if not self._parens:
       return
@@ -201,8 +201,8 @@ class TokenGenerator(object):
 
       if tok.src == ')':
         self._scope_stack.pop()
-        ast_utils.prependprop(node, 'prefix', self._parens.pop())
-        ast_utils.appendprop(node, 'suffix', result)
+        ast_utils.prependprop(node, prefix_attr, self._parens.pop())
+        ast_utils.appendprop(node, suffix_attr, result)
         result = ''
         count = 0
         self._loc = tok.end
@@ -219,11 +219,15 @@ class TokenGenerator(object):
       raise ValueError('Hint value negative')
 
   @contextlib.contextmanager
-  def scope(self, node):
+  def scope(self, node, attr=None):
     """Context manager to handle a parenthesized scope."""
     self.open_scope(node)
     yield
-    self.close_scope(node)
+    if attr:
+      self.close_scope(node, prefix_attr=attr + '_prefix',
+                       suffix_attr=attr + '_suffix')
+    else:
+      self.close_scope(node)
 
   def is_in_scope(self):
     """Return True iff there is a scope open."""
