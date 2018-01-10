@@ -1084,7 +1084,12 @@ class AstAnnotator(BaseVisitor):
     """Parse some whitespace from the source tokens and return it."""
     next_token = self.tokens.peek()
     if semicolon and next_token and next_token.src == ';':
-      return self.tokens.whitespace() + self.token(';')
+      result = self.tokens.whitespace() + self.token(';')
+      next_token = self.tokens.peek()
+      if next_token.type in (token_generator.TOKENS.NL,
+                             token_generator.TOKENS.NEWLINE):
+        result += self.tokens.whitespace(max_lines=1)
+      return result
     return self.tokens.whitespace(max_lines=max_lines)
 
   def block_suffix(self, node, indent_level):
