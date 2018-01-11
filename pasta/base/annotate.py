@@ -149,9 +149,9 @@ class BaseVisitor(ast.NodeVisitor):
   def optional_token(self, node, attr_name, token_val):
     """Account for a suffix that may or may not occur."""
 
-  def as_or_comma(self):
-    """Account for the symbol "as" or a comma, used in an except handler."""
-    return 'as'
+  def one_of_symbols(self, *symbols):
+    """Account for one of the given symbols."""
+    return symbols[0]
 
   def ws_oneline(self):
     """Account for up to one line of whitespace."""
@@ -412,7 +412,7 @@ class BaseVisitor(ast.NodeVisitor):
     if node.type:
       self.visit(node.type)
     if node.type and node.name:
-      self.attr(node, 'as', [self.ws, self.as_or_comma, self.ws],
+      self.attr(node, 'as', [self.ws, self.one_of_symbols("as", ","), self.ws],
                 default=' as ')
     if node.name:
       if isinstance(node.name, ast.AST):
@@ -498,7 +498,9 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'exec', ['exec', self.ws], default='exec ')
     self.visit(node.body)
     if node.globals:
-      self.attr(node, 'in_globals', [self.ws, 'in', self.ws], default=' in ')
+      self.attr(node, 'in_globals',
+                [self.ws, self.one_of_symbols('in', ','), self.ws],
+                default=' in ')
       self.visit(node.globals)
       if node.locals:
         self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
@@ -1108,9 +1110,16 @@ class AstAnnotator(BaseVisitor):
       self.tokens.next()
       ast_utils.appendprop(node, attr_name, token.src + self.ws())
 
-  def as_or_comma(self):
-    """Parse a symbol "as" or a comma, used in an except handler."""
-    return self.token(',' if self.tokens.peek().src == ',' else 'as')
+  def one_of_symbols(self, *symbols):
+    """Account for one of the given symbols."""
+    def _one_of_symbols():
+      next_token = self.tokens.next()
+      found = next((s for s in symbols if s == next_token.src), None)
+      if found is None:
+        raise AnnotationError(
+            'Expected one of: %r, but found: %r' % (symbols, next_token.src))
+      return found
+    return _one_of_symbols
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Parses some source and sets an attribute on the given node.
