@@ -6,7 +6,7 @@
 (3, 0)       ExceptHandler        	prefix=||	suffix=||
 (7, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (8, 0)       ExceptHandler        	prefix=||	suffix=||
-(11, 0)      TryExcept            	prefix=||	suffix=||
+(11, 0)      TryExcept            	prefix=|  |	suffix=||
 (16, 2)      Expr                 	prefix=|  |	suffix=|\n|
 (2, 2)       Name a               	prefix=||	suffix=||
 (3, 7)       Name b               	prefix=| |	suffix=||
@@ -16,7 +16,7 @@
 (8, 10)      Name d               	prefix=|    |	suffix=|   |
 (8, 15)      Name e               	prefix=||	suffix=||
 (9, 2)       Expr                 	prefix=|  |	suffix=|\n|
-(12, 2)      Expr                 	prefix=|  |	suffix=|\n|
+(12, 2)      Expr                 	prefix=||	suffix=|\n|
 (13, 0)      ExceptHandler        	prefix=||	suffix=||
 (16, 2)      Name k               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

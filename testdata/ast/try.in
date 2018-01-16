@@ -21,3 +21,27 @@ except  n:
 finally  :
   p
   q
+
+try:
+  try:
+    r
+  except:
+    s
+except:
+  t
+
+try:
+  try:
+    u
+  except:
+    v
+finally:
+  w
+
+try:
+  try:
+    x
+  finally:
+    y
+finally:
+  z

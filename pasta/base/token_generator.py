@@ -67,6 +67,11 @@ class TokenGenerator(object):
       return None
     return self._tokens[self._i + 1]
 
+  def peek_non_whitespace(self):
+    """Get the next non-whitespace token without advancing."""
+    return next((tok for tok in self._tokens[self._i + 1:]
+                 if tok.type not in (TOKENS.INDENT, TOKENS.DEDENT)), None)
+
   def next(self, advance=True):
     """Consume the next token and optionally advance the current location."""
     self._i += 1

@@ -266,6 +266,10 @@ class BaseVisitor(ast.NodeVisitor):
         self.visit(stmt)
 
   @abc.abstractmethod
+  def check_is_continued_try(self, node):
+    pass
+
+  @abc.abstractmethod
   def check_is_continued_with(self, node):
     """Return True if the node continues a previous `with` statement.
 
@@ -358,9 +362,11 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_TryFinally(self, node):
     # Try with except and finally is a TryFinally with the first statement as a
     # TryExcept in Python2
-    if not isinstance(node.body[0], ast.TryExcept):
-      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
-                default='try:\n')
+    self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+              default='try:\n')
+    # TODO(soupytwist): Find a cleaner solution for differentiating this.
+    if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
+      node.body[0].is_continued = True
     for stmt in node.body:
       self.visit(stmt)
     self.attr(node, 'open_finally',
@@ -371,8 +377,9 @@ class BaseVisitor(ast.NodeVisitor):
 
   @block_statement
   def visit_TryExcept(self, node):
-    self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
-              default='try:\n')
+    if not getattr(node, 'is_continued', False):
+      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+                default='try:\n')
     for stmt in node.body:
       self.visit(stmt)
     for handler in node.handlers:
@@ -1075,6 +1082,11 @@ class AstAnnotator(BaseVisitor):
     """Return True iff the If node is an `elif` in the source."""
     next_tok = self.tokens.next_name()
     return isinstance(node, ast.If) and next_tok.src == 'elif'
+
+  def check_is_continued_try(self, node):
+    """Return True iff the TryExcept node is a continued `try` in the source."""
+    return (isinstance(node, ast.TryExcept) and
+            self.tokens.peek_non_whitespace().src != 'try')
 
   def check_is_continued_with(self, node):
     """Return True iff the With node is a continued `with` in the source."""
