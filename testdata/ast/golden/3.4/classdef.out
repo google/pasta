@@ -6,7 +6,7 @@
 (15, 0)      ClassDef i           	prefix=|\n|	suffix=||
 (1, 8)       Name object          	prefix=||	suffix=||
 (2, 2)       Pass                 	prefix=|  |	suffix=|\n|
-(6, 15)      Name e               	prefix=|   |	suffix=| |
+(6, 15)      Name e               	prefix=||	suffix=| |
 (6, 20)      Name f               	prefix=|  |	suffix=||
 (7, 2)       Pass                 	prefix=|  |	suffix=|\n|
 (4, 1)       Name b               	prefix=||	suffix=||

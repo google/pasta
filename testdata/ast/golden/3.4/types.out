@@ -5,7 +5,7 @@
 (10, 0)      FunctionDef r        	prefix=|\n|	suffix=||
 (-1, -1)     arguments            	prefix=||	suffix=||
 (2, 2)       Pass                 	prefix=|  |	suffix=|\n|
-(-1, -1)     arguments            	prefix=| |	suffix=||
+(-1, -1)     arguments            	prefix=||	suffix=||
 (5, 2)       Pass                 	prefix=|  |	suffix=|\n|
 (4, 44)      Name bool            	prefix=||	suffix=||
 (-1, -1)     arguments            	prefix=||	suffix=||

@@ -31,6 +31,10 @@ _CODING_PATTERN = re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
 PASTA_DICT = '__pasta__'
 
 
+def get_argument_count(node):
+  return len(node.args) + (1 if node.vararg else 0) + (1 if node.kwarg else 0)
+
+
 def find_starargs(call_node):
   """Finds the index of starargs in a call's arguments, if present.
 

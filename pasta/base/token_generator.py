@@ -148,7 +148,7 @@ class TokenGenerator(object):
     self._loc = self._tokens[self._i].end
     return ''.join(lines)
 
-  def open_scope(self, node):
+  def open_scope(self, node, single_paren=False):
     """Open a parenthesized scope on the given node."""
     prev_loc = self._loc
 
@@ -161,7 +161,9 @@ class TokenGenerator(object):
     result = ''
     parens = []
     last_paren_loc = None
+    tokens_used = 0
     for tok in whitespace:
+      tokens_used += 1
       result += self._space_between(prev_loc, tok)
       result += tok.src
       prev_loc = tok.end
@@ -170,6 +172,8 @@ class TokenGenerator(object):
         last_paren_loc = prev_loc
         parens.append(result)
         result = ''
+        if single_paren:
+          break
 
     if parens:
       parens[-1] += self._space_between(last_paren_loc, next_token)
@@ -177,12 +181,14 @@ class TokenGenerator(object):
       for paren in parens:
         self._parens.append(paren)
         self._scope_stack.append(_scope_helper(node))
-      self._loc = next_token.start
-      self.rewind(1)
+
+      self._loc = (whitespace + [next_token])[tokens_used].start
+      self.rewind(1 + len(whitespace) - tokens_used)
     else:
       self.rewind(len(whitespace) + 1)
 
-  def close_scope(self, node, prefix_attr='prefix', suffix_attr='suffix'):
+  def close_scope(self, node, prefix_attr='prefix', suffix_attr='suffix',
+                  trailing_comma=False):
     """Close a parenthesized scope on the given node, if one is open."""
     if not self._parens:
       return
@@ -190,7 +196,9 @@ class TokenGenerator(object):
 
     def predicate(token):
       return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                             TOKENS.INDENT, TOKENS.DEDENT) or token.src in ')')
+                             TOKENS.INDENT, TOKENS.DEDENT)
+              or token.src == ')'
+              or trailing_comma and token.src == ',')
     whitespace = list(self.takewhile(predicate, advance=False))
 
     count = 0
@@ -224,15 +232,16 @@ class TokenGenerator(object):
       raise ValueError('Hint value negative')
 
   @contextlib.contextmanager
-  def scope(self, node, attr=None):
+  def scope(self, node, attr=None, trailing_comma=False):
     """Context manager to handle a parenthesized scope."""
-    self.open_scope(node)
+    self.open_scope(node, single_paren=(attr is not None))
     yield
     if attr:
       self.close_scope(node, prefix_attr=attr + '_prefix',
-                       suffix_attr=attr + '_suffix')
+                       suffix_attr=attr + '_suffix',
+                       trailing_comma=trailing_comma)
     else:
-      self.close_scope(node)
+      self.close_scope(node, trailing_comma=trailing_comma)
 
   def is_in_scope(self):
     """Return True iff there is a scope open."""
