@@ -125,7 +125,15 @@ class BaseVisitor(ast.NodeVisitor):
 
   @contextlib.contextmanager
   def scope(self, node, attr=None, trailing_comma=False):
-    """Context manager to handle a parenthesized scope."""
+    """Context manager to handle a parenthesized scope.
+
+    Arguments:
+      node: (ast.AST) Node to store the scope prefix and suffix on.
+      attr: (string, optional) Attribute of the node contained in the scope, if
+        any. For example, as `None`, the scope would wrap the entire node, but
+        as 'bases', the scope might wrap only the bases of a class.
+      trailing_comma: (boolean) If True, allow a trailing comma at the end.
+    """
     if attr:
       self.attr(node, attr + '_prefix', [])
     yield
@@ -1162,7 +1170,15 @@ class AstAnnotator(BaseVisitor):
     ast_utils.setprop(node, attr_name, ''.join(attr_parts))
 
   def scope(self, node, attr=None, trailing_comma=False):
-    """Return a context manager to handle a parenthesized scope."""
+    """Return a context manager to handle a parenthesized scope.
+
+    Arguments:
+      node: (ast.AST) Node to store the scope prefix and suffix on.
+      attr: (string, optional) Attribute of the node contained in the scope, if
+        any. For example, as `None`, the scope would wrap the entire node, but
+        as 'bases', the scope might wrap only the bases of a class.
+      trailing_comma: (boolean) If True, allow a trailing comma at the end.
+    """
     return self.tokens.scope(node, attr=attr, trailing_comma=trailing_comma)
 
   def _optional_token(self, token_type, token_val):
