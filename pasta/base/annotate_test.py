@@ -105,6 +105,25 @@ class PrefixSuffixTest(test_utils.TestCase):
     self.assertEqual('\n', ast_utils.prop(t.body[1], 'prefix'))
     self.assertEqual('', ast_utils.prop(t.body[1], 'suffix'))
 
+  def test_scope_trailing_comma(self):
+    template = 'def foo(a, b{trailing_comma}): pass'
+    for trailing_comma in ('', ',', ' , '):
+      tree = pasta.parse(template.format(trailing_comma=trailing_comma))
+      self.assertEqual(trailing_comma.lstrip(' ') + ')',
+                       ast_utils.prop(tree.body[0], 'args_suffix'))
+
+    template = 'class Foo(a, b{trailing_comma}): pass'
+    for trailing_comma in ('', ',', ' , '):
+      tree = pasta.parse(template.format(trailing_comma=trailing_comma))
+      self.assertEqual(trailing_comma.lstrip(' ') + ')',
+                       ast_utils.prop(tree.body[0], 'bases_suffix'))
+
+    template = 'from mod import (a, b{trailing_comma})'
+    for trailing_comma in ('', ',', ' , '):
+      tree = pasta.parse(template.format(trailing_comma=trailing_comma))
+      self.assertEqual(trailing_comma + ')',
+                       ast_utils.prop(tree.body[0], 'names_suffix'))
+
 
 def _is_syntax_valid(filepath):
   with open(filepath, 'r') as f:

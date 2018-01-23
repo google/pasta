@@ -37,7 +37,7 @@ def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
                  max_suffix_lines=None):
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
-    with (self.scope(node) if scope else _noop_context()):
+    with (self.scope(node, trailing_comma=False) if scope else _noop_context()):
       if prefix:
         self.prefix(node)
       f(self, node, *args, **kwargs)
@@ -124,8 +124,16 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'suffix', [lambda: self.ws(max_lines=max_lines)])
 
   @contextlib.contextmanager
-  def scope(self, node, attr=None):
-    """Context manager to handle a parenthesized scope."""
+  def scope(self, node, attr=None, trailing_comma=False):
+    """Context manager to handle a parenthesized scope.
+
+    Arguments:
+      node: (ast.AST) Node to store the scope prefix and suffix on.
+      attr: (string, optional) Attribute of the node contained in the scope, if
+        any. For example, as `None`, the scope would wrap the entire node, but
+        as 'bases', the scope might wrap only the bases of a class.
+      trailing_comma: (boolean) If True, allow a trailing comma at the end.
+    """
     if attr:
       self.attr(node, attr + '_prefix', [])
     yield
@@ -315,20 +323,12 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws], default='\n')
     self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
               default='class %s' % node.name, deps=('name',))
-    if node.bases:
-      self.token('(')
-    else:
-      self.optional_token(node, 'open_bases', '(')
-    for i, base in enumerate(node.bases):
-      self.visit(base)
-      self.attr(node, 'base_suffix_%d' % i, [self.ws])
-      if base != node.bases[-1]:
-        self.token(',')
-    if node.bases:
-      self.optional_token(node, 'bases_extracomma', ',')
-      self.token(')')
-    else:
-      self.optional_token(node, 'close_bases', ')')
+    with self.scope(node, 'bases', trailing_comma=bool(node.bases)):
+      for i, base in enumerate(node.bases):
+        self.visit(base)
+        self.attr(node, 'base_suffix_%d' % i, [self.ws])
+        if base != node.bases[-1]:
+          self.token(',')
     self.attr(node, 'open_block', [self.ws, ':', self.ws_oneline],
               default=':\n')
     for stmt in node.body:
@@ -343,10 +343,11 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws_oneline],
                 default='\n')
     self.attr(node, 'function_def',
-              [self.ws, 'def', self.ws, node.name, self.ws, '('],
-              deps=('name',), default='def %s(' % node.name)
-    self.visit(node.args)
-    self.attr(node, 'function_def_close', [self.ws, ')', self.ws], default=')')
+              [self.ws, 'def', self.ws, node.name, self.ws],
+              deps=('name',), default='def %s' % node.name)
+    args_count = ast_utils.get_argument_count(node.args)
+    with self.scope(node, 'args', trailing_comma=args_count > 0):
+      self.visit(node.args)
 
     if getattr(node, 'returns', None):
       self.attr(node, 'returns_prefix', [self.ws, '->', self.ws],
@@ -554,7 +555,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'module_suffix', [self.ws], default=' ')
 
     self.token('import')
-    with self.scope(node, 'names'):
+    with self.scope(node, 'names', trailing_comma=True):
       for alias in node.names:
         self.visit(alias)
         if alias != node.names[-1]:
@@ -633,10 +634,9 @@ class BaseVisitor(ast.NodeVisitor):
   @expression
   def visit_Call(self, node):
     self.visit(node.func)
+    kw_end = len(node.args) + len(node.keywords) + (1 if node.starargs else 0)
+    num_items = kw_end + (1 if node.kwargs else 0)
     self.attr(node, 'open_call', [self.ws, '(', self.ws], default='(')
-    num_items = (len(node.args) + len(node.keywords) +
-                 (1 if node.starargs else 0) + (1 if node.kwargs else 0))
-
     i = 0
     for arg in node.args:
       self.visit(arg)
@@ -645,7 +645,6 @@ class BaseVisitor(ast.NodeVisitor):
       i += 1
 
     starargs_idx = ast_utils.find_starargs(node)
-    kw_end = len(node.args) + len(node.keywords) + (1 if node.starargs else 0)
     kw_idx = 0
     while i < kw_end:
       if i == starargs_idx:
@@ -662,10 +661,8 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'kwargs_prefix', [self.ws, '**', self.ws], default='**')
       self.visit(node.kwargs)
 
-    self.attr(node, 'arguments_suffix', [self.ws], default='')
     if num_items > 0:
-      self.optional_token(node, 'extracomma', ',')
-
+      self.optional_token(node, 'trailing_comma', ',')
     self.attr(node, 'close_call', [self.ws, ')'], default=')')
 
   @expression
@@ -769,8 +766,8 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(elt)
       if elt is not node.elts[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
-    if node.elts:
-      self.optional_token(node, 'extracomma', ',')
+      else:
+        self.optional_token(node, 'extracomma', ',')
 
     self.attr(node, 'set_close', [self.ws, '}'], default='}')
 
@@ -789,8 +786,8 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(elt)
       if elt is not node.elts[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
-    if node.elts:
-      self.optional_token(node, 'extracomma', ',')
+      else:
+        self.optional_token(node, 'extracomma', ',')
 
   @expression
   def visit_UnaryOp(self, node):
@@ -937,9 +934,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_around
   def visit_arguments(self, node):
-    total_args = (len(node.args) +
-                  (1 if node.vararg else 0) +
-                  (1 if node.kwarg else 0))
+    total_args = ast_utils.get_argument_count(node)
     arg_i = 0
 
     positional = node.args[:-len(node.defaults)] if node.defaults else node.args
@@ -980,9 +975,6 @@ class BaseVisitor(ast.NodeVisitor):
       else:
         self.token(node.kwarg)
         self.attr(node, 'kwarg_suffix', [self.ws])
-
-    if positional or keyword or node.vararg or node.kwarg:
-      self.optional_token(node, 'extracomma', ',')
 
   @space_around
   def visit_comprehension(self, node):
@@ -1177,9 +1169,17 @@ class AstAnnotator(BaseVisitor):
         attr_parts.append(attr_val())
     ast_utils.setprop(node, attr_name, ''.join(attr_parts))
 
-  def scope(self, node, attr=None):
-    """Return a context manager to handle a parenthesized scope."""
-    return self.tokens.scope(node, attr=attr)
+  def scope(self, node, attr=None, trailing_comma=False):
+    """Return a context manager to handle a parenthesized scope.
+
+    Arguments:
+      node: (ast.AST) Node to store the scope prefix and suffix on.
+      attr: (string, optional) Attribute of the node contained in the scope, if
+        any. For example, as `None`, the scope would wrap the entire node, but
+        as 'bases', the scope might wrap only the bases of a class.
+      trailing_comma: (boolean) If True, allow a trailing comma at the end.
+    """
+    return self.tokens.scope(node, attr=attr, trailing_comma=trailing_comma)
 
   def _optional_token(self, token_type, token_val):
     token = self.tokens.peek()
