@@ -88,6 +88,11 @@ class PrefixSuffixTest(test_utils.TestCase):
           'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' % (
               src, node, node.lineno, '\n'.join(_get_diff(actual, expected))))
 
+  def test_module_suffix(self):
+    src = 'foo\n#bar\n\n#baz\n'
+    t = pasta.parse(src)
+    self.assertEquals(src[src.index('#bar'):], ast_utils.prop(t, 'suffix'))
+
   def test_no_block_suffix_for_single_line_statement(self):
     src = 'if x:  return y\n  #a\n#b\n'
     t = pasta.parse(src)

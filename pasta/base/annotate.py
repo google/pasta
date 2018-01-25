@@ -171,10 +171,10 @@ class BaseVisitor(ast.NodeVisitor):
   # == BLOCK STATEMENTS: Statements that contain a list of statements         ==
   # ============================================================================
 
-  @block_statement
+  # Keeps the entire suffix, so @block_statement is not useful here.
+  @space_around
   def visit_Module(self, node):
     self.generic_visit(node)
-    self.attr(node, 'suffix', [self.ws])
 
   @block_statement
   def visit_If(self, node):
