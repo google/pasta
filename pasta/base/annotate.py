@@ -34,7 +34,7 @@ from pasta.base import token_generator
 # ==============================================================================
 
 def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
-                 max_suffix_lines=None):
+                 max_suffix_lines=None, semicolon=False):
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
     with (self.scope(node, trailing_comma=False) if scope else _noop_context()):
@@ -42,7 +42,7 @@ def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
         self.prefix(node)
       f(self, node, *args, **kwargs)
       if suffix:
-        self.suffix(node, max_lines=max_suffix_lines)
+        self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon)
   return wrapped
 
 
@@ -68,7 +68,7 @@ def space_left(f):
 
 def statement(f):
   """Decorates a function where the node is a statement."""
-  return _gen_wrapper(f, scope=False, max_suffix_lines=1)
+  return _gen_wrapper(f, scope=False, max_suffix_lines=1, semicolon=True)
 
 
 def block_statement(f):
@@ -119,9 +119,10 @@ class BaseVisitor(ast.NodeVisitor):
     """Account for some amount of whitespace as the prefix to a node."""
     self.attr(node, 'prefix', [self.ws])
 
-  def suffix(self, node, max_lines=None):
+  def suffix(self, node, max_lines=None, semicolon=False):
     """Account for some amount of whitespace as the suffix to a node."""
-    self.attr(node, 'suffix', [lambda: self.ws(max_lines=max_lines)])
+    self.attr(node, 'suffix',
+              [lambda: self.ws(max_lines=max_lines, semicolon=semicolon)])
 
   @contextlib.contextmanager
   def scope(self, node, attr=None, trailing_comma=False):
@@ -146,13 +147,18 @@ class BaseVisitor(ast.NodeVisitor):
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Handles an attribute on the given node."""
 
-  def ws(self, max_lines=None):
+  def ws(self, max_lines=None, semicolon=False):
     """Account for some amount of whitespace.
 
     Arguments:
       max_lines: (int) Maximum number of newlines to consider.
+      semicolon: (boolean) If True, parse up to the next semicolon (if present).
     """
     return ''
+
+  def ws_oneline(self):
+    """Account for up to one line of whitespace."""
+    return self.ws(max_lines=1)
 
   def optional_token(self, node, attr_name, token_val):
     """Account for a suffix that may or may not occur."""
@@ -160,10 +166,6 @@ class BaseVisitor(ast.NodeVisitor):
   def one_of_symbols(self, *symbols):
     """Account for one of the given symbols."""
     return symbols[0]
-
-  def ws_oneline(self):
-    """Account for up to one line of whitespace."""
-    return self.ws(max_lines=1)
 
   # ============================================================================
   # == BLOCK STATEMENTS: Statements that contain a list of statements         ==
@@ -1084,8 +1086,16 @@ class AstAnnotator(BaseVisitor):
     """Return True iff the With node is a continued `with` in the source."""
     return isinstance(node, ast.With) and self.tokens.peek().src == ','
 
-  def ws(self, max_lines=None):
+  def ws(self, max_lines=None, semicolon=False):
     """Parse some whitespace from the source tokens and return it."""
+    next_token = self.tokens.peek()
+    if semicolon and next_token and next_token.src == ';':
+      result = self.tokens.whitespace() + self.token(';')
+      next_token = self.tokens.peek()
+      if next_token.type in (token_generator.TOKENS.NL,
+                             token_generator.TOKENS.NEWLINE):
+        result += self.tokens.whitespace(max_lines=1)
+      return result
     return self.tokens.whitespace(max_lines=max_lines)
 
   def block_suffix(self, node, indent_level):
