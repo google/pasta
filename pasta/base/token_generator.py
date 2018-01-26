@@ -85,12 +85,14 @@ class TokenGenerator(object):
     """Rewind the token iterator."""
     self._i -= amount
 
-  def whitespace(self, max_lines=None):
+  def whitespace(self, max_lines=None, comment=False):
     """Parses whitespace from the current _loc to the next non-whitespace.
 
     Arguments:
       max_lines: (optional int) Maximum number of lines to consider as part of
         the whitespace. Valid values are None, 0 and 1.
+      comment: (boolean) If True, look for a trailing comment even when not in
+        a parenthesized scope.
 
     Pre-condition:
       `_loc' represents the point before which everything has been parsed and
@@ -98,8 +100,12 @@ class TokenGenerator(object):
     Post-condition:
       `_loc' is exactly at the character that was parsed to.
     """
+    next_token = self.peek()
+    if not comment and next_token and next_token.type == TOKENS.COMMENT:
+      return ''
     def predicate(token):
-      return (token.type in (TOKENS.COMMENT, TOKENS.INDENT, TOKENS.DEDENT) or
+      return (token.type in (TOKENS.INDENT, TOKENS.DEDENT) or
+              token.type == TOKENS.COMMENT and (comment or self._hints) or
               max_lines is None and token.type in (TOKENS.NL, TOKENS.NEWLINE))
     whitespace = list(self.takewhile(predicate, advance=False))
     next_token = self.peek()
@@ -126,7 +132,7 @@ class TokenGenerator(object):
     # Get the normal suffix lines, but don't advance the token index unless
     # there is no indentation to account for
     start_i = self._i
-    full_whitespace = self.whitespace()
+    full_whitespace = self.whitespace(comment=True)
     if not indent_level:
       return full_whitespace
     self._i = start_i

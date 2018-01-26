@@ -243,6 +243,6 @@ def replace_child(parent, node, replace_with):
       try:
         field_val[field_val.index(node)] = replace_with
         return
-      except IndexError:
+      except ValueError:
         pass
-  raise errors.InvalidAstError('Node %r is not a child of %r' % (child, parent))
+  raise errors.InvalidAstError('Node %r is not a child of %r' % (node, parent))

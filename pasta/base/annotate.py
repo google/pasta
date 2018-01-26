@@ -34,7 +34,7 @@ from pasta.base import token_generator
 # ==============================================================================
 
 def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
-                 max_suffix_lines=None, semicolon=False):
+                 max_suffix_lines=None, semicolon=False, comment=False):
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
     with (self.scope(node, trailing_comma=False) if scope else _noop_context()):
@@ -42,7 +42,8 @@ def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
         self.prefix(node)
       f(self, node, *args, **kwargs)
       if suffix:
-        self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon)
+        self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon,
+                    comment=comment)
   return wrapped
 
 
@@ -68,7 +69,13 @@ def space_left(f):
 
 def statement(f):
   """Decorates a function where the node is a statement."""
-  return _gen_wrapper(f, scope=False, max_suffix_lines=1, semicolon=True)
+  return _gen_wrapper(f, scope=False, max_suffix_lines=1, semicolon=True,
+                      comment=True)
+
+
+def module(f):
+  """Special decorator for the module node."""
+  return _gen_wrapper(f, scope=False, comment=True)
 
 
 def block_statement(f):
@@ -84,7 +91,7 @@ def block_statement(f):
         indent = (ast_utils.prop(last_child, 'prefix') or '\n').splitlines()[-1]
         self.block_suffix(node, indent)
     else:
-      self.suffix(node)
+      self.suffix(node, comment=True)
   return wrapped
 
 
@@ -117,12 +124,13 @@ class BaseVisitor(ast.NodeVisitor):
 
   def prefix(self, node):
     """Account for some amount of whitespace as the prefix to a node."""
-    self.attr(node, 'prefix', [self.ws])
+    self.attr(node, 'prefix', [lambda: self.ws(comment=True)])
 
-  def suffix(self, node, max_lines=None, semicolon=False):
+  def suffix(self, node, max_lines=None, semicolon=False, comment=False):
     """Account for some amount of whitespace as the suffix to a node."""
-    self.attr(node, 'suffix',
-              [lambda: self.ws(max_lines=max_lines, semicolon=semicolon)])
+    def _ws():
+      return self.ws(max_lines=max_lines, semicolon=semicolon, comment=comment)
+    self.attr(node, 'suffix', [_ws])
 
   @contextlib.contextmanager
   def scope(self, node, attr=None, trailing_comma=False):
@@ -147,12 +155,14 @@ class BaseVisitor(ast.NodeVisitor):
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Handles an attribute on the given node."""
 
-  def ws(self, max_lines=None, semicolon=False):
+  def ws(self, max_lines=None, semicolon=False, comment=False):
     """Account for some amount of whitespace.
 
     Arguments:
       max_lines: (int) Maximum number of newlines to consider.
       semicolon: (boolean) If True, parse up to the next semicolon (if present).
+      comment: (boolean) If True, look for a trailing comment even when not in
+        a parenthesized scope.
     """
     return ''
 
@@ -172,7 +182,7 @@ class BaseVisitor(ast.NodeVisitor):
   # ============================================================================
 
   # Keeps the entire suffix, so @block_statement is not useful here.
-  @space_around
+  @module
   def visit_Module(self, node):
     self.generic_visit(node)
 
@@ -677,7 +687,6 @@ class BaseVisitor(ast.NodeVisitor):
   @expression
   def visit_Dict(self, node):
     self.token('{')
-
     for i, key, value in zip(range(len(node.keys)), node.keys, node.values):
       self.visit(key)
       self.attr(node, 'key_val_sep_%d' % i, [self.ws, ':', self.ws],
@@ -1086,7 +1095,7 @@ class AstAnnotator(BaseVisitor):
     """Return True iff the With node is a continued `with` in the source."""
     return isinstance(node, ast.With) and self.tokens.peek().src == ','
 
-  def ws(self, max_lines=None, semicolon=False):
+  def ws(self, max_lines=None, semicolon=False, comment=False):
     """Parse some whitespace from the source tokens and return it."""
     next_token = self.tokens.peek()
     if semicolon and next_token and next_token.src == ';':
@@ -1096,7 +1105,7 @@ class AstAnnotator(BaseVisitor):
                              token_generator.TOKENS.NEWLINE):
         result += self.tokens.whitespace(max_lines=1)
       return result
-    return self.tokens.whitespace(max_lines=max_lines)
+    return self.tokens.whitespace(max_lines=max_lines, comment=comment)
 
   def block_suffix(self, node, indent_level):
     ast_utils.setprop(node, 'suffix',

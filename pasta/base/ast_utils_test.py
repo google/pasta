@@ -23,6 +23,7 @@ import traceback
 import unittest
 
 import pasta
+from pasta.augment import errors
 from pasta.base import ast_utils
 from pasta.base import test_utils
 from pasta.base import scope
@@ -72,7 +73,7 @@ class UtilsTest(test_utils.TestCase):
                        ast_utils.sanitize_source(src_prefix + src))
 
 
-class RemoveChildTest(test_utils.TestCase):
+class AlterChildTest(test_utils.TestCase):
 
   def testRemoveChildMethod(self):
     src = """\
@@ -121,3 +122,25 @@ if a:
   x = 1
 """
     self.assertEqual(pasta.dump(tree), expected)
+
+  def testReplaceChildInBody(self):
+    src = 'def foo():\n  a = 0\n  a += 1 # replace this\n  return a\n'
+    replace_with = pasta.parse('foo(a + 1)  # trailing comment\n').body[0]
+    expected = 'def foo():\n  a = 0\n  foo(a + 1) # replace this\n  return a\n'
+    t = pasta.parse(src)
+
+    parent = t.body[0]
+    node_to_replace = parent.body[1]
+    ast_utils.replace_child(parent, node_to_replace, replace_with)
+
+    self.assertEqual(expected, pasta.dump(t))
+
+  def testReplaceChildInvalid(self):
+    src = 'def foo():\n  return 1\nx = 1\n'
+    replace_with = pasta.parse('bar()').body[0]
+    t = pasta.parse(src)
+
+    parent = t.body[0]
+    node_to_replace = t.body[1]
+    with self.assertRaises(errors.InvalidAstError):
+      ast_utils.replace_child(parent, node_to_replace, replace_with)
