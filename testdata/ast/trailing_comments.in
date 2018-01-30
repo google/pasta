@@ -1,0 +1,17 @@
+a  # a
+
+( b )   #   b
+
+@c()   # c
+@d  #  d
+def e():  # e
+  f   # f
+
+@g  # g
+@h()# h
+class i:    # i
+  return j# j
+
+k = ( # l prefix
+  l   #  l
+)  # k

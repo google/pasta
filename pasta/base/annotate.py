@@ -155,7 +155,7 @@ class BaseVisitor(ast.NodeVisitor):
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Handles an attribute on the given node."""
 
-  def ws(self, max_lines=None, semicolon=False, comment=False):
+  def ws(self, max_lines=None, semicolon=False, comment=True):
     """Account for some amount of whitespace.
 
     Arguments:
@@ -1095,7 +1095,7 @@ class AstAnnotator(BaseVisitor):
     """Return True iff the With node is a continued `with` in the source."""
     return isinstance(node, ast.With) and self.tokens.peek().src == ','
 
-  def ws(self, max_lines=None, semicolon=False, comment=False):
+  def ws(self, max_lines=None, semicolon=False, comment=True):
     """Parse some whitespace from the source tokens and return it."""
     next_token = self.tokens.peek()
     if semicolon and next_token and next_token.src == ';':
