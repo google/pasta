@@ -20,7 +20,7 @@
 (3, 6)       Name d               	prefix=||	suffix=||
 (3, 9)       Name e               	prefix=||	suffix=| |
 (-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Index                	prefix=|  |	suffix=||
+(-1, -1)     Index                	prefix=||	suffix=||
 (-1, -1)     Ellipsis             	prefix=||	suffix=||
 (-1, -1)     Slice                	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
