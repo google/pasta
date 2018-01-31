@@ -69,8 +69,10 @@ class TokenGenerator(object):
 
   def peek_non_whitespace(self):
     """Get the next non-whitespace token without advancing."""
+    whitespace_tokens = (TOKENS.INDENT, TOKENS.DEDENT, TOKENS.COMMENT,
+                         TOKENS.NL, TOKENS.NEWLINE)
     return next((tok for tok in self._tokens[self._i + 1:]
-                 if tok.type not in (TOKENS.INDENT, TOKENS.DEDENT)), None)
+                 if tok.type not in whitespace_tokens), None)
 
   def next(self, advance=True):
     """Consume the next token and optionally advance the current location."""

@@ -23,6 +23,7 @@ finally  :
   q
 
 try:
+  # 1
   try:
     r
   except:
@@ -31,6 +32,7 @@ except:
   t
 
 try:
+  # 2
   try:
     u
   except:
@@ -39,6 +41,7 @@ finally:
   w
 
 try:
+  # 3
   try:
     x
   finally:
