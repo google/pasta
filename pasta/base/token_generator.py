@@ -34,6 +34,8 @@ from pasta.base import ast_utils
 # Alias for extracting token names
 TOKENS = tokenize
 Token = collections.namedtuple('Token', ('type', 'src', 'start', 'end', 'line'))
+FORMATTING_TOKENS = (TOKENS.INDENT, TOKENS.DEDENT, TOKENS.NL, TOKENS.NEWLINE,
+                     TOKENS.COMMENT)
 
 
 class TokenGenerator(object):
@@ -69,10 +71,8 @@ class TokenGenerator(object):
 
   def peek_non_whitespace(self):
     """Get the next non-whitespace token without advancing."""
-    whitespace_tokens = (TOKENS.INDENT, TOKENS.DEDENT, TOKENS.COMMENT,
-                         TOKENS.NL, TOKENS.NEWLINE)
     return next((tok for tok in self._tokens[self._i + 1:]
-                 if tok.type not in whitespace_tokens), None)
+                 if tok.type not in FORMATTING_TOKENS), None)
 
   def next(self, advance=True):
     """Consume the next token and optionally advance the current location."""
@@ -158,76 +158,73 @@ class TokenGenerator(object):
 
   def open_scope(self, node, single_paren=False):
     """Open a parenthesized scope on the given node."""
-    prev_loc = self._loc
-
-    def predicate(token):
-      return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                             TOKENS.INDENT) or token.src in '(')
-    whitespace = list(self.takewhile(predicate, advance=False))
-    next_token = self.next(advance=False)
-
     result = ''
     parens = []
-    last_paren_loc = None
-    tokens_used = 0
-    for tok in whitespace:
-      tokens_used += 1
-      result += self._space_between(prev_loc, tok)
-      result += tok.src
-      prev_loc = tok.end
+    start_i = self._i
+    start_loc = prev_loc = self._loc
+
+    # Eat whitespace or '(' tokens one at a time
+    for tok in self.takewhile(
+        lambda t: t.type in FORMATTING_TOKENS or t.src == '('):
+      # Stores all the code up and including this token
+      result += self._space_between(prev_loc, tok) + tok.src
 
       if tok.src == '(':
-        last_paren_loc = prev_loc
+        # Start a new scope
+        if single_paren and parens:
+          break
         parens.append(result)
         result = ''
-        if single_paren:
-          break
+        start_i = self._i
+        start_loc = self._loc
+      prev_loc = self._loc
 
     if parens:
-      parens[-1] += self._space_between(last_paren_loc, next_token)
-
+      # Add any additional whitespace on to the last open-paren
+      next_tok = self.peek()
+      parens[-1] += result + self._space_between(self._loc, next_tok)
+      self._loc = next_tok.start
+      # Add each paren onto the stack
       for paren in parens:
         self._parens.append(paren)
         self._scope_stack.append(_scope_helper(node))
-
-      self._loc = (whitespace + [next_token])[tokens_used].start
-      self.rewind(1 + len(whitespace) - tokens_used)
     else:
-      self.rewind(len(whitespace) + 1)
+      # No parens were encountered, then reset like this method did nothing
+      self._i = start_i
+      self._loc = start_loc
 
   def close_scope(self, node, prefix_attr='prefix', suffix_attr='suffix',
                   trailing_comma=False):
     """Close a parenthesized scope on the given node, if one is open."""
-    if not self._parens:
+    if not self._parens or node not in self._scope_stack[-1]:
       return
-    prev_loc = self._loc
-
-    def predicate(token):
-      return (token.type in (TOKENS.NL, TOKENS.NEWLINE, TOKENS.COMMENT,
-                             TOKENS.INDENT, TOKENS.DEDENT)
-              or token.src == ')'
-              or trailing_comma and token.src == ',')
-    whitespace = list(self.takewhile(predicate, advance=False))
-
-    count = 0
+    symbols = {')'}
+    if trailing_comma:
+      symbols.add(',')
+    parsed_to_i = self._i
+    parsed_to_loc = prev_loc = self._loc
     result = ''
-    for tok in whitespace:
-      count += 1
-      if not self._parens or node not in self._scope_stack[-1]:
-        continue
 
-      result += self._space_between(prev_loc, tok)
-      result += tok.src
-      prev_loc = tok.end
+    for tok in self.takewhile(
+        lambda t: t.type in FORMATTING_TOKENS or t.src in symbols):
+      # Stores all the code up and including this token
+      result += self._space_between(prev_loc, tok) + tok.src
 
       if tok.src == ')':
+        # Close out the open scope
         self._scope_stack.pop()
         ast_utils.prependprop(node, prefix_attr, self._parens.pop())
         ast_utils.appendprop(node, suffix_attr, result)
         result = ''
-        count = 0
-        self._loc = tok.end
-    self.rewind(count)
+        parsed_to_i = self._i
+        parsed_to_loc = tok.end
+        if not self._parens or node not in self._scope_stack[-1]:
+          break
+      prev_loc = tok.end
+
+    # Reset back to the last place where we parsed anything
+    self._i = parsed_to_i
+    self._loc = parsed_to_loc
 
   def hint_open(self):
     """Indicates opening a group of parentheses or brackets."""
@@ -304,11 +301,14 @@ class TokenGenerator(object):
 
   def takewhile(self, condition, advance=True):
     """Parse tokens as long as a condition holds on the next token."""
+    prev_loc = self._loc
     token = self.next(advance=advance)
     while token is not None and condition(token):
       yield token
+      prev_loc = self._loc
       token = self.next(advance=advance)
     self.rewind()
+    self._loc = prev_loc
 
 
 def _scope_helper(node):
