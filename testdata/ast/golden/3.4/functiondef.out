@@ -5,6 +5,7 @@
 (12, 0)      FunctionDef v        	prefix=|\n|	suffix=||
 (18, 0)      FunctionDef x        	prefix=|\n|	suffix=||
 (21, 0)      ClassDef A           	prefix=|\n|	suffix=||
+(27, 0)      FunctionDef f        	prefix=|\n|	suffix=||
 (-1, -1)     arguments            	prefix=||	suffix=||
 (2, 2)       Expr                 	prefix=|  |	suffix=|\n|
 (-1, -1)     arguments            	prefix=||	suffix=||
@@ -21,6 +22,8 @@
 (-1, -1)     arguments            	prefix=||	suffix=||
 (19, 2)      Expr                 	prefix=|  |	suffix=|\n|
 (22, 2)      FunctionDef d        	prefix=|  |	suffix=||
+(-1, -1)     arguments            	prefix=||	suffix=|\n    |
+(30, 2)      Expr                 	prefix=|  |	suffix=|\n|
 (1, 6)       arg b                	prefix=||	suffix=||
 (2, 2)       Name c               	prefix=||	suffix=||
 (4, 13)      arg e                	prefix=||	suffix=|  |
@@ -47,6 +50,10 @@
 (25, 4)      Expr                 	prefix=|    |	suffix=|\n|
 (22, 3)      Name b               	prefix=||	suffix=||
 (23, 3)      Name c               	prefix=||	suffix=||
+(28, 4)      arg g                	prefix=||	suffix=||
+(28, 7)      arg h                	prefix=||	suffix=||
+(28, 9)      Name i               	prefix=||	suffix=||
+(30, 2)      Name j               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
@@ -62,6 +69,8 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (25, 4)      Name e               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

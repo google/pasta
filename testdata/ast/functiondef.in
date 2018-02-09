@@ -23,3 +23,8 @@ class A:
   @c
   def d():
     e
+
+def f(
+    g, h=i
+    ):
+  j
