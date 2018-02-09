@@ -39,6 +39,19 @@ FORMATTING_TOKENS = (TOKENS.INDENT, TOKENS.DEDENT, TOKENS.NL, TOKENS.NEWLINE,
 
 
 class TokenGenerator(object):
+  """Helper for sequentially parsing Python source code, token by token.
+
+  Holds internal state during parsing, including:
+  _tokens: List of tokens in the source code, as parsed by `tokenize` module.
+  _parens: Stack of open parenthesis at the current point in parsing.
+  _hints: Number of open parentheses, brackets, etc. at the current point.
+  _scope_stack: Stack containing tuples of nodes where the last parenthesis that
+    was open is related to one of the nodes on the top of the stack.
+  _lines: Full lines of the source code.
+  _i: Index of the last token that was parsed. Initially -1.
+  _loc: (lineno, column_offset) pair of the position in the source that has been
+     parsed to. This should be either the start or end of the token at index _i.
+  """
 
   def __init__(self, source):
     _token_generator = tokenize.generate_tokens(StringIO(source).readline)
@@ -166,7 +179,7 @@ class TokenGenerator(object):
     # Eat whitespace or '(' tokens one at a time
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src == '('):
-      # Stores all the code up and including this token
+      # Stores all the code up to and including this token
       result += self._space_between(prev_loc, tok) + tok.src
 
       if tok.src == '(':
@@ -207,7 +220,7 @@ class TokenGenerator(object):
 
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src in symbols):
-      # Stores all the code up and including this token
+      # Stores all the code up to and including this token
       result += self._space_between(prev_loc, tok) + tok.src
 
       if tok.src == ')':
