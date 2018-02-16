@@ -2,9 +2,15 @@
 (1, 0)       Expr                 	prefix=||	suffix=|\n|
 (3, 0)       Expr                 	prefix=|\n|	suffix=|\n|
 (5, 0)       Expr                 	prefix=|\n|	suffix=|\n|
+(7, 0)       Expr                 	prefix=|\n|	suffix=|\n|
+(9, 0)       Expr                 	prefix=|\n|	suffix=|\n|
+(11, 0)      Expr                 	prefix=|\n|	suffix=|\n|
 (1, 0)       Subscript            	prefix=||	suffix=||
 (3, 0)       Subscript            	prefix=||	suffix=||
 (5, 0)       Subscript            	prefix=||	suffix=||
+(7, 0)       Subscript            	prefix=||	suffix=||
+(9, 0)       Subscript            	prefix=||	suffix=||
+(11, 0)      Subscript            	prefix=||	suffix=||
 (1, 0)       Name a               	prefix=||	suffix=||
 (-1, -1)     Index                	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
@@ -13,6 +19,15 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (5, 0)       Name f               	prefix=||	suffix=| |
 (-1, -1)     ExtSlice             	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(7, 0)       Name i               	prefix=||	suffix=||
+(-1, -1)     Slice                	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(9, 0)       Name j               	prefix=||	suffix=||
+(-1, -1)     Slice                	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(11, 0)      Name k               	prefix=||	suffix=||
+(-1, -1)     Slice                	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (1, 2)       Name b               	prefix=||	suffix=||
@@ -24,9 +39,18 @@
 (-1, -1)     Ellipsis             	prefix=||	suffix=||
 (-1, -1)     Slice                	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
+(7, 3)       Name None            	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(9, 4)       Name None            	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(11, 5)      Name None            	prefix=|(|	suffix=|)|
+(-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (5, 5)       Name g               	prefix=||	suffix=|  |
 (5, 17)      Name h               	prefix=||	suffix=| |
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||

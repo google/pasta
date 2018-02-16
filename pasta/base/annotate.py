@@ -1029,12 +1029,27 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'lowerspace', [self.ws, ':', self.ws])
     if node.upper:
       self.visit(node.upper)
-    if node.step:
-      self.attr(node, 'stepspace', [self.ws, ':', self.ws])
+
+    self.attr(node, 'stepspace1', [self.ws])
+    self.optional_token(node, 'step_colon', ':')
+    self.attr(node, 'stepspace2', [self.ws])
+    if node.step and self.check_slice_includes_step(node):
+      node.step.is_explicit_step = True
       self.visit(node.step)
 
     if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
       self.attr(node, 'slice_close', [self.ws, ']'], default=']')
+
+  def check_slice_includes_step(self, node):
+    """Helper function for Slice node to determine whether to visit its step."""
+    # This is needed because of a bug in the 2.7 parser which treats
+    # a[::] as Slice(lower=None, upper=None, step=Name(id='None'))
+    # but also treats a[::None] exactly the same.
+    if not node.step:
+      return False
+    if getattr(node.step, 'is_explicit_step', False):
+      return True
+    return not (isinstance(node.step, ast.Name) and node.step.id == 'None')
 
 
 class AnnotationError(Exception):
@@ -1090,6 +1105,10 @@ class AstAnnotator(BaseVisitor):
   def check_is_continued_with(self, node):
     """Return True iff the With node is a continued `with` in the source."""
     return isinstance(node, ast.With) and self.tokens.peek().src == ','
+
+  def check_slice_includes_step(self, node):
+    """Helper function for Slice node to determine whether to visit its step."""
+    return self.tokens.peek_non_whitespace().src != ']'
 
   def ws(self, max_lines=None, semicolon=False, comment=True):
     """Parse some whitespace from the source tokens and return it."""
