@@ -883,7 +883,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_around
   def visit_NotEq(self, node):
-    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+    self.attr(node, 'operator', [self.one_of_symbols('!=', '<>')])
 
   @space_around
   def visit_Lt(self, node):
