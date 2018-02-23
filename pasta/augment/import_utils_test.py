@@ -161,6 +161,19 @@ c_mod.foo()
                           [tree.body[0].names[1],
                            tree.body[1].names[1]])
 
+  def test_dynamic_import(self):
+    # For now we just don't want to error out on these, longer
+    # term we want to do the right thing (see
+    # https://github.com/google/pasta/issues/32)
+    src = """\
+def foo():
+  import bar
+"""
+    tree = ast.parse(src)
+    self.assertItemsEqual(import_utils.get_unused_import_aliases(tree),
+                          [])
+
+    
 
 class RemoveImportsTest(test_utils.TestCase):
   # Note that we don't test any 'asname' examples but as far as remove_import
