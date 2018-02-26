@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import ast
 import copy
+import logging
 
 from pasta.augment import errors
 from pasta.base import ast_utils
@@ -74,10 +75,15 @@ def get_unused_import_aliases(tree, sc=None):
   unused_aliases = set()
   for node in ast.walk(tree):
     if isinstance(node, ast.alias):
-      name = sc.names[
-          node.asname if node.asname is not None else node.name]
-      if not name.reads:
-        unused_aliases.add(node)
+      str_name = node.asname if node.asname is not None else node.name
+      if str_name in sc.names:
+        name = sc.names[str_name]
+        if not name.reads:
+          unused_aliases.add(node)
+      else:
+        # This happens because of https://github.com/google/pasta/issues/32
+        logging.warning('Imported name %s not found in scope (perhaps it\'s '
+        'imported dynamically', str_name)
 
   return unused_aliases
 
