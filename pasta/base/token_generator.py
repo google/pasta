@@ -180,12 +180,16 @@ class TokenGenerator(object):
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src == '('):
       # Stores all the code up to and including this token
-      result += self._space_between(prev_loc, tok) + tok.src
+      result += self._space_between(prev_loc, tok)
 
+      if tok.src == '(' and single_paren and parens:
+        self.rewind()
+        self._loc = tok.start
+        break
+
+      result += tok.src
       if tok.src == '(':
         # Start a new scope
-        if single_paren and parens:
-          break
         parens.append(result)
         result = ''
         start_i = self._i
