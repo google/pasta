@@ -694,7 +694,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(value)
       if value is not node.values[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
-    self.optional_token(node, 'extracomma', ',')
+    self.optional_token(node, 'extracomma', ',', allow_whitespace_prefix=True)
     self.attr(node, 'close_prefix', [self.ws, '}'], default='}')
 
   @expression
@@ -736,7 +736,7 @@ class BaseVisitor(ast.NodeVisitor):
       if elt is not node.elts[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
     if node.elts:
-      self.optional_token(node, 'extracomma', ',')
+      self.optional_token(node, 'extracomma', ',', allow_whitespace_prefix=True)
 
     self.attr(node, 'list_close', [self.ws, ']'], default=']')
 
@@ -778,7 +778,8 @@ class BaseVisitor(ast.NodeVisitor):
       if elt is not node.elts[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
       else:
-        self.optional_token(node, 'extracomma', ',')
+        self.optional_token(node, 'extracomma', ',',
+                            allow_whitespace_prefix=True)
 
     self.attr(node, 'set_close', [self.ws, '}'], default='}')
 
@@ -798,7 +799,8 @@ class BaseVisitor(ast.NodeVisitor):
       if elt is not node.elts[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
       else:
-        self.optional_token(node, 'extracomma', ',')
+        self.optional_token(node, 'extracomma', ',',
+                            allow_whitespace_prefix=True)
 
   @expression
   def visit_UnaryOp(self, node):
@@ -1141,12 +1143,17 @@ class AstAnnotator(BaseVisitor):
 
     return token.src
 
-  def optional_token(self, node, attr_name, token_val):
+  def optional_token(self, node, attr_name, token_val,
+                     allow_whitespace_prefix=False):
     """Try to parse a token and attach it to the node."""
-    token = self.tokens.peek()
+    token = (self.tokens.peek_non_whitespace()
+             if allow_whitespace_prefix else self.tokens.peek())
     if token and token.src == token_val:
-      self.tokens.next()
-      ast_utils.appendprop(node, attr_name, token.src + self.ws())
+      parsed = ''
+      if allow_whitespace_prefix:
+        parsed += self.ws()
+      ast_utils.appendprop(node, attr_name,
+                           parsed + self.tokens.next().src + self.ws())
 
   def one_of_symbols(self, *symbols):
     """Account for one of the given symbols."""

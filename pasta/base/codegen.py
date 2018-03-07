@@ -67,8 +67,9 @@ class Printer(annotate.BaseVisitor):
   def token(self, value):
     self.code += value
 
-  def optional_token(self, node, attr_name, token_val):
-    del token_val
+  def optional_token(self, node, attr_name, token_val,
+                     allow_whitespace_prefix=False):
+    del token_val, allow_whitespace_prefix
     if not hasattr(node, ast_utils.PASTA_DICT):
       return
     self.code += ast_utils.prop(node, attr_name)

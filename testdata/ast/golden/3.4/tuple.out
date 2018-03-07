@@ -6,6 +6,7 @@
 (9, 0)       Expr                 	prefix=|\n|	suffix=||
 (11, 0)      Expr                 	prefix=||	suffix=|\n|
 (13, 0)      Expr                 	prefix=|\n|	suffix=|\n|
+(15, 0)      Expr                 	prefix=|\n|	suffix=|\n|
 (1, 1)       Tuple                	prefix=|(|	suffix=|)|
 (3, 0)       Tuple                	prefix=||	suffix=||
 (5, 0)       Tuple                	prefix=||	suffix=||
@@ -13,6 +14,7 @@
 (9, 0)       Tuple                	prefix=||	suffix=||
 (11, 1)      Tuple                	prefix=|(|	suffix=| )|
 (13, 1)      Tuple                	prefix=|(|	suffix=|)|
+(15, 1)      Tuple                	prefix=|(|	suffix=|)|
 (1, 1)       Name a               	prefix=||	suffix=||
 (1, 4)       Name b               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
@@ -33,6 +35,8 @@
 (13, 2)      Tuple                	prefix=|(|	suffix=|)|
 (13, 9)      Name o               	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
+(15, 1)      Name p               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
@@ -48,6 +52,7 @@
 (-1, -1)     Load                 	prefix=||	suffix=||
 (13, 2)      Name m               	prefix=||	suffix=||
 (13, 5)      Name n               	prefix=||	suffix=||
+(-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
 (-1, -1)     Load                 	prefix=||	suffix=||
