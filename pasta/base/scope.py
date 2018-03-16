@@ -95,7 +95,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.visit_in_order(node, 'decorator_list')
     self.scope.define_name(node.name, node)
     try:
-      self.scope = Scope(self.scope)
+      self.scope = self.root_scope.create_scope(self.scope, node)
       # Visit decorator list first to avoid declarations in args
       self.visit_in_order(node, 'args', 'returns', 'body')
     finally:
@@ -113,7 +113,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.visit_in_order(node, 'decorator_list', 'bases')
     self.scope.define_name(node.name, node)
     try:
-      self.scope = Scope(self.scope)
+      self.scope = self.root_scope.create_scope(self.scope, node)
       self.visit_in_order(node, 'body')
     finally:
       self.scope = self.scope.parent_scope
@@ -157,6 +157,9 @@ class Scope(object):
   def get_root_scope(self):
     return self.parent_scope.get_root_scope()
 
+  def get_scope_for_node(self, node):
+    return self.get_root_scope().get_scope_for_node(node)
+
 
 class RootScope(Scope):
 
@@ -165,6 +168,7 @@ class RootScope(Scope):
     self.external_references = {}
     self._parents = {}
     self._nodes_to_names = {}
+    self._node_scopes = {}
 
   def add_external_reference(self, name, node, packages=True):
     names_to_add = [name]
@@ -192,6 +196,18 @@ class RootScope(Scope):
 
   def set_name_for_node(self, node, name):
     self._nodes_to_names[node] = name
+
+  def get_scope_for_node(self, node):
+    while node:
+      try:
+        return self._node_scopes[node]
+      except KeyError:
+        node = self.parent(node)
+    return self
+
+  def create_scope(self, parent_scope, node):
+    self._node_scopes[node] = Scope(parent_scope)
+    return self._node_scopes[node]
 
 
 # Should probably also have a scope?
