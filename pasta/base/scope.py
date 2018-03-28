@@ -186,10 +186,12 @@ class RootScope(Scope):
     return self
 
   def parent(self, node):
-    return self._parents[node]
+    return self._parents.get(node, None)
 
   def set_parent(self, node, parent):
     self._parents[node] = parent
+    if parent is None:
+      self._node_scopes[node] = self
 
   def get_name_for_node(self, node):
     return self._nodes_to_names.get(node, None)
@@ -203,7 +205,7 @@ class RootScope(Scope):
         return self._node_scopes[node]
       except KeyError:
         node = self.parent(node)
-    return self
+    return None
 
   def create_scope(self, parent_scope, node):
     self._node_scopes[node] = Scope(parent_scope)

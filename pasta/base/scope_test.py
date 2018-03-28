@@ -390,6 +390,8 @@ class ScopeTest(test_utils.TestCase):
     self.assertIs(class_node_scope.get_scope_for_node(func_node),
                   func_node_scope)
 
+    self.assertIsNone(sc.get_scope_for_node(ast.Name(id='foo')))
+
 
 def suite():
   result = unittest.TestSuite()
