@@ -358,6 +358,40 @@ class ScopeTest(test_utils.TestCase):
     self.assertItemsEqual(s.names['aaa'].attrs['bbb'].attrs['ccc'].reads,
                           [call3])
 
+  def test_get_scope_for_node(self):
+    src = textwrap.dedent("""\
+        import a
+        def b(c, d, e=1):
+          class F(d):
+            g = 1
+          return c
+        """)
+    t = ast.parse(src)
+    import_node, func_node = t.body
+    class_node, return_node = func_node.body
+
+    sc = scope.analyze(t)
+    import_node_scope = sc.get_scope_for_node(import_node)
+    self.assertIs(import_node_scope, sc)
+    self.assertItemsEqual(import_node_scope.names, ['a', 'b'])
+
+    func_node_scope = sc.get_scope_for_node(func_node)
+    self.assertIs(func_node_scope.parent_scope, sc)
+    self.assertItemsEqual(func_node_scope.names, ['c', 'd', 'e', 'F'])
+
+    class_node_scope = sc.get_scope_for_node(class_node)
+    self.assertIs(class_node_scope.parent_scope, func_node_scope)
+    self.assertItemsEqual(class_node_scope.names, ['g'])
+
+    return_node_scope = sc.get_scope_for_node(return_node)
+    self.assertIs(return_node_scope, func_node_scope)
+    self.assertItemsEqual(return_node_scope.names, ['c', 'd', 'e', 'F'])
+
+    self.assertIs(class_node_scope.get_scope_for_node(func_node),
+                  func_node_scope)
+
+    self.assertIsNone(sc.get_scope_for_node(ast.Name(id='foo')))
+
 
 def suite():
   result = unittest.TestSuite()

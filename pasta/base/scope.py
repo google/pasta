@@ -95,7 +95,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.visit_in_order(node, 'decorator_list')
     self.scope.define_name(node.name, node)
     try:
-      self.scope = Scope(self.scope)
+      self.scope = self.scope.create_scope(node)
       # Visit decorator list first to avoid declarations in args
       self.visit_in_order(node, 'args', 'returns', 'body')
     finally:
@@ -113,7 +113,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.visit_in_order(node, 'decorator_list', 'bases')
     self.scope.define_name(node.name, node)
     try:
-      self.scope = Scope(self.scope)
+      self.scope = self.scope.create_scope(node)
       self.visit_in_order(node, 'body')
     finally:
       self.scope = self.scope.parent_scope
@@ -157,6 +157,14 @@ class Scope(object):
   def get_root_scope(self):
     return self.parent_scope.get_root_scope()
 
+  def get_scope_for_node(self, node):
+    return self.get_root_scope().get_scope_for_node(node)
+
+  def create_scope(self, node):
+    subscope = Scope(self)
+    self.get_root_scope()._set_scope_for_node(node, subscope)
+    return subscope
+
 
 class RootScope(Scope):
 
@@ -165,6 +173,7 @@ class RootScope(Scope):
     self.external_references = {}
     self._parents = {}
     self._nodes_to_names = {}
+    self._node_scopes = {}
 
   def add_external_reference(self, name, node, packages=True):
     names_to_add = [name]
@@ -182,16 +191,29 @@ class RootScope(Scope):
     return self
 
   def parent(self, node):
-    return self._parents[node]
+    return self._parents.get(node, None)
 
   def set_parent(self, node, parent):
     self._parents[node] = parent
+    if parent is None:
+      self._node_scopes[node] = self
 
   def get_name_for_node(self, node):
     return self._nodes_to_names.get(node, None)
 
   def set_name_for_node(self, node, name):
     self._nodes_to_names[node] = name
+
+  def get_scope_for_node(self, node):
+    while node:
+      try:
+        return self._node_scopes[node]
+      except KeyError:
+        node = self.parent(node)
+    return None
+
+  def _set_scope_for_node(self, node, node_scope):
+    self._node_scopes[node] = node_scope
 
 
 # Should probably also have a scope?
