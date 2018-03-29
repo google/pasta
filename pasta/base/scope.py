@@ -95,7 +95,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.visit_in_order(node, 'decorator_list')
     self.scope.define_name(node.name, node)
     try:
-      self.scope = self.root_scope.create_scope(self.scope, node)
+      self.scope = self.scope.create_scope(node)
       # Visit decorator list first to avoid declarations in args
       self.visit_in_order(node, 'args', 'returns', 'body')
     finally:
@@ -113,7 +113,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.visit_in_order(node, 'decorator_list', 'bases')
     self.scope.define_name(node.name, node)
     try:
-      self.scope = self.root_scope.create_scope(self.scope, node)
+      self.scope = self.scope.create_scope(node)
       self.visit_in_order(node, 'body')
     finally:
       self.scope = self.scope.parent_scope
@@ -159,6 +159,11 @@ class Scope(object):
 
   def get_scope_for_node(self, node):
     return self.get_root_scope().get_scope_for_node(node)
+
+  def create_scope(self, node):
+    subscope = Scope(self)
+    self.get_root_scope()._set_scope_for_node(node, subscope)
+    return subscope
 
 
 class RootScope(Scope):
@@ -207,9 +212,8 @@ class RootScope(Scope):
         node = self.parent(node)
     return None
 
-  def create_scope(self, parent_scope, node):
-    self._node_scopes[node] = Scope(parent_scope)
-    return self._node_scopes[node]
+  def _set_scope_for_node(self, node, node_scope):
+    self._node_scopes[node] = node_scope
 
 
 # Should probably also have a scope?
