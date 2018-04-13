@@ -121,15 +121,16 @@ def space_between(from_loc, to_loc, line, lines):
 def setup_props(node):
   if not hasattr(node, PASTA_DICT):
     try:
-      setattr(node, PASTA_DICT, collections.defaultdict(lambda: ''))
+      setattr(node, PASTA_DICT, collections.defaultdict(lambda: None))
     except AttributeError:
       pass
 
 
 def prop(node, name):
-  if hasattr(node, PASTA_DICT):
+  try:
     return getattr(node, PASTA_DICT)[name]
-  return None
+  except AttributeError:
+    return None
 
 
 def setprop(node, name, value):
@@ -138,11 +139,13 @@ def setprop(node, name, value):
 
 
 def appendprop(node, name, value):
-  getattr(node, PASTA_DICT)[name] += value
+  pasta_dict = getattr(node, PASTA_DICT)
+  pasta_dict[name] = pasta_dict.get(name, '') + value
 
 
 def prependprop(node, name, value):
-  getattr(node, PASTA_DICT)[name] = value + getattr(node, PASTA_DICT)[name]
+  pasta_dict = getattr(node, PASTA_DICT)
+  pasta_dict[name] = value + pasta_dict.get(name, '')
 
 
 def find_nodes_by_type(node, accept_types):

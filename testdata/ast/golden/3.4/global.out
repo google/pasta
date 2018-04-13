@@ -1,4 +1,4 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       Global               	prefix=||	suffix=|\n|
-(3, 0)       Global               	prefix=|\n|	suffix=|\n|
-(5, 0)       Global               	prefix=|\n|	suffix=|\n|
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Global               	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Global               	prefix=|\n|	suffix=|\n|	indent=||
+(5, 0)       Global               	prefix=|\n|	suffix=|\n|	indent=||

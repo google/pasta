@@ -1,13 +1,13 @@
-(-1, -1)     Module               	prefix=||	suffix=||
-(1, 0)       Expr                 	prefix=||	suffix=|\n|
-(3, 0)       Expr                 	prefix=|\n|	suffix=|\n|
-(1, 0)       Call                 	prefix=||	suffix=||
-(3, 0)       Call                 	prefix=||	suffix=||
-(1, 0)       Name repr            	prefix=||	suffix=||
-(1, 5)       Name a               	prefix=||	suffix=||
-(3, 0)       Name repr            	prefix=||	suffix=|  |
-(3, 9)       Name b               	prefix=||	suffix=|   |
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
-(-1, -1)     Load                 	prefix=||	suffix=||
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Expr                 	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(1, 0)       Call                 	prefix=||	suffix=||	indent=||
+(3, 0)       Call                 	prefix=||	suffix=||	indent=||
+(1, 0)       Name repr            	prefix=||	suffix=||	indent=||
+(1, 5)       Name a               	prefix=||	suffix=||	indent=||
+(3, 0)       Name repr            	prefix=||	suffix=|  |	indent=||
+(3, 9)       Name b               	prefix=||	suffix=|   |	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

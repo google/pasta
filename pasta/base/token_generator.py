@@ -54,12 +54,12 @@ class TokenGenerator(object):
   """
 
   def __init__(self, source):
+    self.lines = source.splitlines(True)
     _token_generator = tokenize.generate_tokens(StringIO(source).readline)
     self._tokens = list(Token(*tok) for tok in _token_generator)
     self._parens = []
     self._hints = 0
     self._scope_stack = []
-    self._lines = source.splitlines(True)
     self._len = len(self._tokens)
     self._i = -1
     self._loc = self.loc_begin()
@@ -291,10 +291,10 @@ class TokenGenerator(object):
     """Parse the space between a location and the next token"""
     if prev_loc > tok.start:
       raise ValueError('prev_loc > token start', prev_loc, tok.start)
-    if prev_loc[0] > len(self._lines):
+    if prev_loc[0] > len(self.lines):
       return ''
     return ast_utils.space_between(prev_loc, tok.start,
-                                   self._lines[prev_loc[0] - 1], self._lines)
+                                   self.lines[prev_loc[0] - 1], self.lines)
 
   def next_name(self):
     """Parse the next name token."""
@@ -313,7 +313,7 @@ class TokenGenerator(object):
     if token.type != token_type:
       raise ValueError("Expected %r but found %r\nline %d: %s" % (
           tokenize.tok_name[token_type], token.src, token.start[0],
-          self._lines[token.start[0] - 1]))
+          self.lines[token.start[0] - 1]))
     return token
 
   def takewhile(self, condition, advance=True):
