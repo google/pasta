@@ -22,6 +22,7 @@ import ast
 import traceback
 import unittest
 
+import pasta
 from pasta.augment import import_utils
 from pasta.base import ast_utils
 from pasta.base import test_utils
@@ -176,7 +177,7 @@ def foo():
     
 
 class RemoveImportsTest(test_utils.TestCase):
-  # Note that we don't test any 'asname' examples but as far as remove_import
+  # Note that we don't test any 'asname' examples but as far as remove_import_alias_node
   # is concerned its not a different case because its still just an alias type
   # and we don't care about the internals of the alias we're trying to remove.
   def test_remove_just_alias(self):
@@ -186,7 +187,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     unused_b_node = tree.body[0].names[1]
 
-    import_utils.remove_import(sc, unused_b_node)
+    import_utils.remove_import_alias_node(sc, unused_b_node)
 
     self.assertEqual(len(tree.body), 1)
     self.assertEqual(type(tree.body[0]), ast.Import)
@@ -200,7 +201,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     unused_b_node = tree.body[0].names[1]
 
-    import_utils.remove_import(sc, unused_b_node)
+    import_utils.remove_import_alias_node(sc, unused_b_node)
 
     self.assertEqual(len(tree.body), 1)
     self.assertEqual(type(tree.body[0]), ast.ImportFrom)
@@ -214,7 +215,7 @@ class RemoveImportsTest(test_utils.TestCase):
 
     a_node = tree.body[0].names[0]
 
-    import_utils.remove_import(sc, a_node)
+    import_utils.remove_import_alias_node(sc, a_node)
 
     self.assertEqual(len(tree.body), 0)
 
@@ -225,9 +226,61 @@ class RemoveImportsTest(test_utils.TestCase):
 
     a_node = tree.body[0].names[0]
 
-    import_utils.remove_import(sc, a_node)
+    import_utils.remove_import_alias_node(sc, a_node)
 
     self.assertEqual(len(tree.body), 0)
+
+
+class AddImportTest(test_utils.TestCase):
+
+  def test_add_normal_import(self):
+    tree = ast.Module(body=[])
+    self.assertEqual('a.b.c',
+                     import_utils.add_import(tree, 'a.b.c', from_import=False))
+    self.assertEqual('import a.b.c\n', pasta.dump(tree))
+
+  def test_add_from_import(self):
+    tree = ast.Module(body=[])
+    self.assertEqual('c',
+                     import_utils.add_import(tree, 'a.b.c', from_import=True))
+    self.assertEqual('from a.b import c\n', pasta.dump(tree))
+
+  def test_add_single_name_from_import(self):
+    tree = ast.Module(body=[])
+    self.assertEqual('foo',
+                     import_utils.add_import(tree, 'foo', from_import=True))
+    self.assertEqual('import foo\n', pasta.dump(tree))
+
+  def test_add_existing_import(self):
+    tree = ast.Module(body=[
+        ast.ImportFrom(level=0, module='a.b',
+                       names=[ast.alias(name='c', asname=None)])
+    ])
+    self.assertIsNone(import_utils.add_import(tree, 'a.b.c'))
+    self.assertEqual('from a.b import c\n', pasta.dump(tree))
+
+  def test_merge_from_import(self):
+    tree = ast.Module(body=[
+        ast.ImportFrom(level=0, module='a.b',
+                       names=[ast.alias(name='c', asname=None)]),
+    ])
+
+    # x is explicitly not merged
+    self.assertEqual('x', import_utils.add_import(tree, 'a.b.x',
+                                                  merge_from_imports=False))
+    self.assertEqual('from a.b import x\nfrom a.b import c\n',
+                     pasta.dump(tree))
+
+    # y is allowed to be merged and is grouped into the first matching import
+    self.assertEqual('y', import_utils.add_import(tree, 'a.b.y',
+                                                  merge_from_imports=True))
+    self.assertEqual('from a.b import x, y\nfrom a.b import c\n',
+                     pasta.dump(tree))
+
+  def test_add_import_after_docstring(self):
+    tree = ast.Module(body=[ast.Expr(value=ast.Str(s='Docstring.'))])
+    self.assertEqual('a', import_utils.add_import(tree, 'a'))
+    self.assertEqual('\'Docstring.\'\nimport a\n', pasta.dump(tree))
 
 
 def suite():
@@ -235,6 +288,7 @@ def suite():
   result.addTests(unittest.makeSuite(SplitImportTest))
   result.addTests(unittest.makeSuite(GetUnusedImportsTest))
   result.addTests(unittest.makeSuite(RemoveImportsTest))
+  result.addTests(unittest.makeSuite(AddImportsTest))
   return result
 
 if __name__ == '__main__':

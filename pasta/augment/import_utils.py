@@ -27,6 +27,64 @@ from pasta.base import ast_utils
 from pasta.base import scope
 
 
+def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
+  """Adds an import to the module.
+
+  Arguments:
+    tree: (ast.Module) Module AST to modify.
+    name_to_import: (string) The absolute name to import.
+    from_import: (boolean) If True, import the name using an ImportFrom node.
+    merge_from_imports: (boolean) If True, merge a newly inserted ImportFrom
+      node into an existing ImportFrom node, if applicable.
+
+  Returns:
+    The name (as a string) that can be used to reference the imported name. This
+      can be the fully-qualified name, the basename, or an alias name.
+  """
+  sc = scope.analyze(tree)
+
+  # Don't add anything if it's already imported
+  if name_to_import in sc.external_references:
+    return None
+
+  import_node = None
+  added_name = None
+
+  # Add an ImportFrom node if requested and possible
+  if from_import and '.' in name_to_import:
+    from_module, alias_name = name_to_import.rsplit('.', 1)
+    new_alias = ast.alias(name=alias_name, asname=None)
+
+    # Try to avoid name conflicts
+    counter = 0
+    while new_alias.asname in sc.names:
+      counter += 1
+      new_alias.asname = '%s_%d' % (alias_name, counter)
+
+    if merge_from_imports:
+      # Try to add to an existing ImportFrom from the same module
+      existing_from_import = next(
+          (node for node in tree.body if isinstance(node, ast.ImportFrom)
+           and node.module == from_module and node.level == 0), None)
+      if existing_from_import:
+        existing_from_import.names.append(new_alias)
+        return new_alias.asname if new_alias.asname else new_alias.name
+
+    # Create a new node for this import
+    import_node = ast.ImportFrom(module=from_module, names=[new_alias], level=0)
+    added_name = new_alias.asname or new_alias.name 
+
+  # If not already created as an ImportFrom, create a normal Import node
+  if not import_node:
+    import_node = ast.Import(
+        names=[ast.alias(name=name_to_import, asname=None)])
+    added_name = name_to_import
+
+  # Insert the node at the top of the module and return the name in scope
+  tree.body.insert(1 if ast_utils.has_docstring(tree) else 0, import_node)
+  return added_name
+
+
 def split_import(sc, node, alias_to_remove):
   """Split an import node by moving the given imported alias into a new import.
 
@@ -58,6 +116,7 @@ def split_import(sc, node, alias_to_remove):
   parent_list.insert(idx + 1, new_import)
   return new_import
 
+
 def get_unused_import_aliases(tree, sc=None):
   """Get the import aliases that aren't used.
 
@@ -88,16 +147,16 @@ def get_unused_import_aliases(tree, sc=None):
   return unused_aliases
 
 
-def remove_import(sc, alias_to_remove):
+def remove_import_alias_node(sc, node):
   """Remove an alias and if applicable remove their entire import.
 
   Arguments:
     sc: (scope.Scope) Scope computed on whole tree of the code being modified.
-    alias_to_remove: (list of ast.alias) The import alias nodes to remove.
+    node: (ast.Import|ast.ImportFrom|ast.alias) The node to remove.
   """
-  import_node = sc.parent(alias_to_remove)
+  import_node = sc.parent(node)
   if len(import_node.names) == 1:
     import_parent = sc.parent(import_node)
     ast_utils.remove_child(import_parent, import_node)
   else:
-    ast_utils.remove_child(import_node, alias_to_remove)
+    ast_utils.remove_child(import_node, node)

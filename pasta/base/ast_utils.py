@@ -249,3 +249,9 @@ def replace_child(parent, node, replace_with):
       except ValueError:
         pass
   raise errors.InvalidAstError('Node %r is not a child of %r' % (node, parent))
+
+
+def has_docstring(node):
+  return (hasattr(node, 'body') and node.body and
+          isinstance(node.body[0], ast.Expr) and
+          isinstance(node.body[0].value, ast.Str))
