@@ -43,7 +43,6 @@ class Printer(annotate.BaseVisitor):
   def __init__(self):
     super(Printer, self).__init__()
     self.code = ''
-    self._indent = ''
 
   def visit(self, node):
     node._printer_info = collections.defaultdict(lambda: False)

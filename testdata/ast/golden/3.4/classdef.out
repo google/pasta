@@ -7,14 +7,14 @@
 (1, 8)       Name object          	prefix=||	suffix=||	indent=||
 (2, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (6, 15)      Name e               	prefix=||	suffix=| |	indent=||
-(6, 20)      Name f               	prefix=|  |	suffix=||	indent=||
+(6, 20)      Name f               	prefix=||	suffix=||	indent=||
 (7, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (4, 1)       Name b               	prefix=||	suffix=||	indent=||
 (5, 0)       Call                 	prefix=||	suffix=||	indent=||
 (10, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (13, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (15, 8)      Name j               	prefix=||	suffix=||	indent=||
-(15, 11)     Name k               	prefix=| |	suffix=||	indent=||
+(15, 11)     Name k               	prefix=||	suffix=||	indent=||
 (16, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

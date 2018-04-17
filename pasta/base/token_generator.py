@@ -213,6 +213,12 @@ class TokenGenerator(object):
   def close_scope(self, node, prefix_attr='prefix', suffix_attr='suffix',
                   trailing_comma=False):
     """Close a parenthesized scope on the given node, if one is open."""
+    # Ensures the prefix + suffix are not None
+    if ast_utils.prop(node, prefix_attr) is None:
+      ast_utils.setprop(node, prefix_attr, '')
+    if ast_utils.prop(node, suffix_attr) is None:
+      ast_utils.setprop(node, suffix_attr, '')
+
     if not self._parens or node not in self._scope_stack[-1]:
       return
     symbols = {')'}

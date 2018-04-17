@@ -34,17 +34,17 @@ from pasta.base import token_generator
 # == Helper functions for decorating nodes with prefix + suffix               ==
 # ==============================================================================
 
-def _gen_wrapper(f, scope=True, prefix=True, suffix=True,
-                 max_suffix_lines=None, semicolon=False, comment=False):
+def _gen_wrapper(f, scope=True, prefix=True, suffix=True, max_suffix_lines=None,
+                 semicolon=False, comment=False, statement=False):
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
     with (self.scope(node, trailing_comma=False) if scope else _noop_context()):
       if prefix:
-        self.prefix(node)
+        self.prefix(node, default=self._indent if statement else '')
       f(self, node, *args, **kwargs)
       if suffix:
         self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon,
-                    comment=comment)
+                    comment=comment, default='\n' if statement else '')
   return wrapped
 
 
@@ -71,7 +71,7 @@ def space_left(f):
 def statement(f):
   """Decorates a function where the node is a statement."""
   return _gen_wrapper(f, scope=False, max_suffix_lines=1, semicolon=True,
-                      comment=True)
+                      comment=True, statement=True)
 
 
 def module(f):
@@ -83,7 +83,7 @@ def block_statement(f):
   """Decorates a function where the node is a statement with children."""
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
-    self.prefix(node)
+    self.prefix(node, default=self._indent)
     f(self, node, *args, **kwargs)
     if hasattr(self, 'block_suffix'):
       last_child = ast_utils.get_last_child(node)
@@ -116,6 +116,8 @@ class BaseVisitor(ast.NodeVisitor):
 
   def __init__(self):
     self._stack = []
+    self._indent = ''
+    self._indent_diff = ''
 
   def visit(self, node):
     self._stack.append(node)
@@ -123,22 +125,32 @@ class BaseVisitor(ast.NodeVisitor):
     super(BaseVisitor, self).visit(node)
     assert node is self._stack.pop()
 
-  def prefix(self, node):
+  def prefix(self, node, default=''):
     """Account for some amount of whitespace as the prefix to a node."""
-    self.attr(node, 'prefix', [lambda: self.ws(comment=True)])
+    self.attr(node, 'prefix', [lambda: self.ws(comment=True)], default=default)
 
-  def suffix(self, node, max_lines=None, semicolon=False, comment=False):
+  def suffix(self, node, max_lines=None, semicolon=False, comment=False,
+             default=''):
     """Account for some amount of whitespace as the suffix to a node."""
     def _ws():
       return self.ws(max_lines=max_lines, semicolon=semicolon, comment=comment)
-    self.attr(node, 'suffix', [_ws])
+    self.attr(node, 'suffix', [_ws], default=default)
 
   def indented(self, node, children_attr):
+    prev_indent = self._indent
+    prev_indent_diff = self._indent_diff
+    new_diff = ast_utils.prop(node, 'indent')
+    if new_diff is None:
+      new_diff = '  '
+    self._indent_diff = new_diff
+    self._indent = prev_indent + self._indent_diff
     for child in getattr(node, children_attr):
       yield child
+    self._indent = prev_indent
+    self._indent_diff = prev_indent_diff
 
   @contextlib.contextmanager
-  def scope(self, node, attr=None, trailing_comma=False):
+  def scope(self, node, attr=None, trailing_comma=False, default_parens=False):
     """Context manager to handle a parenthesized scope.
 
     Arguments:
@@ -147,12 +159,16 @@ class BaseVisitor(ast.NodeVisitor):
         any. For example, as `None`, the scope would wrap the entire node, but
         as 'bases', the scope might wrap only the bases of a class.
       trailing_comma: (boolean) If True, allow a trailing comma at the end.
+      default_parens: (boolean) If True and no formatting information is
+        present, the scope would be assumed to be parenthesized.
     """
     if attr:
-      self.attr(node, attr + '_prefix', [])
+      self.attr(node, attr + '_prefix', [],
+                default='(' if default_parens else '')
     yield
     if attr:
-      self.attr(node, attr + '_suffix', [])
+      self.attr(node, attr + '_suffix', [],
+                default=')' if default_parens else '')
 
   def token(self, token_val):
     """Account for a specific token."""
@@ -339,12 +355,13 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws], default='\n')
     self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
               default='class %s' % node.name, deps=('name',))
-    with self.scope(node, 'bases', trailing_comma=bool(node.bases)):
+    with self.scope(node, 'bases', trailing_comma=bool(node.bases),
+                    default_parens=True):
       for i, base in enumerate(node.bases):
         self.visit(base)
         self.attr(node, 'base_suffix_%d' % i, [self.ws])
         if base != node.bases[-1]:
-          self.token(',')
+          self.attr(node, 'base_sep_%d' % i, [',', self.ws], default=', ')
     self.attr(node, 'open_block', [self.ws, ':', self.ws_oneline],
               default=':\n')
     for stmt in self.indented(node, 'body'):
@@ -362,7 +379,8 @@ class BaseVisitor(ast.NodeVisitor):
               [self.ws, 'def', self.ws, node.name, self.ws],
               deps=('name',), default='def %s' % node.name)
     args_count = ast_utils.get_argument_count(node.args)
-    with self.scope(node, 'args', trailing_comma=args_count > 0):
+    with self.scope(node, 'args', trailing_comma=args_count > 0,
+                    default_parens=True):
       self.visit(node.args)
 
     if getattr(node, 'returns', None):
@@ -546,12 +564,12 @@ class BaseVisitor(ast.NodeVisitor):
 
   @statement
   def visit_Import(self, node):
-    self.attr(node, 'open_import', ['import', self.ws], default='import ')
+    self.token('import')
     for i, alias in enumerate(node.names):
+      self.attr(node, 'alias_prefix_%d' % i, [self.ws], default=' ')
       self.visit(alias)
       if alias != node.names[-1]:
-        self.attr(node, 'alias_sep_%d' % i, [self.ws, ',', self.ws],
-                  default=', ')
+        self.attr(node, 'alias_sep_%d' % i, [self.ws, ','], default=',')
 
   @statement
   def visit_ImportFrom(self, node):
@@ -572,10 +590,11 @@ class BaseVisitor(ast.NodeVisitor):
 
     self.token('import')
     with self.scope(node, 'names', trailing_comma=True):
-      for alias in node.names:
+      for i, alias in enumerate(node.names):
+        self.attr(node, 'alias_prefix_%d' % i, [self.ws], default=' ')
         self.visit(alias)
-        if alias != node.names[-1]:
-          self.token(',')
+        if alias is not node.names[-1]:
+          self.attr(node, 'alias_sep_%d' % i, [self.ws, ','], default=',')
 
 
   @statement
@@ -927,7 +946,6 @@ class BaseVisitor(ast.NodeVisitor):
   # == MISC NODES: Nodes which are neither statements nor expressions         ==
   # ============================================================================
 
-  @space_left
   def visit_alias(self, node):
     name_pattern = []
     parts = node.name.split('.')
@@ -1067,8 +1085,6 @@ class AstAnnotator(BaseVisitor):
   def __init__(self, source):
     super(AstAnnotator, self).__init__()
     self.tokens = token_generator.TokenGenerator(source)
-    self._indent = ''
-    self._indent_diff = ''
 
   def visit(self, node):
     try:
@@ -1257,7 +1273,7 @@ class AstAnnotator(BaseVisitor):
         attr_parts.append(attr_val())
     ast_utils.setprop(node, attr_name, ''.join(attr_parts))
 
-  def scope(self, node, attr=None, trailing_comma=False):
+  def scope(self, node, attr=None, trailing_comma=False, default_parens=False):
     """Return a context manager to handle a parenthesized scope.
 
     Arguments:
@@ -1266,7 +1282,10 @@ class AstAnnotator(BaseVisitor):
         any. For example, as `None`, the scope would wrap the entire node, but
         as 'bases', the scope might wrap only the bases of a class.
       trailing_comma: (boolean) If True, allow a trailing comma at the end.
+      default_parens: (boolean) If True and no formatting information is
+        present, the scope would be assumed to be parenthesized.
     """
+    del default_parens
     return self.tokens.scope(node, attr=attr, trailing_comma=trailing_comma)
 
   def _optional_token(self, token_type, token_val):
