@@ -27,11 +27,11 @@
 (7, 4)       Name i               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(13, 2)      Tuple                	prefix=|(|	suffix=|)|	indent=||
+(13, 2)      Tuple                	prefix=||	suffix=||	indent=||
 (13, 9)      Name m               	prefix=||	suffix=||	indent=||
-(13, 13)     Tuple                	prefix=|(|	suffix=|)|	indent=||
+(13, 13)     Tuple                	prefix=||	suffix=||	indent=||
 (13, 18)     Name o               	prefix=||	suffix=||	indent=||
-(13, 22)     Tuple                	prefix=|(|	suffix=|)|	indent=||
+(13, 22)     Tuple                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (15, 1)      Name r               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

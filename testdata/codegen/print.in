@@ -1,0 +1,3 @@
+print a
+print b, c, d
+print >>e, f

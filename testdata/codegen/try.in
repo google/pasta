@@ -1,0 +1,14 @@
+try a:
+  b
+try c:
+  d
+except f:
+  g
+except h as i:
+  j
+finally:
+  k
+try l:
+  m
+except n:
+  o

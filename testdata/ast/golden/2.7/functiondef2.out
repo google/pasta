@@ -2,7 +2,7 @@
 (1, 0)       FunctionDef a        	prefix=||	suffix=||	indent=||
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
 (2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(1, 7)       Tuple                	prefix=|(|	suffix=|)|	indent=||
+(1, 7)       Tuple                	prefix=||	suffix=||	indent=||
 (1, 14)      Name d               	prefix=||	suffix=||	indent=||
 (2, 2)       Name e               	prefix=||	suffix=||	indent=|  |
 (1, 7)       Name b               	prefix=||	suffix=||	indent=||

@@ -191,7 +191,7 @@ class BaseVisitor(ast.NodeVisitor):
     """Account for up to one line of whitespace."""
     return self.ws(max_lines=1)
 
-  def optional_token(self, node, attr_name, token_val):
+  def optional_token(self, node, attr_name, token_val, default=False):
     """Account for a suffix that may or may not occur."""
 
   def one_of_symbols(self, *symbols):
@@ -263,7 +263,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     if node.orelse:
       self.attr(node, 'else', [self.ws, 'else', self.ws, ':', self.ws_oneline],
-                default=':\n')
+                default=self._indent + 'else:\n')
       for stmt in self.indented(node, 'orelse'):
         self.visit(stmt)
 
@@ -280,7 +280,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     if node.orelse:
       self.attr(node, 'else', [self.ws, 'else', self.ws, ':', self.ws_oneline],
-                default=':\n')
+                default=self._indent + 'else:\n')
 
       for stmt in self.indented(node, 'orelse'):
         self.visit(stmt)
@@ -329,7 +329,7 @@ class BaseVisitor(ast.NodeVisitor):
     """
 
   def visit_With_3(self, node):
-    self.token('with')
+    self.attr(node, 'with', ['with', self.ws], default='with ')
 
     for i, withitem in enumerate(node.items):
       self.visit(withitem)
@@ -473,6 +473,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     self.token('raise')
     if node.type:
+      self.attr(node, 'type_prefix', [self.ws], default=' ')
       self.visit(node.type)
     if node.inst:
       self.attr(node, 'inst_prefix', [self.ws, ',', self.ws], default=', ')
@@ -498,10 +499,10 @@ class BaseVisitor(ast.NodeVisitor):
 
   @statement
   def visit_Assert(self, node):
-    self.token('assert')
+    self.attr(node, 'assert_open', ['assert', self.ws], default='assert ')
     self.visit(node.test)
     if node.msg:
-      self.token(',')
+      self.attr(node, 'msg_prefix', [',', self.ws], default=', ')
       self.visit(node.msg)
 
   @statement
@@ -633,12 +634,14 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Return(self, node):
     self.token('return')
     if node.value:
+      self.attr(node, 'return_value_prefix', [self.ws], default=' ')
       self.visit(node.value)
 
   @statement
   def visit_Yield(self, node):
     self.token('yield')
     if node.value:
+      self.attr(node, 'yield_value_prefix', [self.ws], default=' ')
       self.visit(node.value)
 
   # ============================================================================
@@ -815,15 +818,18 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.value)
     self.visit(node.slice)
 
-  @expression
+  @space_around
   def visit_Tuple(self, node):
-    for i, elt in enumerate(node.elts):
-      self.visit(elt)
-      if elt is not node.elts[-1]:
-        self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
-      else:
-        self.optional_token(node, 'extracomma', ',',
-                            allow_whitespace_prefix=True)
+    with self.scope(node, 'elts', default_parens=True):
+      for i, elt in enumerate(node.elts):
+        self.visit(elt)
+        if elt is not node.elts[-1]:
+          self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws],
+                    default=', ')
+        else:
+          self.optional_token(node, 'extracomma', ',',
+                              allow_whitespace_prefix=True,
+                              default=len(node.elts) == 1)
 
   @expression
   def visit_UnaryOp(self, node):
@@ -1050,7 +1056,7 @@ class BaseVisitor(ast.NodeVisitor):
 
     if node.lower:
       self.visit(node.lower)
-    self.attr(node, 'lowerspace', [self.ws, ':', self.ws])
+    self.attr(node, 'lowerspace', [self.ws, ':', self.ws], default=':')
     if node.upper:
       self.visit(node.upper)
 
@@ -1058,6 +1064,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.optional_token(node, 'step_colon', ':')
     self.attr(node, 'stepspace2', [self.ws])
     if node.step and self.check_slice_includes_step(node):
+      self.optional_token(node, 'step_colon_2', ':', default=True)
       node.step.is_explicit_step = True
       self.visit(node.step)
 
@@ -1207,8 +1214,10 @@ class AstAnnotator(BaseVisitor):
     return token.src
 
   def optional_token(self, node, attr_name, token_val,
-                     allow_whitespace_prefix=False):
+                     allow_whitespace_prefix=False, default=False):
     """Try to parse a token and attach it to the node."""
+    del default
+    ast_utils.appendprop(node, attr_name, '')
     token = (self.tokens.peek_non_whitespace()
              if allow_whitespace_prefix else self.tokens.peek())
     if token and token.src == token_val:

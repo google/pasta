@@ -68,11 +68,12 @@ class Printer(annotate.BaseVisitor):
     self.code += value
 
   def optional_token(self, node, attr_name, token_val,
-                     allow_whitespace_prefix=False):
-    del token_val, allow_whitespace_prefix
-    if not hasattr(node, ast_utils.PASTA_DICT):
-      return
-    self.code += ast_utils.prop(node, attr_name) or ''
+                     allow_whitespace_prefix=False, default=False):
+    del allow_whitespace_prefix
+    value = ast_utils.prop(node, attr_name)
+    if value is None and default:
+      value = token_val
+    self.code += value or ''
 
   def attr(self, node, attr_name, attr_vals, deps=None, default=None):
     """Add the formatted data stored for a given attribute on this node.

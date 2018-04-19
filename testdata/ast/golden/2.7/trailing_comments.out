@@ -20,7 +20,7 @@
 (8, 2)       Name f               	prefix=||	suffix=||	indent=|  |
 (5, 1)       Name c               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(13, 9)      Name j               	prefix=| |	suffix=||	indent=|  |
+(13, 9)      Name j               	prefix=||	suffix=||	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (11, 1)      Name h               	prefix=||	suffix=||	indent=||
 (-1, -1)     Store                	prefix=||	suffix=||	indent=||

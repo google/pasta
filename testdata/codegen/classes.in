@@ -1,0 +1,7 @@
+class A():
+  b
+class C(d, e):
+  f
+class G(h, i):
+  class j():
+    k

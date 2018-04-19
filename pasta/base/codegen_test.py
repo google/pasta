@@ -19,63 +19,62 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import os.path
 import textwrap
 import unittest
+from six import with_metaclass
 
 import pasta
+from pasta.base import codegen
+from pasta.base import test_utils
+
+TESTDATA_DIR = os.path.realpath(
+    os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
-class AutoFormatTest(unittest.TestCase):
+def _is_syntax_valid(filepath):
+  with open(filepath, 'r') as f:
+    try:
+      ast.parse(f.read())
+    except SyntaxError:
+      return False
+  return True
+
+
+class AutoFormatTestMeta(type):
+
+  def __new__(mcs, name, bases, inst_dict):
+    # Helper function to generate a test method
+    def auto_format_test_generator(input_file):
+      def test(self):
+        with open(input_file, 'r') as handle:
+          src = handle.read()
+        t = ast.parse(src)
+        auto_formatted = codegen.to_str(t)
+        self.assertMultiLineEqual(src, auto_formatted)
+      return test
+
+    # Add a test method for each input file
+    test_method_prefix = 'test_auto_format_'
+    data_dir = os.path.join(TESTDATA_DIR, 'codegen')
+    for dirpath, _, files in os.walk(data_dir):
+      for filename in files:
+        if filename.endswith('.in'):
+          full_path = os.path.join(dirpath, filename)
+          inst_dict[test_method_prefix + filename[:-3]] = unittest.skipIf(
+              not _is_syntax_valid(full_path),
+              'Test contains syntax not supported by this version.',
+              )(auto_format_test_generator(full_path))
+    return type.__new__(mcs, name, bases, inst_dict)
+
+
+class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
   """Tests that code without formatting info is printed neatly."""
 
   def test_imports(self):
     src = 'from a import b\nimport c, d\nfrom ..e import f, g\n'
     t = ast.parse(src)
     self.assertEqual(src, pasta.dump(t))
-
-  def test_function(self):
-    t = ast.parse('def a(b, c): d')
-    self.assertEqual('def a(b, c):\n  d\n', pasta.dump(t))
-
-  def test_functions_nested(self):
-    src = textwrap.dedent('''\
-        def a(b, c):
-          def d(e): f
-          g
-          def h(): i
-          j
-        ''')
-    formatted_src = textwrap.dedent('''\
-        def a(b, c):
-          def d(e):
-            f
-          g
-          def h():
-            i
-          j
-        ''')
-    t = ast.parse(src)
-    self.assertEqual(formatted_src, pasta.dump(t))
-
-  def test_class(self):
-    t = ast.parse('class A(b, c): d')
-    self.assertEqual('class A(b, c):\n  d\n', pasta.dump(t))
-
-  def test_classes_nested(self):
-    src = textwrap.dedent('''\
-        class A(b, c):
-          def d(self, e): f
-          class G: h
-        ''')
-    formatted_src = textwrap.dedent('''\
-        class A(b, c):
-          def d(self, e):
-            f
-          class G():
-            h
-        ''')
-    t = ast.parse(src)
-    self.assertEqual(formatted_src, pasta.dump(t))
 
 
 def suite():

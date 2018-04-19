@@ -29,7 +29,7 @@
 (-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
 (-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
 (-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
-(13, 2)      Tuple                	prefix=|(|	suffix=|)|	indent=||
+(13, 2)      Tuple                	prefix=||	suffix=| |	indent=||
 (-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (1, 7)       Name a               	prefix=||	suffix=| |	indent=||
