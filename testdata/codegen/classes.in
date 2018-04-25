@@ -5,3 +5,9 @@ class C(d, e):
 class G(h, i):
   class j():
     k
+@l
+@m
+class N():
+  @o
+  class P():
+    q

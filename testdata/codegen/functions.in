@@ -9,3 +9,9 @@ def g(h, i):
   def n():
     o
   p
+@q
+@r
+def s():
+  @t
+  def u():
+    v

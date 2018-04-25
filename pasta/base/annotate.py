@@ -352,7 +352,8 @@ class BaseVisitor(ast.NodeVisitor):
     for i, decorator in enumerate(node.decorator_list):
       self.attr(node, 'decorator_prefix_%d' % i, [self.ws, '@'], default='@')
       self.visit(decorator)
-      self.attr(node, 'decorator_suffix_%d' % i, [self.ws], default='\n')
+      self.attr(node, 'decorator_suffix_%d' % i, [self.ws],
+                default='\n' + self._indent)
     self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
               default='class %s' % node.name, deps=('name',))
     with self.scope(node, 'bases', trailing_comma=bool(node.bases),
@@ -374,7 +375,7 @@ class BaseVisitor(ast.NodeVisitor):
                 default='@')
       self.visit(decorator)
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws_oneline],
-                default='\n')
+                default='\n' + self._indent)
     self.attr(node, 'function_def',
               [self.ws, 'def', self.ws, node.name, self.ws],
               deps=('name',), default='def %s' % node.name)
