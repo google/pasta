@@ -21,7 +21,7 @@ from __future__ import print_function
 import collections
 
 from pasta.base import annotate
-from pasta.base import ast_utils
+from pasta.base import formatting as fmt
 
 # TODO: Handle indentation correctly on inserted nodes
 
@@ -54,13 +54,13 @@ class Printer(annotate.BaseVisitor):
 
   def visit_Num(self, node):
     self.prefix(node)
-    content = ast_utils.prop(node, 'content')
+    content = fmt.get(node, 'content')
     self.code += content if content is not None else repr(node.n)
     self.suffix(node)
 
   def visit_Str(self, node):
     self.prefix(node)
-    content = ast_utils.prop(node, 'content')
+    content = fmt.get(node, 'content')
     self.code += content if content is not None else repr(node.s)
     self.suffix(node)
 
@@ -70,7 +70,7 @@ class Printer(annotate.BaseVisitor):
   def optional_token(self, node, attr_name, token_val,
                      allow_whitespace_prefix=False, default=False):
     del allow_whitespace_prefix
-    value = ast_utils.prop(node, attr_name)
+    value = fmt.get(node, attr_name)
     if value is None and default:
       value = token_val
     self.code += value or ''
@@ -94,16 +94,16 @@ class Printer(annotate.BaseVisitor):
     if not hasattr(node, '_printer_info') or node._printer_info[attr_name]:
       return
     node._printer_info[attr_name] = True
-    val = ast_utils.prop(node, attr_name)
+    val = fmt.get(node, attr_name)
     if (val is None or deps and
-        any(getattr(node, dep, None) != ast_utils.prop(node, dep + '__src')
+        any(getattr(node, dep, None) != fmt.get(node, dep + '__src')
             for dep in deps)):
       val = default
     self.code += val if val is not None else ''
 
   def check_is_elif(self, node):
     try:
-      return ast_utils.prop(node, 'is_elif')
+      return fmt.get(node, 'is_elif')
     except AttributeError:
       return False
 

@@ -30,6 +30,7 @@ import tokenize
 from six import StringIO
 
 from pasta.base import ast_utils
+from pasta.base import formatting as fmt
 
 # Alias for extracting token names
 TOKENS = tokenize
@@ -214,10 +215,10 @@ class TokenGenerator(object):
                   trailing_comma=False):
     """Close a parenthesized scope on the given node, if one is open."""
     # Ensures the prefix + suffix are not None
-    if ast_utils.prop(node, prefix_attr) is None:
-      ast_utils.setprop(node, prefix_attr, '')
-    if ast_utils.prop(node, suffix_attr) is None:
-      ast_utils.setprop(node, suffix_attr, '')
+    if fmt.get(node, prefix_attr) is None:
+      fmt.set(node, prefix_attr, '')
+    if fmt.get(node, suffix_attr) is None:
+      fmt.set(node, suffix_attr, '')
 
     if not self._parens or node not in self._scope_stack[-1]:
       return
@@ -236,8 +237,8 @@ class TokenGenerator(object):
       if tok.src == ')':
         # Close out the open scope
         self._scope_stack.pop()
-        ast_utils.prependprop(node, prefix_attr, self._parens.pop())
-        ast_utils.appendprop(node, suffix_attr, result)
+        fmt.prepend(node, prefix_attr, self._parens.pop())
+        fmt.append(node, suffix_attr, result)
         result = ''
         parsed_to_i = self._i
         parsed_to_loc = tok.end

@@ -31,6 +31,7 @@ import pasta
 from pasta.base import annotate
 from pasta.base import ast_utils
 from pasta.base import codegen
+from pasta.base import formatting as fmt
 from pasta.base import test_utils
 
 TESTDATA_DIR = os.path.realpath(
@@ -81,7 +82,7 @@ class PrefixSuffixTest(test_utils.TestCase):
       node_finder.visit(t)
       node = node_finder.results[0]
       expected = '  #b\n    #c\n\n  #d\n'
-      actual = str(ast_utils.prop(node, 'block_suffix_%s' % children_attr))
+      actual = str(fmt.get(node, 'block_suffix_%s' % children_attr))
       self.assertMultiLineEqual(
           expected, actual,
           'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' % (
@@ -90,24 +91,24 @@ class PrefixSuffixTest(test_utils.TestCase):
   def test_module_suffix(self):
     src = 'foo\n#bar\n\n#baz\n'
     t = pasta.parse(src)
-    self.assertEquals(src[src.index('#bar'):], ast_utils.prop(t, 'suffix'))
+    self.assertEquals(src[src.index('#bar'):], fmt.get(t, 'suffix'))
 
   def test_no_block_suffix_for_single_line_statement(self):
     src = 'if x:  return y\n  #a\n#b\n'
     t = pasta.parse(src)
-    self.assertIsNone(ast_utils.prop(t.body[0], 'block_suffix_body'))
+    self.assertIsNone(fmt.get(t.body[0], 'block_suffix_body'))
 
   def test_expression_prefix_suffix(self):
     src = 'a\n\nfoo\n\n\nb\n'
     t = pasta.parse(src)
-    self.assertEqual('\n', ast_utils.prop(t.body[1], 'prefix'))
-    self.assertEqual('\n', ast_utils.prop(t.body[1], 'suffix'))
+    self.assertEqual('\n', fmt.get(t.body[1], 'prefix'))
+    self.assertEqual('\n', fmt.get(t.body[1], 'suffix'))
 
   def test_statement_prefix_suffix(self):
     src = 'a\n\ndef foo():\n  return bar\n\n\nb\n'
     t = pasta.parse(src)
-    self.assertEqual('\n', ast_utils.prop(t.body[1], 'prefix'))
-    self.assertEqual('', ast_utils.prop(t.body[1], 'suffix'))
+    self.assertEqual('\n', fmt.get(t.body[1], 'prefix'))
+    self.assertEqual('', fmt.get(t.body[1], 'suffix'))
 
 
 class IndentationTest(test_utils.TestCase):
@@ -130,21 +131,21 @@ class IndentationTest(test_utils.TestCase):
     call_nodes.sort(key=lambda node: node.lineno)
     begin, a1, b1, c1, b2, a2, end = call_nodes
 
-    self.assertEqual('', ast_utils.prop(begin, 'indent'))
-    self.assertEqual('  ', ast_utils.prop(a1, 'indent'))
-    self.assertEqual('    ', ast_utils.prop(b1, 'indent'))
-    self.assertEqual('      ', ast_utils.prop(c1, 'indent'))
-    self.assertEqual('    ', ast_utils.prop(b2, 'indent'))
-    self.assertEqual('  ', ast_utils.prop(a2, 'indent'))
-    self.assertEqual('', ast_utils.prop(end, 'indent'))
+    self.assertEqual('', fmt.get(begin, 'indent'))
+    self.assertEqual('  ', fmt.get(a1, 'indent'))
+    self.assertEqual('    ', fmt.get(b1, 'indent'))
+    self.assertEqual('      ', fmt.get(c1, 'indent'))
+    self.assertEqual('    ', fmt.get(b2, 'indent'))
+    self.assertEqual('  ', fmt.get(a2, 'indent'))
+    self.assertEqual('', fmt.get(end, 'indent'))
 
   def test_indent_levels_same_line(self):
     src = 'if a: b; c\n'
     t = pasta.parse(src)
     if_node = t.body[0]
     b, c = if_node.body
-    self.assertIsNone(ast_utils.prop(b, 'indent_diff'))
-    self.assertIsNone(ast_utils.prop(c, 'indent_diff'))
+    self.assertIsNone(fmt.get(b, 'indent_diff'))
+    self.assertIsNone(fmt.get(c, 'indent_diff'))
 
   def test_indent_depths(self):
     template = 'if a:\n{first}if b:\n{first}{second}foo()\n'
@@ -157,31 +158,31 @@ class IndentationTest(test_utils.TestCase):
       inner_if_node = outer_if_node.body[0]
       call_node = inner_if_node.body[0]
 
-      self.assertEqual('', ast_utils.prop(outer_if_node, 'indent'))
-      self.assertEqual('', ast_utils.prop(outer_if_node, 'indent_diff'))
-      self.assertEqual(first, ast_utils.prop(inner_if_node, 'indent'))
-      self.assertEqual(first, ast_utils.prop(inner_if_node, 'indent_diff'))
-      self.assertEqual(first + second, ast_utils.prop(call_node, 'indent'))
-      self.assertEqual(second, ast_utils.prop(call_node, 'indent_diff'))
+      self.assertEqual('', fmt.get(outer_if_node, 'indent'))
+      self.assertEqual('', fmt.get(outer_if_node, 'indent_diff'))
+      self.assertEqual(first, fmt.get(inner_if_node, 'indent'))
+      self.assertEqual(first, fmt.get(inner_if_node, 'indent_diff'))
+      self.assertEqual(first + second, fmt.get(call_node, 'indent'))
+      self.assertEqual(second, fmt.get(call_node, 'indent_diff'))
 
   def test_scope_trailing_comma(self):
     template = 'def foo(a, b{trailing_comma}): pass'
     for trailing_comma in ('', ',', ' , '):
       tree = pasta.parse(template.format(trailing_comma=trailing_comma))
       self.assertEqual(trailing_comma.lstrip(' ') + ')',
-                       ast_utils.prop(tree.body[0], 'args_suffix'))
+                       fmt.get(tree.body[0], 'args_suffix'))
 
     template = 'class Foo(a, b{trailing_comma}): pass'
     for trailing_comma in ('', ',', ' , '):
       tree = pasta.parse(template.format(trailing_comma=trailing_comma))
       self.assertEqual(trailing_comma.lstrip(' ') + ')',
-                       ast_utils.prop(tree.body[0], 'bases_suffix'))
+                       fmt.get(tree.body[0], 'bases_suffix'))
 
     template = 'from mod import (a, b{trailing_comma})'
     for trailing_comma in ('', ',', ' , '):
       tree = pasta.parse(template.format(trailing_comma=trailing_comma))
       self.assertEqual(trailing_comma + ')',
-                       ast_utils.prop(tree.body[0], 'names_suffix'))
+                       fmt.get(tree.body[0], 'names_suffix'))
 
 
 def _is_syntax_valid(filepath):
@@ -256,9 +257,9 @@ class PrefixSuffixGoldenTestMeta(type):
             "{0:12} {1:20} \tprefix=|{2}|\tsuffix=|{3}|\tindent=|{4}|".format(
                 str((getattr(n, 'lineno', -1), getattr(n, 'col_offset', -1))),
                 type(n).__name__ + ' ' + _get_node_identifier(n),
-                escape(ast_utils.prop(n, 'prefix')),
-                escape(ast_utils.prop(n, 'suffix')),
-                escape(ast_utils.prop(n, 'indent')))
+                escape(fmt.get(n, 'prefix')),
+                escape(fmt.get(n, 'suffix')),
+                escape(fmt.get(n, 'indent')))
             for n in ast.walk(t)) + '\n'
 
         # If specified, write the golden data instead of checking it

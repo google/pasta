@@ -27,6 +27,7 @@ from six.moves import zip
 
 from pasta.base import ast_constants
 from pasta.base import ast_utils
+from pasta.base import formatting as fmt
 from pasta.base import token_generator
 
 
@@ -89,7 +90,7 @@ def block_statement(f):
       last_child = ast_utils.get_last_child(node)
       # Workaround for ast.Module which does not have a lineno
       if last_child and last_child.lineno != getattr(node, 'lineno', 0):
-        indent = (ast_utils.prop(last_child, 'prefix') or '\n').splitlines()[-1]
+        indent = fmt.get(last_child, 'prefix', '\n').splitlines()[-1]
         self.block_suffix(node, indent)
     else:
       self.suffix(node, comment=True)
@@ -138,7 +139,7 @@ class BaseVisitor(ast.NodeVisitor):
   def indented(self, node, children_attr):
     prev_indent = self._indent
     prev_indent_diff = self._indent_diff
-    new_diff = ast_utils.prop(node, 'indent')
+    new_diff = fmt.get(node, 'indent')
     if new_diff is None:
       new_diff = '  '
     self._indent_diff = new_diff
@@ -208,7 +209,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   @block_statement
   def visit_If(self, node):
-    tok = 'elif' if ast_utils.prop(node, 'is_elif') else 'if'
+    tok = 'elif' if fmt.get(node, 'is_elif') else 'if'
     self.attr(node, 'open_if', [tok, self.ws], default=tok + ' ')
     self.visit(node.test)
     self.attr(node, 'open_block', [self.ws, ':', self.ws_oneline],
@@ -220,7 +221,7 @@ class BaseVisitor(ast.NodeVisitor):
     if node.orelse:
       if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
           self.check_is_elif(node.orelse[0])):
-        ast_utils.setprop(node.orelse[0], 'is_elif', True)
+        fmt.set(node.orelse[0], 'is_elif', True)
         self.visit(node.orelse[0])
       else:
         self.attr(node, 'elseprefix', [self.ws])
@@ -1109,8 +1110,8 @@ class AstAnnotator(BaseVisitor):
 
   def visit(self, node):
     try:
-      ast_utils.setprop(node, 'indent', self._indent)
-      ast_utils.setprop(node, 'indent_diff', self._indent_diff)
+      fmt.set(node, 'indent', self._indent)
+      fmt.set(node, 'indent_diff', self._indent_diff)
       super(AstAnnotator, self).visit(node)
     except (TypeError, ValueError, IndexError, KeyError) as e:
       raise AnnotationError(e)
@@ -1147,8 +1148,8 @@ class AstAnnotator(BaseVisitor):
     for child in children:
       yield child
     # Store the suffix at this indentation level, which could be many lines
-    ast_utils.setprop(node, 'block_suffix_%s' % children_attr,
-                      self.tokens.block_whitespace(self._indent))
+    fmt.set(node, 'block_suffix_%s' % children_attr,
+            self.tokens.block_whitespace(self._indent))
 
     # Dedent back to the previous level
     self._indent = prev_indent
@@ -1209,8 +1210,7 @@ class AstAnnotator(BaseVisitor):
     return self.tokens.whitespace(max_lines=max_lines, comment=comment)
 
   def block_suffix(self, node, indent_level):
-    ast_utils.setprop(node, 'suffix',
-    self.tokens.block_whitespace(indent_level))
+    fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
   def token(self, token_val):
     """Parse a single token with exactly the given value."""
@@ -1231,14 +1231,14 @@ class AstAnnotator(BaseVisitor):
                      allow_whitespace_prefix=False, default=False):
     """Try to parse a token and attach it to the node."""
     del default
-    ast_utils.appendprop(node, attr_name, '')
+    fmt.append(node, attr_name, '')
     token = (self.tokens.peek_non_whitespace()
              if allow_whitespace_prefix else self.tokens.peek())
     if token and token.src == token_val:
       parsed = ''
       if allow_whitespace_prefix:
         parsed += self.ws()
-      ast_utils.appendprop(node, attr_name,
+      fmt.append(node, attr_name,
                            parsed + self.tokens.next().src + self.ws())
 
   def one_of_symbols(self, *symbols):
@@ -1287,14 +1287,14 @@ class AstAnnotator(BaseVisitor):
     del default  # unused
     if deps:
       for dep in deps:
-        ast_utils.setprop(node, dep + '__src', getattr(node, dep, None))
+        fmt.set(node, dep + '__src', getattr(node, dep, None))
     attr_parts = []
     for attr_val in attr_vals:
       if isinstance(attr_val, six.string_types):
         attr_parts.append(self.token(attr_val))
       else:
         attr_parts.append(attr_val())
-    ast_utils.setprop(node, attr_name, ''.join(attr_parts))
+    fmt.set(node, attr_name, ''.join(attr_parts))
 
   def scope(self, node, attr=None, trailing_comma=False, default_parens=False):
     """Return a context manager to handle a parenthesized scope.

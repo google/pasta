@@ -24,11 +24,10 @@ import itertools
 import re
 
 from pasta.augment import errors
+from pasta.base import formatting as fmt
 
 # From PEP-0263 -- https://www.python.org/dev/peps/pep-0263/
 _CODING_PATTERN = re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
-
-PASTA_DICT = '__pasta__'
 
 
 _AST_OP_NODES = (
@@ -71,30 +70,6 @@ def sanitize_source(src):
     if _CODING_PATTERN.match(line):
       src_lines[i] = re.sub('#.*$', '# (removed coding)', line)
   return ''.join(src_lines)
-
-
-def prop(node, name):
-  try:
-    return getattr(node, PASTA_DICT)[name]
-  except AttributeError:
-    return None
-
-
-def setprop(node, name, value):
-  if not hasattr(node, PASTA_DICT):
-    try:
-      setattr(node, PASTA_DICT, collections.defaultdict(lambda: None))
-    except AttributeError:
-      pass
-  getattr(node, PASTA_DICT)[name] = value
-
-
-def appendprop(node, name, value):
-  setprop(node, name, (prop(node, name) or '') + value)
-
-
-def prependprop(node, name, value):
-  setprop(node, name, value + (prop(node, name) or ''))
 
 
 def find_nodes_by_type(node, accept_types):
@@ -141,13 +116,13 @@ def get_last_child(node):
       return None
   if isinstance(node, ast.If):
     if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
-        prop(node.orelse[0], 'is_elif')):
+        fmt.get(node.orelse[0], 'is_elif')):
       return get_last_child(node.orelse[0])
     if node.orelse:
       return node.orelse[-1]
   elif isinstance(node, ast.With):
     if (len(node.body) == 1 and isinstance(node.body[0], ast.With) and
-        prop(node.body[0], 'is_continued')):
+        fmt.get(node.body[0], 'is_continued')):
       return get_last_child(node.body[0])
   elif hasattr(ast, 'Try') and isinstance(node, ast.Try):
     if node.finalbody:
@@ -183,9 +158,9 @@ def replace_child(parent, node, replace_with):
     replace_with: (ast.AST) New child node.
   """
   # TODO(soupytwist): Don't refer to the formatting dict directly
-  if hasattr(node, PASTA_DICT):
-    setprop(replace_with, 'prefix', prop(node, 'prefix'))
-    setprop(replace_with, 'suffix', prop(node, 'suffix'))
+  if hasattr(node, fmt.PASTA_DICT):
+    fmt.set(replace_with, 'prefix', fmt.get(node, 'prefix'))
+    fmt.set(replace_with, 'suffix', fmt.get(node, 'suffix'))
   for field in parent._fields:
     field_val = getattr(parent, field, None)
     if field_val == node:
