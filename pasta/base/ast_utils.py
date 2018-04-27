@@ -31,31 +31,6 @@ _CODING_PATTERN = re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
 PASTA_DICT = '__pasta__'
 
 
-def get_argument_count(node):
-  return len(node.args) + (1 if node.vararg else 0) + (1 if node.kwarg else 0)
-
-
-def find_starargs(call_node):
-  """Finds the index of starargs in a call's arguments, if present.
-
-  NB: It is legal for *args to appear anywhere between the last positional
-  argument and **kwargs.
-
-  Arguments:
-    call_node: (ast.Call) Call node to search.
-  Returns:
-    The index of the starargs argument, or -1 if not present.
-  """
-  if not call_node.starargs:
-    return -1
-
-  loc = lambda node: (node.lineno, node.col_offset)
-  starargs_loc = loc(call_node.starargs)
-  kwvalues = (kw.value for kw in call_node.keywords)
-  locs = (loc(n) for n in itertools.chain(kwvalues, (call_node.starargs,)))
-  return len(call_node.args) + sorted(locs).index(starargs_loc)
-
-
 _AST_OP_NODES = (
     ast.And, ast.Or, ast.Eq, ast.NotEq, ast.Is, ast.IsNot, ast.In, ast.NotIn,
     ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Add, ast.Sub, ast.Mult, ast.Div,
@@ -73,13 +48,17 @@ class _TreeNormalizer(ast.NodeTransformer):
     return super(_TreeNormalizer, self).visit(node)
 
 
-def normalize(tree):
-  _TreeNormalizer().visit(tree)
-  return tree
+_tree_normalizer = _TreeNormalizer()
 
 
 def parse(src):
-  return normalize(ast.parse(sanitize_source(src)))
+  """Replaces ast.parse; ensures additional properties on the parsed tree.
+
+  This enforces the assumption that each node in the ast is unique.
+  """
+  tree = ast.parse(sanitize_source(src))
+  _tree_normalizer.visit(tree)
+  return tree
 
 
 def sanitize_source(src):
@@ -94,38 +73,6 @@ def sanitize_source(src):
   return ''.join(src_lines)
 
 
-def space_between(from_loc, to_loc, line, lines):
-  """Builds a string with all the non-code characters between two locations.
-
-  Arguments:
-    from_loc: (int, int) Row, col position to start reading from.
-    to_loc: (int, int) Row, col position to read until.
-    line: (string) The line of the row in from_loc.
-    lines: (list of string) All lines in the source, where lines[i] is the i-th
-      line in the source code.
-  """
-  # TODO "line" parameter here is redundant
-  if from_loc[0] == to_loc[0]:
-    return line[from_loc[1]:to_loc[1]]
-
-  result = lines[from_loc[0] - 1][from_loc[1]:]
-  for line in lines[from_loc[0]:to_loc[0] - 1]:
-    result += line
-  else:
-    line = to_loc
-  if to_loc[1]:
-    result += lines[to_loc[0] - 1][:to_loc[1]]
-  return result
-
-
-def setup_props(node):
-  if not hasattr(node, PASTA_DICT):
-    try:
-      setattr(node, PASTA_DICT, collections.defaultdict(lambda: None))
-    except AttributeError:
-      pass
-
-
 def prop(node, name):
   try:
     return getattr(node, PASTA_DICT)[name]
@@ -134,18 +81,20 @@ def prop(node, name):
 
 
 def setprop(node, name, value):
-  setup_props(node)
+  if not hasattr(node, PASTA_DICT):
+    try:
+      setattr(node, PASTA_DICT, collections.defaultdict(lambda: None))
+    except AttributeError:
+      pass
   getattr(node, PASTA_DICT)[name] = value
 
 
 def appendprop(node, name, value):
-  pasta_dict = getattr(node, PASTA_DICT)
-  pasta_dict[name] = pasta_dict.get(name, '') + value
+  setprop(node, name, (prop(node, name) or '') + value)
 
 
 def prependprop(node, name, value):
-  pasta_dict = getattr(node, PASTA_DICT)
-  pasta_dict[name] = value + pasta_dict.get(name, '')
+  setprop(node, name, value + (prop(node, name) or ''))
 
 
 def find_nodes_by_type(node, accept_types):

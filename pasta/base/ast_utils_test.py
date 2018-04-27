@@ -31,24 +31,6 @@ from pasta.base import scope
 
 class UtilsTest(test_utils.TestCase):
 
-  def test_get_argument_count(self):
-    test_cases = (
-        (0, 'def foo(): pass'),
-        (1, 'def foo(a): pass'),
-        (2, 'def foo(a, b=2): pass'),
-        (2, 'def foo(a=1, b=2): pass'),
-        (3, 'def foo(a, b=2, c=3): pass'),
-        (3, 'def foo(a, b=2, *c): pass'),
-        (4, 'def foo(a, b=2, *c, **d): pass'),
-        (3, 'def foo(a, b=2, **d): pass'),
-        (1, 'def foo(*c): pass'),
-        (1, 'def foo(**d): pass'),
-    )
-    for argument_count, src in test_cases:
-      t = ast.parse(src)
-      self.assertEqual(argument_count,
-                       ast_utils.get_argument_count(t.body[0].args))
-
   def test_sanitize_source(self):
     coding_lines = (
         '# -*- coding: latin-1 -*-',

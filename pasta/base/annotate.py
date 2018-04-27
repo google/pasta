@@ -121,7 +121,6 @@ class BaseVisitor(ast.NodeVisitor):
 
   def visit(self, node):
     self._stack.append(node)
-    ast_utils.setup_props(node)
     super(BaseVisitor, self).visit(node)
     assert node is self._stack.pop()
 
@@ -379,7 +378,9 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'function_def',
               [self.ws, 'def', self.ws, node.name, self.ws],
               deps=('name',), default='def %s' % node.name)
-    args_count = ast_utils.get_argument_count(node.args)
+    args_count = sum((len(node.args.args),
+                      1 if node.args.vararg else 0,
+                      1 if node.args.kwarg else 0))
     with self.scope(node, 'args', trailing_comma=args_count > 0,
                     default_parens=True):
       self.visit(node.args)
@@ -683,7 +684,17 @@ class BaseVisitor(ast.NodeVisitor):
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
       i += 1
 
-    starargs_idx = ast_utils.find_starargs(node)
+    # Find the index of starargs in a call's arguments, if present.
+    # NB: It is legal for *args to appear anywhere between the last positional
+    # argument and **kwargs.
+    if node.starargs:
+      sorted_keywords = sorted(
+          itertools.chain((kw.value for kw in node.keywords), (node.starargs,)),
+          key=lambda n: (n.lineno, n.col_offset))
+      starargs_idx = len(node.args) + sorted_keywords.index(node.starargs)
+    else:
+      starargs_idx = 0
+
     kw_idx = 0
     while i < kw_end:
       if i == starargs_idx:
@@ -976,7 +987,9 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_around
   def visit_arguments(self, node):
-    total_args = ast_utils.get_argument_count(node)
+    total_args = sum((len(node.args),
+                      1 if node.vararg else 0,
+                      1 if node.kwarg else 0))
     arg_i = 0
 
     positional = node.args[:-len(node.defaults)] if node.defaults else node.args

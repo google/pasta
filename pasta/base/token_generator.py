@@ -295,12 +295,22 @@ class TokenGenerator(object):
 
   def _space_between(self, prev_loc, tok):
     """Parse the space between a location and the next token"""
-    if prev_loc > tok.start:
-      raise ValueError('prev_loc > token start', prev_loc, tok.start)
+    next_loc = tok.start
+    if prev_loc > next_loc:
+      raise ValueError('prev_loc > token start', prev_loc, next_loc)
     if prev_loc[0] > len(self.lines):
       return ''
-    return ast_utils.space_between(prev_loc, tok.start,
-                                   self.lines[prev_loc[0] - 1], self.lines)
+
+    prev_row, prev_col = prev_loc
+    next_row, next_col = next_loc
+    if prev_row == next_row:
+      return self.lines[prev_row - 1][prev_col:next_col]
+
+    return ''.join(itertools.chain(
+        (self.lines[prev_row - 1][prev_col:],),
+        self.lines[prev_row:next_row - 1],
+        (self.lines[next_row - 1][:next_col],) if next_col > 0 else '',
+    ))
 
   def next_name(self):
     """Parse the next name token."""
