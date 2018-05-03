@@ -176,7 +176,7 @@ def foo():
 
     
 
-class RemoveImportsTest(test_utils.TestCase):
+class RemoveImportTest(test_utils.TestCase):
   # Note that we don't test any 'asname' examples but as far as remove_import_alias_node
   # is concerned its not a different case because its still just an alias type
   # and we don't care about the internals of the alias we're trying to remove.
@@ -287,8 +287,8 @@ def suite():
   result = unittest.TestSuite()
   result.addTests(unittest.makeSuite(SplitImportTest))
   result.addTests(unittest.makeSuite(GetUnusedImportsTest))
-  result.addTests(unittest.makeSuite(RemoveImportsTest))
-  result.addTests(unittest.makeSuite(AddImportsTest))
+  result.addTests(unittest.makeSuite(RemoveImportTest))
+  result.addTests(unittest.makeSuite(AddImportTest))
   return result
 
 if __name__ == '__main__':
