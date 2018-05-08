@@ -4,11 +4,13 @@
 (5, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (7, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (9, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(11, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (1, 0)       Call                 	prefix=||	suffix=||	indent=||
 (3, 0)       Call                 	prefix=||	suffix=||	indent=||
 (5, 0)       Call                 	prefix=||	suffix=||	indent=||
 (7, 0)       Call                 	prefix=||	suffix=||	indent=||
 (9, 1)       Call                 	prefix=||	suffix=||	indent=||
+(11, 0)      Call                 	prefix=||	suffix=||	indent=||
 (1, 0)       Name a               	prefix=||	suffix=||	indent=||
 (1, 2)       Name b               	prefix=||	suffix=||	indent=||
 (3, 0)       Name c               	prefix=||	suffix=||	indent=||
@@ -31,6 +33,8 @@
 (9, 1)       Name q               	prefix=|(|	suffix=|)|	indent=||
 (9, 4)       Name r               	prefix=||	suffix=||	indent=||
 (9, 7)       Name s               	prefix=||	suffix=||	indent=||
+(11, 0)      Name t               	prefix=||	suffix=||	indent=||
+(-1, -1)     keyword u            	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -52,6 +56,9 @@
 (7, 16)      Name v               	prefix=||	suffix=| |	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(11, 4)      Name v               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

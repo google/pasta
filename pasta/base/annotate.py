@@ -694,7 +694,7 @@ class BaseVisitor(ast.NodeVisitor):
           key=lambda n: (n.lineno, n.col_offset))
       starargs_idx = len(node.args) + sorted_keywords.index(node.starargs)
     else:
-      starargs_idx = 0
+      starargs_idx = -1
 
     kw_idx = 0
     while i < kw_end:
