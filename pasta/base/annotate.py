@@ -90,7 +90,7 @@ def block_statement(f):
       last_child = ast_utils.get_last_child(node)
       # Workaround for ast.Module which does not have a lineno
       if last_child and last_child.lineno != getattr(node, 'lineno', 0):
-        indent = fmt.get(last_child, 'prefix', '\n').splitlines()[-1]
+        indent = (fmt.get(last_child, 'prefix') or '\n').splitlines()[-1]
         self.block_suffix(node, indent)
     else:
       self.suffix(node, comment=True)
