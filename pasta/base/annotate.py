@@ -24,6 +24,7 @@ import contextlib
 import itertools
 import six
 from six.moves import zip
+import sys
 
 from pasta.base import ast_constants
 from pasta.base import ast_utils
@@ -675,52 +676,68 @@ class BaseVisitor(ast.NodeVisitor):
   @expression
   def visit_Call(self, node):
     self.visit(node.func)
-    kw_end = len(node.args) + len(node.keywords) + (1 if node.starargs else 0)
-    num_items = kw_end + (1 if node.kwargs else 0)
-    self.attr(node, 'open_call', [self.ws, '(', self.ws], default='(')
-    i = 0
-    for arg in node.args:
-      self.visit(arg)
-      if i < num_items - 1:
-        self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
-      i += 1
 
-    # Find the index of starargs in a call's arguments, if present.
-    # NB: It is legal for *args to appear anywhere between the last positional
-    # argument and **kwargs.
+    with self.scope(node, 'arguments', default_parens=True):
+      # python <3.5: starargs and kwargs are in separate fields
+      # python 3.5+: starargs args included as a Starred nodes in the arguments
+      #              and kwargs are included as keywords with no argument name.
+      if sys.version_info[:2] >= (3, 5):
+        any_args = self.visit_Call_arguments35(node)
+      else:
+        any_args = self.visit_Call_arguments(node)
+      if any_args:
+        self.optional_token(node, 'trailing_comma', ',')
+
+  def visit_Call_arguments(self, node):
+    def arg_location(tup):
+      _, n = tup
+      if isinstance(n, ast.keyword):
+        n = n.value
+      return (n.lineno, n.col_offset)
+
     if node.starargs:
       sorted_keywords = sorted(
-          itertools.chain((kw.value for kw in node.keywords), (node.starargs,)),
-          key=lambda n: (n.lineno, n.col_offset))
-      starargs_idx = len(node.args) + sorted_keywords.index(node.starargs)
+          [(None, kw) for kw in node.keywords] + [('*', node.starargs)],
+          key=arg_location)
     else:
-      starargs_idx = -1
-
-    kw_idx = 0
-    while i < kw_end:
-      if i == starargs_idx:
-        self.attr(node, 'starargs_prefix', [self.ws, '*'], default='*')
-        self.visit(node.starargs)
-      else:
-        self.visit(node.keywords[kw_idx])
-        kw_idx += 1
-      if i < num_items - 1:
-        self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
-      i += 1
-
+      sorted_keywords = [(None, kw) for kw in node.keywords]
+    all_args = [(None, n) for n in node.args] + sorted_keywords
     if node.kwargs:
-      self.attr(node, 'kwargs_prefix', [self.ws, '**', self.ws], default='**')
-      self.visit(node.kwargs)
+      all_args.append(('**', node.kwargs))
 
-    if num_items > 0:
-      self.optional_token(node, 'trailing_comma', ',')
-    self.attr(node, 'close_call', [self.ws, ')'], default=')')
+    for i, (prefix, arg) in enumerate(all_args):
+      if prefix is not None:
+        self.attr(node, '%s_prefix' % prefix, [self.ws, prefix], default=prefix)
+      self.visit(arg)
+      if arg is not all_args[-1][1]:
+        self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
+    return bool(all_args)
+
+  def visit_Call_arguments35(self, node):
+    def arg_location(n):
+      if isinstance(n, ast.keyword):
+        n = n.value
+      return (n.lineno, n.col_offset)
+
+    all_args = sorted(node.args + node.keywords, key=arg_location)
+
+    for i, arg in enumerate(all_args):
+      self.visit(arg)
+      if arg is not all_args[-1]:
+        self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
+    return bool(all_args)
+
+  def visit_Starred(self, node):
+    self.attr(node, 'star', ['*', self.ws], default='*')
+    self.visit(node.value)
 
   @expression
   def visit_Compare(self, node):
     self.visit(node.left)
-    for op, comparator in zip(node.ops, node.comparators):
+    for i, (op, comparator) in enumerate(zip(node.ops, node.comparators)):
+      self.attr(node, 'op_prefix_%d' % i, [self.ws], default=' ')
       self.visit(op)
+      self.attr(node, 'op_suffix_%d' % i, [self.ws], default=' ')
       self.visit(comparator)
 
   @expression
@@ -857,107 +874,81 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Ellipsis(self, node):
     self.token('...')
 
-  @space_around
   def visit_Add(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Sub(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Mult(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Div(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Mod(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Pow(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_LShift(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_RShift(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_BitAnd(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_BitOr(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_BitXor(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_FloorDiv(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Invert(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Not(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_UAdd(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_USub(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Eq(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_NotEq(self, node):
     self.attr(node, 'operator', [self.one_of_symbols('!=', '<>')])
 
-  @space_around
   def visit_Lt(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_LtE(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Gt(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_GtE(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_Is(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_IsNot(self, node):
     self.attr(node, 'content', ['is', self.ws, 'not'], default='is not')
 
-  @space_around
   def visit_In(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
-  @space_around
   def visit_NotIn(self, node):
     self.attr(node, 'content', ['not', self.ws, 'in'], default='not in')
 
@@ -1043,8 +1034,11 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_around
   def visit_keyword(self, node):
-    self.token(node.arg)
-    self.attr(node, 'eq', [self.ws, '='], default='=')
+    if node.arg is None:
+      self.attr(node, 'stars', ['**', self.ws], default='**')
+    else:
+      self.token(node.arg)
+      self.attr(node, 'eq', [self.ws, '='], default='=')
     self.visit(node.value)
 
   @space_left

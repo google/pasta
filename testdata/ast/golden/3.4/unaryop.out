@@ -11,10 +11,10 @@
 (1, 1)       Name a               	prefix=||	suffix=||	indent=||
 (-1, -1)     USub                 	prefix=||	suffix=||	indent=||
 (3, 2)       Name b               	prefix=||	suffix=||	indent=||
-(-1, -1)     Invert               	prefix=||	suffix=|  |	indent=||
-(5, 3)       Name c               	prefix=||	suffix=||	indent=||
-(-1, -1)     Not                  	prefix=||	suffix=| |	indent=||
-(7, 7)       Name d               	prefix=|( |	suffix=|)|	indent=||
+(-1, -1)     Invert               	prefix=||	suffix=||	indent=||
+(5, 3)       Name c               	prefix=|  |	suffix=||	indent=||
+(-1, -1)     Not                  	prefix=||	suffix=||	indent=||
+(7, 7)       Name d               	prefix=| ( |	suffix=|)|	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
