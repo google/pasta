@@ -212,7 +212,7 @@ class TokenGenerator(object):
       self._loc = start_loc
 
   def close_scope(self, node, prefix_attr='prefix', suffix_attr='suffix',
-                  trailing_comma=False):
+                  trailing_comma=False, single_paren=False):
     """Close a parenthesized scope on the given node, if one is open."""
     # Ensures the prefix + suffix are not None
     if fmt.get(node, prefix_attr) is None:
@@ -227,15 +227,22 @@ class TokenGenerator(object):
       symbols.add(',')
     parsed_to_i = self._i
     parsed_to_loc = prev_loc = self._loc
+    encountered_paren = False
     result = ''
 
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src in symbols):
+      if tok.src == ')' and single_paren and encountered_paren:
+        self.rewind()
+        parsed_to_i = self._i
+        parsed_to_loc = tok.start
+        break
       # Stores all the code up to and including this token
       result += self._space_between(prev_loc, tok) + tok.src
 
       if tok.src == ')':
         # Close out the open scope
+        encountered_paren = True
         self._scope_stack.pop()
         fmt.prepend(node, prefix_attr, self._parens.pop())
         fmt.append(node, suffix_attr, result)
@@ -268,7 +275,8 @@ class TokenGenerator(object):
     if attr:
       self.close_scope(node, prefix_attr=attr + '_prefix',
                        suffix_attr=attr + '_suffix',
-                       trailing_comma=trailing_comma)
+                       trailing_comma=trailing_comma,
+                       single_paren=True)
     else:
       self.close_scope(node, trailing_comma=trailing_comma)
 

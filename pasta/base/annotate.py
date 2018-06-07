@@ -848,7 +848,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.value)
     self.visit(node.slice)
 
-  @space_around
+  @expression
   def visit_Tuple(self, node):
     with self.scope(node, 'elts', default_parens=True):
       for i, elt in enumerate(node.elts):
