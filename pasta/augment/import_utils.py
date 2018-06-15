@@ -56,10 +56,11 @@ def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
     new_alias = ast.alias(name=alias_name, asname=None)
 
     # Try to avoid name conflicts
+    imported_name = alias_name
     counter = 0
-    while new_alias.asname in sc.names:
+    while imported_name in sc.names:
       counter += 1
-      new_alias.asname = '%s_%d' % (alias_name, counter)
+      imported_name = new_alias.asname = '%s_%d' % (alias_name, counter)
 
     if merge_from_imports:
       # Try to add to an existing ImportFrom from the same module

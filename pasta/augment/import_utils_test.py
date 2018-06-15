@@ -259,6 +259,14 @@ class AddImportTest(test_utils.TestCase):
     self.assertIsNone(import_utils.add_import(tree, 'a.b.c'))
     self.assertEqual('from a.b import c\n', pasta.dump(tree))
 
+  def test_add_import_with_conflict(self):
+    tree = ast.parse('def c(): pass\n')
+    self.assertEqual('c_1',
+                     import_utils.add_import(tree, 'a.b.c', from_import=True))
+    self.assertEqual(
+        'from a.b import c as c_1\ndef c():\n  pass\n', pasta.dump(tree))
+
+
   def test_merge_from_import(self):
     tree = ast.Module(body=[
         ast.ImportFrom(level=0, module='a.b',
