@@ -43,6 +43,9 @@ def inline_name(t, name):
         name, type(name_node.definition)))
 
   assign_node = sc.parent(name_node.definition)
+  if not isinstance(assign_node, ast.Assign):
+    raise InlineError('%r is not declared in an assignment' % name)
+
   value = assign_node.value
   if not isinstance(sc.parent(assign_node), ast.Module):
     raise InlineError('%r is not a top-level name' % name)
@@ -50,8 +53,7 @@ def inline_name(t, name):
   # If the name is written anywhere else in this module, it is not constant
   for ref in name_node.reads:
     if isinstance(getattr(ref, 'ctx', None), ast.Store):
-      raise InlineError('%r is not a constant; it is written on line %d' % (
-          name, ref.lineno))
+      raise InlineError('%r is not a constant' % name)
 
   # Replace all reads of the name with a copy of its value
   for ref in name_node.reads:

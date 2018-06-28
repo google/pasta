@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import textwrap
 import unittest
 
 from pasta.augment import inline
@@ -41,51 +42,51 @@ class InlineTest(test_utils.TestCase):
     self.checkAstsEqual(t, ast.parse('x = z = 1\na = x + 1\n'))
 
   def test_inline_multiple_reads(self):
-    src = '''\
-CONSTANT = "foo"
-def a(b=CONSTANT):
-  return b == CONSTANT
-    '''
-    expected = '''\
-def a(b="foo"):
-  return b == "foo"
-    '''
+    src = textwrap.dedent('''\
+        CONSTANT = "foo"
+        def a(b=CONSTANT):
+          return b == CONSTANT
+        ''')
+    expected = textwrap.dedent('''\
+        def a(b="foo"):
+          return b == "foo"
+        ''')
     t = ast.parse(src)
     inline.inline_name(t, 'CONSTANT')
     self.checkAstsEqual(t, ast.parse(expected))
 
   def test_inline_non_constant_fails(self):
-    src = '''\
-CONSTANT = "foo"
-CONSTANT += "bar"
-    '''
+    src = textwrap.dedent('''\
+        NOT_A_CONSTANT = "foo"
+        NOT_A_CONSTANT += "bar"
+        ''')
     t = ast.parse(src)
-    with self.assertRaises(inline.InlineError) as cm:
-      inline.inline_name(t, 'CONSTANT')
-    self.assertEqual(_exc_message(cm.exception),
-                     '\'CONSTANT\' is not a constant; it is written on line 2')
+    with self.assertRaisesRegexp(inline.InlineError,
+                                 '\'NOT_A_CONSTANT\' is not a constant'):
+      inline.inline_name(t, 'NOT_A_CONSTANT')
 
   def test_inline_function_fails(self):
     src = 'def func(): pass\nfunc()\n'
     t = ast.parse(src)
 
-    with self.assertRaises(inline.InlineError) as cm:
+    with self.assertRaisesRegexp(
+        inline.InlineError,
+        '\'func\' is not a constant; it has type %r' % ast.FunctionDef):
       inline.inline_name(t, 'func')
-    self.assertEqual(
-        _exc_message(cm.exception),
-        '\'func\' is not a constant; it has type %r' % ast.FunctionDef)
 
   def test_inline_conditional_fails(self):
     src = 'if define:\n  x = 1\na = x\n'
     t = ast.parse(src)
-    with self.assertRaises(inline.InlineError) as cm:
+    with self.assertRaisesRegexp(inline.InlineError,
+                                 '\'x\' is not a top-level name'):
       inline.inline_name(t, 'x')
-    self.assertEqual(_exc_message(cm.exception),
-                     '\'x\' is not a top-level name')
 
-
-def _exc_message(exc):
-  return getattr(exc, 'message', None) or str(exc)
+  def test_inline_non_assign_fails(self):
+    src = 'CONSTANT1, CONSTANT2 = values'
+    t = ast.parse(src)
+    with self.assertRaisesRegexp(
+        inline.InlineError, '\'CONSTANT1\' is not declared in an assignment'):
+      inline.inline_name(t, 'CONSTANT1')
 
 
 def suite():
