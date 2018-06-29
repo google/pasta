@@ -73,7 +73,11 @@ def sanitize_source(src):
 
 
 def find_nodes_by_type(node, accept_types):
-  visitor = FindNodeVisitor(lambda n: isinstance(n, accept_types))
+  return find_nodes(lambda n: isinstance(n, accept_types))
+
+
+def find_nodes(node, condition):
+  visitor = FindNodeVisitor(condition)
   visitor.visit(node)
   return visitor.results
 
