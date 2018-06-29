@@ -660,8 +660,10 @@ class BaseVisitor(ast.NodeVisitor):
 
   @expression
   def visit_BinOp(self, node):
+    op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
     self.visit(node.left)
-    self.visit(node.op)
+    self.attr(node, 'op', [self.ws, op_symbol, self.ws],
+              default=' %s ' % op_symbol, deps=('op',))
     self.visit(node.right)
 
   @expression
@@ -863,7 +865,8 @@ class BaseVisitor(ast.NodeVisitor):
 
   @expression
   def visit_UnaryOp(self, node):
-    self.visit(node.op)
+    op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+    self.attr(node, 'op', [op_symbol, self.ws], default=op_symbol, deps=('op',))
     self.visit(node.operand)
 
   # ============================================================================
