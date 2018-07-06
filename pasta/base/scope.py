@@ -27,12 +27,13 @@ class ScopeVisitor(ast.NodeVisitor):
 
   def __init__(self):
     super(ScopeVisitor, self).__init__()
-    self.root_scope = self.scope = RootScope()
     self._parent = None
 
   def visit(self, node):
     if node is None:
       return
+    if isinstance(node, ast.Module):
+      self.root_scope = self.scope = RootScope(node)
     self.root_scope.set_parent(node, self._parent)
     tmp = self._parent
     self._parent = node
@@ -129,9 +130,10 @@ class ScopeVisitor(ast.NodeVisitor):
 
 class Scope(object):
 
-  def __init__(self, parent_scope):
+  def __init__(self, parent_scope, node):
     self.parent_scope = parent_scope
     self.names = {}
+    self.node = node
 
   def add_external_reference(self, name, node, packages=True):
     self.parent_scope.add_external_reference(name, node, packages=packages)
@@ -157,19 +159,19 @@ class Scope(object):
   def get_root_scope(self):
     return self.parent_scope.get_root_scope()
 
-  def get_scope_for_node(self, node):
-    return self.get_root_scope().get_scope_for_node(node)
+  def lookup_scope(self, node):
+    return self.get_root_scope().lookup_scope(node)
 
   def create_scope(self, node):
-    subscope = Scope(self)
+    subscope = Scope(self, node)
     self.get_root_scope()._set_scope_for_node(node, subscope)
     return subscope
 
 
 class RootScope(Scope):
 
-  def __init__(self):
-    super(RootScope, self).__init__(None)
+  def __init__(self, node):
+    super(RootScope, self).__init__(None, node)
     self.external_references = {}
     self._parents = {}
     self._nodes_to_names = {}
@@ -204,7 +206,7 @@ class RootScope(Scope):
   def set_name_for_node(self, node, name):
     self._nodes_to_names[node] = name
 
-  def get_scope_for_node(self, node):
+  def lookup_scope(self, node):
     while node:
       try:
         return self._node_scopes[node]
