@@ -82,6 +82,10 @@ def find_nodes(node, condition):
   return visitor.results
 
 
+def find_nodes_by_type(tree, accept_types):
+  return find_nodes(tree, lambda n: isinstance(n, accept_types))
+
+
 class FindNodeVisitor(ast.NodeVisitor):
 
   def __init__(self, condition):
