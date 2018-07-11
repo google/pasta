@@ -19,8 +19,18 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import collections
 
 # TODO: Support relative imports
+
+# Represents a reference to something external to the module.
+# Fields:
+#   name: (string) The full dotted name being referenced.
+#   node: (ast.AST) The AST node where the reference is defined.
+#   name_ref: (Name) The name object that refers to the imported name, if
+#     applicable. This may not be the same id if the import is aliased.
+ExternalReference = collections.namedtuple('ExternalReference',
+                                           ('name', 'node', 'name_ref'))
 
 
 class ScopeVisitor(ast.NodeVisitor):
@@ -56,31 +66,43 @@ class ScopeVisitor(ast.NodeVisitor):
     for alias in node.names:
       name_parts = alias.name.split('.')
 
-      # Always reference imported names
-      self.scope.add_external_reference(alias.name, alias)
-
       if not alias.asname:
         # If not aliased, define the top-level module of the import
         cur_name = self.scope.define_name(name_parts[0], alias)
+        self.root_scope.add_external_reference(name_parts[0], alias,
+                                               name_ref=cur_name)
 
         # Define names of sub-modules imported
+        partial_name = name_parts[0]
         for part in name_parts[1:]:
+          partial_name += '.' + part
           cur_name = cur_name.lookup_name(part)
           cur_name.define(alias)
+          self.root_scope.add_external_reference(partial_name, alias,
+                                                 name_ref=cur_name)
 
       else:
         # If the imported name is aliased, define that name only
-        self.scope.define_name(alias.asname, alias)
+        name = self.scope.define_name(alias.asname, alias)
+
+        # Define names of sub-modules imported
+        for i in range(1, len(name_parts)):
+          self.root_scope.add_external_reference('.'.join(name_parts[:i]),
+                                                 alias)
+        self.root_scope.add_external_reference(alias.name, alias, name_ref=name)
+
     self.generic_visit(node)
 
   def visit_ImportFrom(self, node):
     if node.module:
-      self.scope.add_external_reference(node.module, node)
+      name_parts = node.module.split('.')
+      for i in range(1, len(name_parts) + 1):
+        self.root_scope.add_external_reference('.'.join(name_parts[:i]), node)
     for alias in node.names:
-      self.scope.define_name(alias.asname or alias.name, alias)
+      name = self.scope.define_name(alias.asname or alias.name, alias)
       if node.module:
-        self.scope.add_external_reference(node.module + '.' + alias.name, alias,
-                                          packages=False)
+        self.scope.add_external_reference('.'.join((node.module, alias.name)),
+                                          alias, name_ref=name)
       # TODO: else? relative imports
     self.generic_visit(node)
 
@@ -135,9 +157,6 @@ class Scope(object):
     self.names = {}
     self.node = node
 
-  def add_external_reference(self, name, node, packages=True):
-    self.parent_scope.add_external_reference(name, node, packages=packages)
-
   def define_name(self, name, node):
     try:
       name_obj = self.names[name]
@@ -177,17 +196,12 @@ class RootScope(Scope):
     self._nodes_to_names = {}
     self._node_scopes = {}
 
-  def add_external_reference(self, name, node, packages=True):
-    names_to_add = [name]
-    if packages:
-      parts = name.split('.')
-      names_to_add.extend('.'.join(parts[:i]) for i in range(1, len(parts)))
-
-    for n in names_to_add:
-      if n in self.external_references:
-        self.external_references[n].append(node)
-      else:
-        self.external_references[n] = [node]
+  def add_external_reference(self, name, node, name_ref=None):
+    ref = ExternalReference(name=name, node=node, name_ref=name_ref)
+    if name in self.external_references:
+      self.external_references[name].append(ref)
+    else:
+      self.external_references[name] = [ref]
 
   def get_root_scope(self):
     return self
