@@ -28,12 +28,13 @@ class ScopeVisitor(ast.NodeVisitor):
   def __init__(self):
     super(ScopeVisitor, self).__init__()
     self._parent = None
+    self.root_scope = self.scope = RootScope(None)
 
   def visit(self, node):
     if node is None:
       return
-    if isinstance(node, ast.Module):
-      self.root_scope = self.scope = RootScope(node)
+    if self.root_scope.node is None:
+      self.root_scope.node = node
     self.root_scope.set_parent(node, self._parent)
     tmp = self._parent
     self._parent = node
