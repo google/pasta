@@ -255,7 +255,7 @@ class Name(object):
     try:
       return self.attrs[name]
     except KeyError:
-      name_obj = self.attrs[name] = Name(name)
+      name_obj = self.attrs[name] = Name('.'.join((self.id, name)))
       return name_obj
 
 

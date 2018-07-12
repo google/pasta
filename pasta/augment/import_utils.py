@@ -45,7 +45,10 @@ def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
 
   # Don't add anything if it's already imported
   if name_to_import in sc.external_references:
-    return None
+    existing_ref = next((ref for ref in sc.external_references[name_to_import]
+                         if ref.name_ref is not None), None)
+    if existing_ref:
+      return existing_ref.name_ref.id
 
   import_node = None
   added_name = None
