@@ -66,9 +66,9 @@ def rename_external(t, old_name, new_name):
   has_changed = False
   renames = {}
   already_changed = []
-  for node in sc.external_references[old_name]:
-    if isinstance(node, ast.alias):
-      parent = sc.parent(node)
+  for ref in sc.external_references[old_name]:
+    if isinstance(ref.node, ast.alias):
+      parent = sc.parent(ref.node)
       # An alias may be the most specific reference to an imported name, but it
       # could if it is a child of an ImportFrom, the ImportFrom node's module
       # may also need to be updated.
@@ -77,15 +77,15 @@ def rename_external(t, old_name, new_name):
         renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
         already_changed.append(parent)
       else:
-        node.name = new_name + node.name[len(old_name):]
-        if not node.asname:
+        ref.node.name = new_name + ref.node.name[len(old_name):]
+        if not ref.node.asname:
           renames[old_name] = new_name
       has_changed = True
-    elif isinstance(node, ast.ImportFrom):
-      if node not in already_changed:
-        assert _rename_name_in_importfrom(sc, node, old_name, new_name)
+    elif isinstance(ref.node, ast.ImportFrom):
+      if ref.node not in already_changed:
+        assert _rename_name_in_importfrom(sc, ref.node, old_name, new_name)
         renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
-        already_changed.append(node)
+        already_changed.append(ref.node)
         has_changed = True
 
   for rename_old, rename_new in six.iteritems(renames):
