@@ -87,6 +87,7 @@ class PrefixSuffixTest(test_utils.TestCase):
           expected, actual,
           'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' % (
               src, node, node.lineno, '\n'.join(_get_diff(actual, expected))))
+      self.assertMultiLineEqual(src, pasta.dump(t))
 
   def test_module_suffix(self):
     src = 'foo\n#bar\n\n#baz\n'

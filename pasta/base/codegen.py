@@ -23,8 +23,6 @@ import collections
 from pasta.base import annotate
 from pasta.base import formatting as fmt
 
-# TODO: Handle indentation correctly on inserted nodes
-
 
 class PrintError(Exception):
   """An exception for when we failed to print the tree."""

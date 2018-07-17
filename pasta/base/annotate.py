@@ -147,6 +147,7 @@ class BaseVisitor(ast.NodeVisitor):
     self._indent = prev_indent + self._indent_diff
     for child in getattr(node, children_attr):
       yield child
+    self.attr(node, 'block_suffix_%s' % children_attr, [])
     self._indent = prev_indent
     self._indent_diff = prev_indent_diff
 
