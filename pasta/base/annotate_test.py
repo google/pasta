@@ -166,6 +166,18 @@ class IndentationTest(test_utils.TestCase):
       self.assertEqual(first + second, fmt.get(call_node, 'indent'))
       self.assertEqual(second, fmt.get(call_node, 'indent_diff'))
 
+  def test_indent_multiline_string(self):
+    src = textwrap.dedent('''\
+        class A:
+          """Doc
+             string."""
+          pass
+        ''')
+    t = pasta.parse(src)
+    docstring, pass_stmt = t.body[0].body
+    self.assertEqual('  ', fmt.get(docstring, 'indent'))
+    self.assertEqual('  ', fmt.get(pass_stmt, 'indent'))
+
   def test_scope_trailing_comma(self):
     template = 'def foo(a, b{trailing_comma}): pass'
     for trailing_comma in ('', ',', ' , '):
