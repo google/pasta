@@ -415,6 +415,28 @@ class ScopeTest(test_utils.TestCase):
 
     self.assertIsNone(sc.lookup_scope(ast.Name(id='foo')))
 
+  def test_class_methods(self):
+    source = textwrap.dedent("""\
+        import aaa
+        class C:
+          def aaa(self):
+            return aaa
+
+          def bbb(self):
+            return aaa
+        """)
+    tree = ast.parse(source)
+    importstmt, classdef = tree.body
+    method_aaa, method_bbb = classdef.body
+
+    s = scope.analyze(tree)
+
+    self.assertItemsEqual(s.names.keys(), {'aaa', 'C'})
+    self.assertItemsEqual(s.external_references.keys(), {'aaa'})
+    self.assertItemsEqual(s.names['aaa'].reads,
+                          [method_aaa.body[0].value, method_bbb.body[0].value])
+    # TODO: Test references to C.aaa, C.bbb once supported
+
 
 def suite():
   result = unittest.TestSuite()
