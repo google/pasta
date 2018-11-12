@@ -146,7 +146,7 @@ def get_unused_import_aliases(tree, sc=None):
       else:
         # This happens because of https://github.com/google/pasta/issues/32
         logging.warning('Imported name %s not found in scope (perhaps it\'s '
-        'imported dynamically', str_name)
+                        'imported dynamically)', str_name)
 
   return unused_aliases
 

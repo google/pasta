@@ -23,7 +23,6 @@ import textwrap
 import unittest
 
 from pasta.augment import inline
-from pasta.base import scope
 from pasta.base import test_utils
 
 

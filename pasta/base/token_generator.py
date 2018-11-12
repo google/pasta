@@ -29,7 +29,6 @@ import itertools
 import tokenize
 from six import StringIO
 
-from pasta.base import ast_utils
 from pasta.base import formatting as fmt
 
 # Alias for extracting token names

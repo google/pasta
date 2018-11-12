@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import ast
 import os.path
-import textwrap
 import unittest
 from six import with_metaclass
 

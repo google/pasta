@@ -20,10 +20,7 @@ from __future__ import print_function
 
 import ast
 import copy
-import itertools
-import six
 
-from pasta.augment import import_utils
 from pasta.base import ast_utils
 from pasta.base import scope
 
