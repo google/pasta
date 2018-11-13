@@ -1133,9 +1133,9 @@ class AstAnnotator(BaseVisitor):
     prev_indent_diff = self._indent_diff
 
     # Find the indent level of the first child
-    lineno = ast_utils.get_start_lineno(children[0])
-    new_indent = ''.join(itertools.takewhile(
-        lambda s: s in ' \t', self.tokens.lines[lineno - 1]))
+    indent_token = self.tokens.peek()
+    assert indent_token.type == token_generator.TOKENS.INDENT
+    new_indent = indent_token.src
     if (not new_indent.startswith(prev_indent) or
         len(new_indent) <= len(prev_indent)):
       raise AnnotationError(

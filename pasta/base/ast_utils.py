@@ -177,12 +177,3 @@ def has_docstring(node):
   return (hasattr(node, 'body') and node.body and
           isinstance(node.body[0], ast.Expr) and
           isinstance(node.body[0].value, ast.Str))
-
-
-def get_start_lineno(node):
-  lineno = node.lineno
-  if isinstance(node, ast.Expr) and isinstance(node.value, ast.Str):
-    # The lineno of multiline strings is the last line in the string for some
-    # reason, so we have to backtrack to the first line of the string
-    lineno -= node.value.s.count('\n')
-  return lineno
