@@ -1133,8 +1133,8 @@ class AstAnnotator(BaseVisitor):
     prev_indent_diff = self._indent_diff
 
     # Find the indent level of the first child
-    indent_token = self.tokens.peek()
-    assert indent_token.type == token_generator.TOKENS.INDENT
+    indent_token = self.tokens.peek_conditional(
+        lambda t: t.type == token_generator.TOKENS.INDENT)
     new_indent = indent_token.src
     if (not new_indent.startswith(prev_indent) or
         len(new_indent) <= len(prev_indent)):

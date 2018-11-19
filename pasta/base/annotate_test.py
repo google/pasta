@@ -209,6 +209,29 @@ class IndentationTest(test_utils.TestCase):
       self.assertEqual(trailing_comma + ')',
                        fmt.get(tree.body[0], 'names_suffix'))
 
+  def test_indent_extra_newlines(self):
+    src = textwrap.dedent('''\
+        if a:
+
+          b
+        ''')
+    t = pasta.parse(src)
+    if_node = t.body[0]
+    b = if_node.body[0]
+    self.assertEqual('  ', fmt.get(b, 'indent_diff'))
+
+  def test_indent_extra_newlines_with_comment(self):
+    src = textwrap.dedent('''\
+        if a:
+            #not here
+
+          b
+        ''')
+    t = pasta.parse(src)
+    if_node = t.body[0]
+    b = if_node.body[0]
+    self.assertEqual('  ', fmt.get(b, 'indent_diff'))
+
 
 def _is_syntax_valid(filepath):
   with open(filepath, 'r') as f:

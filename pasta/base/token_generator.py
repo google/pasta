@@ -84,8 +84,11 @@ class TokenGenerator(object):
 
   def peek_non_whitespace(self):
     """Get the next non-whitespace token without advancing."""
-    return next((tok for tok in self._tokens[self._i + 1:]
-                 if tok.type not in FORMATTING_TOKENS), None)
+    return self.peek_conditional(lambda t: t.type not in FORMATTING_TOKENS)
+
+  def peek_conditional(self, condition):
+    """Get the next token of the given type without advancing."""
+    return next((t for t in self._tokens[self._i + 1:] if condition(t)), None)
 
   def next(self, advance=True):
     """Consume the next token and optionally advance the current location."""
