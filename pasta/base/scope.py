@@ -53,15 +53,14 @@ class ScopeVisitor(ast.NodeVisitor):
 
   def visit_in_order(self, node, *attrs):
     for attr in attrs:
-      try:
-        val = getattr(node, attr)
-        if isinstance(val, list):
-          for item in val:
-            self.visit(item)
-        else:
-          self.visit(val)
-      except AttributeError:
-        pass
+      val = getattr(node, attr, None)
+      if val is None:
+        continue
+      if isinstance(val, list):
+        for item in val:
+          self.visit(item)
+      else:
+        self.visit(val)
 
   def visit_Import(self, node):
     for alias in node.names:
@@ -102,8 +101,8 @@ class ScopeVisitor(ast.NodeVisitor):
     for alias in node.names:
       name = self.scope.define_name(alias.asname or alias.name, alias)
       if node.module:
-        self.scope.add_external_reference('.'.join((node.module, alias.name)),
-                                          alias, name_ref=name)
+        self.root_scope.add_external_reference(
+            '.'.join((node.module, alias.name)), alias, name_ref=name)
       # TODO: else? relative imports
     self.generic_visit(node)
 
