@@ -59,7 +59,7 @@ class ScopeVisitor(ast.NodeVisitor):
       if isinstance(val, list):
         for item in val:
           self.visit(item)
-      else:
+      elif isinstance(val, ast.AST):
         self.visit(val)
 
   def visit_Import(self, node):
