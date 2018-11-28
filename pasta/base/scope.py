@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import ast
 import collections
+import six
 
 # TODO: Support relative imports
 
@@ -128,8 +129,17 @@ class ScopeVisitor(ast.NodeVisitor):
       self.scope = self.scope.parent_scope
 
   def visit_arguments(self, node):
-    # Visit defaults first to avoid declarations in args
-    self.visit_in_order(node, 'defaults', 'args', 'vararg', 'kwarg')
+    self.visit_in_order(node, 'defaults', 'args')
+    if six.PY2:
+      # In python 2.x, these names are not Name nodes. Define them explicitly
+      # to be able to find references in the function body.
+      for arg_attr_name in ('vararg', 'kwarg'):
+        arg_name = getattr(node, arg_attr_name, None)
+        if arg_name is not None:
+          self.scope.define_name(arg_name, node)
+    else:
+      # Visit defaults first to avoid declarations in args
+      self.visit_in_order(node, 'vararg', 'kwarg')
 
   def visit_arg(self, node):
     self.scope.define_name(node.arg, node)
