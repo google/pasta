@@ -24,7 +24,11 @@ Sample use cases:
 
 ## Python Version Support
 
-Targeted for Python `2.7`, with additional support for Python `3.4`.
+Targeted for Python `2.7`, with additional support for Python `3.4` and `3.5`.
+
+## Dependencies
+
+`pasta` depends on [`six`](https://pypi.org/project/six/).
 
 ## Basic Usage
 

@@ -437,6 +437,25 @@ class ScopeTest(test_utils.TestCase):
                           [method_aaa.body[0].value, method_bbb.body[0].value])
     # TODO: Test references to C.aaa, C.bbb once supported
 
+  def test_vararg_kwarg_references_in_function_body(self):
+    source = textwrap.dedent("""\
+        def aaa(bbb, *ccc, **ddd):
+          ccc
+          ddd
+        eee(ccc, ddd)
+        """)
+    tree = ast.parse(source)
+    funcdef, call = tree.body
+    ccc_expr, ddd_expr = funcdef.body
+
+    sc = scope.analyze(tree)
+
+    func_scope = sc.lookup_scope(funcdef)
+    self.assertIn('ccc', func_scope.names)
+    self.assertItemsEqual(func_scope.names['ccc'].reads, [ccc_expr.value])
+    self.assertIn('ddd', func_scope.names)
+    self.assertItemsEqual(func_scope.names['ddd'].reads, [ddd_expr.value])
+
 
 def suite():
   result = unittest.TestSuite()
