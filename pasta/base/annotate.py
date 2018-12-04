@@ -1140,7 +1140,7 @@ class AstAnnotator(BaseVisitor):
         len(new_indent) <= len(prev_indent)):
       raise AnnotationError(
           'Indent detection failed (line %d); inner indentation level is not '
-          'more than the outer indentation.' % lineno)
+          'more than the outer indentation.' % cur_loc[0])
 
     # Set the indent level to the child's indent and iterate over the children
     self._indent = new_indent
