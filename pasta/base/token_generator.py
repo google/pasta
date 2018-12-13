@@ -234,13 +234,17 @@ class TokenGenerator(object):
 
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src in symbols):
+      # Consume all space up to this token
+      result += self._space_between(prev_loc, tok)
       if tok.src == ')' and single_paren and encountered_paren:
         self.rewind()
         parsed_to_i = self._i
         parsed_to_loc = tok.start
+        fmt.append(node, suffix_attr, result)
         break
-      # Stores all the code up to and including this token
-      result += self._space_between(prev_loc, tok) + tok.src
+
+      # Consume the token itself
+      result += tok.src
 
       if tok.src == ')':
         # Close out the open scope
