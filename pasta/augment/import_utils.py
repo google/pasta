@@ -90,17 +90,16 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
 
     # Create a new node for this import
     import_node = ast.ImportFrom(module=from_module, names=[new_alias], level=0)
-    added_name = new_alias.asname or new_alias.name 
 
   # If not already created as an ImportFrom, create a normal Import node
   if not import_node:
+    new_alias = make_safe_alias_node(alias_name=name_to_import, asname=asname)
     import_node = ast.Import(
-        names=[make_safe_alias_node(alias_name=name_to_import, asname=asname)])
-    added_name = name_to_import
+        names=[new_alias])
 
   # Insert the node at the top of the module and return the name in scope
   tree.body.insert(1 if ast_utils.has_docstring(tree) else 0, import_node)
-  return added_name
+  return new_alias.asname or new_alias.name
 
 
 def split_import(sc, node, alias_to_remove):
