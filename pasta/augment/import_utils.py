@@ -27,12 +27,18 @@ from pasta.base import ast_utils
 from pasta.base import scope
 
 
-def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
+def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_imports=True):
   """Adds an import to the module.
+  
+  This function will try to ensure not to create duplicate imports. If name_to_import is
+  already imported, it will return the existing import. If the import would create a name
+  that already exists in the scope given by tree, this function will "import as", and append
+  "_x" to the asname where x is the smallest positive integer generating a unique name.
 
   Arguments:
     tree: (ast.Module) Module AST to modify.
     name_to_import: (string) The absolute name to import.
+    asname: (string) The alias for the import ("import name_to_import as asname")
     from_import: (boolean) If True, import the name using an ImportFrom node.
     merge_from_imports: (boolean) If True, merge a newly inserted ImportFrom
       node into an existing ImportFrom node, if applicable.
@@ -44,7 +50,7 @@ def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
   sc = scope.analyze(tree)
 
   # Don't add anything if it's already imported
-  if name_to_import in sc.external_references:
+  if name_to_import in sc.external_references and asname is not None:
     existing_ref = next((ref for ref in sc.external_references[name_to_import]
                          if ref.name_ref is not None), None)
     if existing_ref:
@@ -52,19 +58,24 @@ def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
 
   import_node = None
   added_name = None
-
-  # Add an ImportFrom node if requested and possible
-  if from_import and '.' in name_to_import:
-    from_module, alias_name = name_to_import.rsplit('.', 1)
-    new_alias = ast.alias(name=alias_name, asname=None)
-
+  
+  def make_safe_alias_node(alias_name, asname):
     # Try to avoid name conflicts
-    imported_name = alias_name
+    new_alias = ast.alias(name=alias_name, asname=asname)
+    imported_name = asname or alias_name
     counter = 0
     while imported_name in sc.names:
       counter += 1
-      imported_name = new_alias.asname = '%s_%d' % (alias_name, counter)
+      imported_name = new_alias.asname = '%s_%d' % (asname or alias_name, 
+                                                    counter)
+    return new_alias
+        
+  # Add an ImportFrom node if requested and possible
+  if from_import and '.' in name_to_import:
+    from_module, alias_name = name_to_import.rsplit('.', 1)
 
+    new_alias = make_safe_alias_node(alias_name, asname)
+    
     if merge_from_imports:
       # Try to add to an existing ImportFrom from the same module
       existing_from_import = next(
@@ -72,7 +83,7 @@ def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
            and node.module == from_module and node.level == 0), None)
       if existing_from_import:
         existing_from_import.names.append(new_alias)
-        return new_alias.asname if new_alias.asname else new_alias.name
+        return new_alias.asname or new_alias.name
 
     # Create a new node for this import
     import_node = ast.ImportFrom(module=from_module, names=[new_alias], level=0)
@@ -81,7 +92,7 @@ def add_import(tree, name_to_import, from_import=True, merge_from_imports=True):
   # If not already created as an ImportFrom, create a normal Import node
   if not import_node:
     import_node = ast.Import(
-        names=[ast.alias(name=name_to_import, asname=None)])
+        names=[make_safe_alias_node(alias_name=name_to_import, asname=asname)])
     added_name = name_to_import
 
   # Insert the node at the top of the module and return the name in scope
