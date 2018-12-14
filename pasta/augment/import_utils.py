@@ -31,9 +31,12 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
   """Adds an import to the module.
   
   This function will try to ensure not to create duplicate imports. If name_to_import is
-  already imported, it will return the existing import. If the import would create a name
-  that already exists in the scope given by tree, this function will "import as", and append
-  "_x" to the asname where x is the smallest positive integer generating a unique name.
+  already imported, it will return the existing import. This is true even if asname is set
+  (asname will be ignored, and the existing name will be returned).
+  
+  If the import would create a name that already exists in the scope given by tree, this
+  function will "import as", and append "_x" to the asname where x is the smallest positive
+  integer generating a unique name.
 
   Arguments:
     tree: (ast.Module) Module AST to modify.
@@ -50,7 +53,7 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
   sc = scope.analyze(tree)
 
   # Don't add anything if it's already imported
-  if name_to_import in sc.external_references and asname is not None:
+  if name_to_import in sc.external_references:
     existing_ref = next((ref for ref in sc.external_references[name_to_import]
                          if ref.name_ref is not None), None)
     if existing_ref:
