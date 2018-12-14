@@ -239,17 +239,41 @@ class AddImportTest(test_utils.TestCase):
                      import_utils.add_import(tree, 'a.b.c', from_import=False))
     self.assertEqual('import a.b.c\n', pasta.dump(tree))
 
+  def test_add_normal_import_with_asname(self):
+    tree = ast.parse('')
+    self.assertEqual(
+      'd',
+      import_utils.add_import(tree, 'a.b.c', asname='d', from_import=False)
+    )
+    self.assertEqual('import a.b.c as d\n', pasta.dump(tree))
+    
   def test_add_from_import(self):
     tree = ast.parse('')
     self.assertEqual('c',
                      import_utils.add_import(tree, 'a.b.c', from_import=True))
     self.assertEqual('from a.b import c\n', pasta.dump(tree))
 
+  def test_add_from_import_with_asname(self):
+    tree = ast.parse('')
+    self.assertEqual(
+      'd',
+      import_utils.add_import(tree, 'a.b.c', asname='d', from_import=True)
+    )
+    self.assertEqual('from a.b import c as d\n', pasta.dump(tree))
+    
   def test_add_single_name_from_import(self):
     tree = ast.parse('')
     self.assertEqual('foo',
                      import_utils.add_import(tree, 'foo', from_import=True))
     self.assertEqual('import foo\n', pasta.dump(tree))
+
+  def test_add_single_name_from_import_with_asname(self):
+    tree = ast.parse('')
+    self.assertEqual(
+      'bar',
+      import_utils.add_import(tree, 'foo', asname='bar', from_import=True)
+    )
+    self.assertEqual('import foo as bar\n', pasta.dump(tree))
 
   def test_add_existing_import(self):
     tree = ast.parse('from a.b import c')
@@ -261,6 +285,11 @@ class AddImportTest(test_utils.TestCase):
     self.assertEqual('d', import_utils.add_import(tree, 'a.b.c'))
     self.assertEqual('from a.b import c as d\n', pasta.dump(tree))
 
+  def test_add_existing_import_aliased_with_asname(self):
+    tree = ast.parse('from a.b import c as d')
+    self.assertEqual('d', import_utils.add_import(tree, 'a.b.c', asname='e'))
+    self.assertEqual('from a.b import c as d\n', pasta.dump(tree))
+    
   def test_add_existing_import_normal_import(self):
     tree = ast.parse('import a.b.c')
     self.assertEqual('a.b',
@@ -281,6 +310,13 @@ class AddImportTest(test_utils.TestCase):
                      import_utils.add_import(tree, 'a.b.c', from_import=True))
     self.assertEqual(
         'from a.b import c as c_1\ndef c():\n  pass\n', pasta.dump(tree))
+
+  def test_add_import_with_asname_with_conflict(self):
+    tree = ast.parse('def c(): pass\n')
+    self.assertEqual('c_1',
+                     import_utils.add_import(tree, 'a.b', asname='c', from_import=True))
+    self.assertEqual(
+        'from a import b as c_1\ndef c():\n  pass\n', pasta.dump(tree))
 
   def test_merge_from_import(self):
     tree = ast.parse('from a.b import c')
