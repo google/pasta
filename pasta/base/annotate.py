@@ -526,6 +526,16 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.value)
 
   @statement
+  def visit_AnnAssign(self, node):
+    # TODO: Check default formatting for different values of "simple"
+    self.visit(node.target)
+    self.attr(node, 'colon', [self.ws, ':', self.ws], default=': ')
+    self.visit(node.annotation)
+    if node.value:
+      self.attr(node, 'equal', [self.ws, '=', self.ws], default=' = ')
+      self.visit(node.value)
+
+  @statement
   def visit_Break(self, node):
     self.token('break')
 

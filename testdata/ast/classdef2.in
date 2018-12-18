@@ -1,0 +1,6 @@
+class A:
+  b: C
+  d: E = f
+
+class G:
+  ( h  )  : I
