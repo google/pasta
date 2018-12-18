@@ -24,9 +24,7 @@ Sample use cases:
 
 ## Python Version Support
 
-Targeted for Python `2.7`, with additional support for Python `3.4` and `3.5`.
-Support for `3.6`, including
-[PEP 526](https://www.python.org/dev/peps/pep-0526/), is in the works.
+Supports python `2.7` and up to `3.6`.
 
 ## Dependencies
 
