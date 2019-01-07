@@ -21,6 +21,7 @@ from __future__ import print_function
 import abc
 import ast
 import contextlib
+import functools
 import itertools
 import six
 from six.moves import zip
