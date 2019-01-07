@@ -862,9 +862,9 @@ class BaseVisitor(ast.NodeVisitor):
 
   @expression
   def visit_Repr(self, node):
-    self.attr(node, 'repr_open', ['repr', self.ws, '('], default='repr(')
+    self.attr(node, 'repr_open', ['`', self.ws], default='`')
     self.visit(node.value)
-    self.attr(node, 'repr_close', [self.ws, ')'], default=')')
+    self.attr(node, 'repr_close', [self.ws, '`'], default='`')
 
   @expression
   def visit_Set(self, node):
