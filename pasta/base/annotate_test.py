@@ -359,7 +359,7 @@ class PrefixSuffixGoldenTest(with_metaclass(PrefixSuffixGoldenTestMeta,
 class ManualEditsTest(test_utils.TestCase):
   """Tests that we can handle ASTs that have been modified.
 
-  Such ASTs may back position information (lineno/col_offset) on some nodes.
+  Such ASTs may lack position information (lineno/col_offset) on some nodes.
   """
 
   def test_call_no_pos(self):
