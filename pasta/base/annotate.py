@@ -21,6 +21,7 @@ from __future__ import print_function
 import abc
 import ast
 import contextlib
+import functools
 import itertools
 import six
 from six.moves import zip
@@ -703,10 +704,10 @@ class BaseVisitor(ast.NodeVisitor):
 
   def visit_Call_arguments(self, node):
     def arg_location(tup):
-      _, n = tup
-      if isinstance(n, ast.keyword):
-        n = n.value
-      return (n.lineno, n.col_offset)
+      arg = tup[1]
+      if isinstance(arg, ast.keyword):
+        arg = arg.value
+      return (getattr(arg, "lineno", 0), getattr(arg, "col_offset", 0))
 
     if node.starargs:
       sorted_keywords = sorted(
@@ -727,12 +728,39 @@ class BaseVisitor(ast.NodeVisitor):
     return bool(all_args)
 
   def visit_Call_arguments35(self, node):
-    def arg_location(n):
-      if isinstance(n, ast.keyword):
-        n = n.value
-      return (n.lineno, n.col_offset)
+    def arg_compare(a1, a2):
+      """Old-style comparator for sorting args."""
+      def is_arg(a):
+        return not isinstance(a, (ast.keyword, ast.Starred))
 
-    all_args = sorted(node.args + node.keywords, key=arg_location)
+      # No kwarg can come before a regular arg (but Starred can be wherever)
+      if is_arg(a1) and isinstance(a2, ast.keyword):
+        return -1
+      elif is_arg(a2) and isinstance(a1, ast.keyword):
+        return 1
+
+      # If no lineno or col_offset on one of the args, they compare as equal
+      # (since sorting is stable, this should leave them mostly where they
+      # were in the initial list).
+      def get_pos(a):
+        if isinstance(a, ast.keyword):
+          a = a.value
+        return (getattr(a, 'lineno', None), getattr(a, 'col_offset', None))
+
+      pos1 = get_pos(a1)
+      pos2 = get_pos(a2)
+
+      if None in pos1 or None in pos2:
+        return 0
+
+      # If both have lineno/col_offset set, use that to sort them
+      return -1 if pos1 < pos2 else 0 if pos1 == pos2 else 1
+
+    # Note that this always sorts keywords identically to just sorting by
+    # lineno/col_offset, except in cases where that ordering would have been
+    # a syntax error (named arg before unnamed arg).
+    all_args = sorted(node.args + node.keywords,
+                      key=functools.cmp_to_key(arg_compare))
 
     for i, arg in enumerate(all_args):
       self.visit(arg)
