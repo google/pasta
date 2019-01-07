@@ -92,7 +92,7 @@ class PrefixSuffixTest(test_utils.TestCase):
   def test_module_suffix(self):
     src = 'foo\n#bar\n\n#baz\n'
     t = pasta.parse(src)
-    self.assertEquals(src[src.index('#bar'):], fmt.get(t, 'suffix'))
+    self.assertEqual(src[src.index('#bar'):], fmt.get(t, 'suffix'))
 
   def test_no_block_suffix_for_single_line_statement(self):
     src = 'if x:  return y\n  #a\n#b\n'
@@ -356,12 +356,41 @@ class PrefixSuffixGoldenTest(with_metaclass(PrefixSuffixGoldenTestMeta,
   maxDiff = None
 
 
+class ManualEditsTest(test_utils.TestCase):
+  """Tests that we can handle ASTs that have been modified.
+
+  Such ASTs may back position information (lineno/col_offset) on some nodes.
+  """
+
+  def test_call_no_pos(self):
+    """Tests that Call node traversal works without position information."""
+    src = 'f(a)'
+    t = pasta.parse(src)
+    node = ast_utils.find_nodes_by_type(t, (ast.Call,))[0]
+    node.keywords.append(ast.keyword(arg='b', value=ast.Num(n=0)))
+    self.assertEqual('f(a, b=0)', pasta.dump(t))
+
+  def test_call_illegal_pos(self):
+    """Tests that Call node traversal works even with illegal positions."""
+    src = 'f(a)'
+    t = pasta.parse(src)
+    node = ast_utils.find_nodes_by_type(t, (ast.Call,))[0]
+    node.keywords.append(ast.keyword(arg='b', value=ast.Num(n=0)))
+
+    # This position would put b=0 before a, so it should be ignored.
+    node.keywords[-1].value.lineno = 0
+    node.keywords[-1].value.col_offset = 0
+
+    self.assertEqual('f(a, b=0)', pasta.dump(t))
+
+
 def _get_diff(before, after):
   return difflib.ndiff(after.splitlines(), before.splitlines())
 
 
 def suite():
   result = unittest.TestSuite()
+  result.addTests(unittest.makeSuite(ManualEditsTest))
   result.addTests(unittest.makeSuite(SymmetricTest))
   result.addTests(unittest.makeSuite(PrefixSuffixTest))
   result.addTests(unittest.makeSuite(PrefixSuffixGoldenTest))
