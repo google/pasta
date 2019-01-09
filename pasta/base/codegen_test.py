@@ -75,6 +75,12 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
     t = ast.parse(src)
     self.assertEqual(src, pasta.dump(t))
 
+  @test_utils.requires_features('exec_node')
+  def test_exec_node_default(self):
+    src = 'exec foo in bar'
+    t = ast.parse(src)
+    self.assertEqual('exec(foo, bar)\n', pasta.dump(t))
+
 
 def suite():
   result = unittest.TestSuite()

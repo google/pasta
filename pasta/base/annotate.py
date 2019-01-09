@@ -554,16 +554,18 @@ class BaseVisitor(ast.NodeVisitor):
 
   @statement
   def visit_Exec(self, node):
-    self.attr(node, 'exec', ['exec', self.ws], default='exec ')
-    self.visit(node.body)
-    if node.globals:
-      self.attr(node, 'in_globals',
-                [self.ws, self.one_of_symbols('in', ','), self.ws],
-                default=' in ')
-      self.visit(node.globals)
-      if node.locals:
-        self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
-        self.visit(node.locals)
+    # If no formatting info is present, will use parenthesized style
+    self.attr(node, 'exec', ['exec', self.ws], default='exec')
+    with self.scope(node, 'body', trailing_comma=False, default_parens=True):
+      self.visit(node.body)
+      if node.globals:
+        self.attr(node, 'in_globals',
+                  [self.ws, self.one_of_symbols('in', ','), self.ws],
+                  default=', ')
+        self.visit(node.globals)
+        if node.locals:
+          self.attr(node, 'in_locals', [self.ws, ',', self.ws], default=', ')
+          self.visit(node.locals)
 
   @statement
   def visit_Expr(self, node):

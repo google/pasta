@@ -66,6 +66,8 @@ def requires_features(*features):
 
 
 def supports_feature(feature):
+  if feature == 'exec_node':
+    return hasattr(ast, 'Exec') and issubclass(ast.Exec, ast.AST)
   if feature == 'type_annotations':
     try:
       ast.parse('def foo(bar: str=123) -> None: pass')

@@ -5,3 +5,9 @@ exec b in c
 exec     d     in   e,f
 
 exec g in h   ,  i
+
+exec(  j )
+
+exec(k, l)
+
+exec(m, n, o)
