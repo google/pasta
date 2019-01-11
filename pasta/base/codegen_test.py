@@ -81,6 +81,16 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
     t = ast.parse(src)
     self.assertEqual('exec(foo, bar)\n', pasta.dump(t))
 
+  def test_bytes(self):
+    src = "b'foo'"
+    t = ast.parse(src)
+    self.assertEqual("b'foo'\n", pasta.dump(t))
+
+  def test_re_str(self):
+    src = "r'foo'"
+    t = ast.parse(src)
+    self.assertEqual("r'foo'\n", pasta.dump(t))
+
 
 def suite():
   result = unittest.TestSuite()
