@@ -11,5 +11,3 @@
 [g for g in h if i if j for k in l for m in o]
 
 ((p, q) for p, q in r)
-
-[a == b"1" for c in d]
