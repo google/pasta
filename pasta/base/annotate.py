@@ -1209,6 +1209,11 @@ class AstAnnotator(BaseVisitor):
     """Annotate a Str node with the exact string format."""
     self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
 
+  @expression
+  def visit_Bytes(self, node):
+    """Annotate a Bytes node with the exact string format."""
+    self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
+    
   @space_around
   def visit_Ellipsis(self, node):
     # Ellipsis is sometimes split into 3 tokens and other times a single token
