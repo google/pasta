@@ -1,0 +1,19 @@
+b"a"
+
+b'b'
+
+b"cd e"
+
+b"fg" b"hi"
+
+b"""jk
+l
+
+m
+n"""
+
+(b"op"
+ b"qr")
+
+b'st' \
+  b'uv'  b"wxyz"
