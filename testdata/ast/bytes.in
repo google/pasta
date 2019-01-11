@@ -17,3 +17,5 @@ n"""
 
 b'st' \
   b'uv'  b"wxyz"
+
+'zz' b'aa' "bb"
