@@ -66,6 +66,8 @@ def requires_features(*features):
 
 
 def supports_feature(feature):
+  if feature == 'bytes_node':
+    return hasattr(ast, 'Bytes') and issubclass(ast.Bytes, ast.AST)
   if feature == 'exec_node':
     return hasattr(ast, 'Exec') and issubclass(ast.Exec, ast.AST)
   if feature == 'type_annotations':
