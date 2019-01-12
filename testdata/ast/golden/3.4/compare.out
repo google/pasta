@@ -6,6 +6,8 @@
 (9, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (11, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (13, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(15, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(17, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (1, 0)       Compare              	prefix=||	suffix=||	indent=||
 (3, 0)       Compare              	prefix=||	suffix=||	indent=||
 (5, 0)       Compare              	prefix=||	suffix=||	indent=||
@@ -13,6 +15,8 @@
 (9, 1)       Compare              	prefix=|(|	suffix=|)|	indent=||
 (11, 0)      Compare              	prefix=||	suffix=||	indent=||
 (13, 0)      Compare              	prefix=||	suffix=||	indent=||
+(15, 0)      Compare              	prefix=||	suffix=||	indent=||
+(17, 0)      Compare              	prefix=||	suffix=||	indent=||
 (1, 0)       Name a               	prefix=||	suffix=| |	indent=||
 (-1, -1)     Lt                   	prefix=||	suffix=||	indent=||
 (1, 4)       Name b               	prefix=||	suffix=||	indent=||
@@ -36,6 +40,15 @@
 (13, 0)      Name n               	prefix=||	suffix=|  |	indent=||
 (-1, -1)     In                   	prefix=||	suffix=||	indent=||
 (13, 6)      Name o               	prefix=||	suffix=||	indent=||
+(15, 0)      Name a               	prefix=||	suffix=| |	indent=||
+(-1, -1)     Eq                   	prefix=||	suffix=||	indent=||
+(15, 5)      Name b               	prefix=||	suffix=||	indent=||
+(17, 0)      Name a               	prefix=||	suffix=| |	indent=||
+(-1, -1)     Eq                   	prefix=||	suffix=||	indent=||
+(17, 5)      Bytes                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
