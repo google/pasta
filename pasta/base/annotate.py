@@ -385,7 +385,6 @@ class BaseVisitor(ast.NodeVisitor):
     # In Python 3, there can be extra args in kwonlyargs
     kwonlyargs = getattr(node.args, 'kwonlyargs', [])
     args_count = sum((len(node.args.args + kwonlyargs),
-    args_count = sum((len(node.args.args),
                       1 if node.args.vararg else 0,
                       1 if node.args.kwarg else 0))
     with self.scope(node, 'args', trailing_comma=args_count > 0,
