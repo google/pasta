@@ -382,7 +382,9 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'function_def',
               [self.ws, 'def', self.ws, node.name, self.ws],
               deps=('name',), default='def %s' % node.name)
-    args_count = sum((len(node.args.args),
+    # In Python 3, there can be extra args in kwonlyargs
+    kwonlyargs = getattr(node.args, 'kwonlyargs', [])
+    args_count = sum((len(node.args.args + kwonlyargs),
                       1 if node.args.vararg else 0,
                       1 if node.args.kwarg else 0))
     with self.scope(node, 'args', trailing_comma=args_count > 0,
@@ -1023,7 +1025,12 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_around
   def visit_arguments(self, node):
-    total_args = sum((len(node.args),
+    # In Python 3, args appearing after *args must be kwargs
+    kwonlyargs = getattr(node, 'kwonlyargs', [])
+    kw_defaults = getattr(node, 'kw_defaults', [])
+    assert len(kwonlyargs) == len(kw_defaults)
+
+    total_args = sum((len(node.args + kwonlyargs),
                       1 if node.vararg else 0,
                       1 if node.kwarg else 0))
     arg_i = 0
@@ -1038,7 +1045,7 @@ class BaseVisitor(ast.NodeVisitor):
         self.attr(node, 'comma_%d' % arg_i, [self.ws, ',', self.ws],
                   default=', ')
 
-    for i, arg, default in zip(range(len(keyword)), keyword, node.defaults):
+    for i, (arg, default) in enumerate(zip(keyword, node.defaults)):
       self.visit(arg)
       self.attr(node, 'default_%d' % i, [self.ws, '=', self.ws],
                 default='=')
@@ -1058,6 +1065,16 @@ class BaseVisitor(ast.NodeVisitor):
       arg_i += 1
       if arg_i < total_args:
         self.token(',')
+
+    for i, (arg, default) in enumerate(zip(kwonlyargs, kw_defaults)):
+      self.visit(arg)
+      self.attr(node, 'kw_default_%d' % i, [self.ws, '=', self.ws],
+                default='=')
+      self.visit(default)
+      arg_i += 1
+      if arg_i < total_args:
+        self.attr(node, 'comma_%d' % arg_i, [self.ws, ',', self.ws],
+                  default=', ')
 
     if node.kwarg:
       self.attr(node, 'kwarg_prefix', [self.ws, '**', self.ws], default='**')
