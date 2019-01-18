@@ -1117,6 +1117,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(dim)
       if dim is not node.dims[-1]:
         self.attr(node, 'dim_sep_%d' % i, [self.ws, ',', self.ws], default=', ')
+    self.optional_token(node, 'trailing_comma', ',', default=False)
     self.attr(node, 'extslice_close', [self.ws, ']'], default=']')
 
   @space_left
