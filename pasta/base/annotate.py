@@ -1045,7 +1045,7 @@ class BaseVisitor(ast.NodeVisitor):
         self.attr(node, 'comma_%d' % arg_i, [self.ws, ',', self.ws],
                   default=', ')
 
-    for i, arg, default in zip(range(len(keyword)), keyword, node.defaults):
+    for i, (arg, default) in enumerate(zip(keyword, node.defaults)):
       self.visit(arg)
       self.attr(node, 'default_%d' % i, [self.ws, '=', self.ws],
                 default='=')
@@ -1066,7 +1066,7 @@ class BaseVisitor(ast.NodeVisitor):
       if arg_i < total_args:
         self.token(',')
 
-    for i, arg, default in zip(range(len(kwonlyargs)), kwonlyargs, kw_defaults):
+    for i, (arg, default) in enumerate(zip(kwonlyargs, kw_defaults)):
       self.visit(arg)
       self.attr(node, 'kw_default_%d' % i, [self.ws, '=', self.ws],
                 default='=')
