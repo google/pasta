@@ -6,6 +6,7 @@
 (9, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (11, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (13, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(15, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (1, 0)       Subscript            	prefix=||	suffix=||	indent=||
 (3, 0)       Subscript            	prefix=||	suffix=||	indent=||
 (5, 0)       Subscript            	prefix=||	suffix=||	indent=||
@@ -13,6 +14,7 @@
 (9, 0)       Subscript            	prefix=||	suffix=||	indent=||
 (11, 0)      Subscript            	prefix=||	suffix=||	indent=||
 (13, 0)      Subscript            	prefix=||	suffix=||	indent=||
+(15, 0)      Subscript            	prefix=||	suffix=||	indent=||
 (1, 0)       Name a               	prefix=||	suffix=||	indent=||
 (-1, -1)     Index                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -34,6 +36,9 @@
 (13, 0)      Name m               	prefix=||	suffix=||	indent=||
 (-1, -1)     ExtSlice             	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(15, 0)      Name o               	prefix=||	suffix=||	indent=||
+(-1, -1)     ExtSlice             	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (1, 2)       Name b               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -52,6 +57,9 @@
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Slice                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Slice                	prefix=||	suffix=||	indent=||
+(-1, -1)     Index                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (5, 5)       Name g               	prefix=||	suffix=|  |	indent=||
@@ -60,6 +68,10 @@
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (13, 3)      Name n               	prefix=||	suffix=||	indent=||
+(15, 3)      Name None            	prefix=||	suffix=||	indent=||
+(15, 5)      Name p               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

@@ -1258,7 +1258,10 @@ class AstAnnotator(BaseVisitor):
 
   def check_slice_includes_step(self, node):
     """Helper function for Slice node to determine whether to visit its step."""
-    return self.tokens.peek_non_whitespace().src != ']'
+    # This is needed because of a bug in the 2.7 parser which treats
+    # a[::] as Slice(lower=None, upper=None, step=Name(id='None'))
+    # but also treats a[::None] exactly the same.
+    return self.tokens.peek_non_whitespace().src not in '],'
 
   def ws(self, max_lines=None, semicolon=False, comment=True):
     """Parse some whitespace from the source tokens and return it."""
