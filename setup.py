@@ -28,7 +28,7 @@ def all_tests():
 
 setup(
     name="google-pasta",
-    version="0.1.2",
+    version="0.1.3",
     packages=find_packages(),
 
     # metadata for upload to PyPI
