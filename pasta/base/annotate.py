@@ -891,7 +891,9 @@ class BaseVisitor(ast.NodeVisitor):
   @expression
   def visit_Subscript(self, node):
     self.visit(node.value)
+    self.attr(node, 'slice_open', ['[', self.ws], default='[')
     self.visit(node.slice)
+    self.attr(node, 'slice_close', [']', self.ws], default=']')
 
   @expression
   def visit_Tuple(self, node):
@@ -1104,27 +1106,18 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_left
   def visit_Index(self, node):
-    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
-      self.attr(node, 'index_open', ['[', self.ws], default='[')
     self.visit(node.value)
-    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
-      self.attr(node, 'index_close', [self.ws, ']'], default=']')
 
   @space_left
   def visit_ExtSlice(self, node):
-    self.attr(node, 'extslice_open', ['[', self.ws], default='[')
     for i, dim in enumerate(node.dims):
       self.visit(dim)
       if dim is not node.dims[-1]:
         self.attr(node, 'dim_sep_%d' % i, [self.ws, ',', self.ws], default=', ')
     self.optional_token(node, 'trailing_comma', ',', default=False)
-    self.attr(node, 'extslice_close', [self.ws, ']'], default=']')
 
   @space_left
   def visit_Slice(self, node):
-    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
-      self.attr(node, 'slice_open', ['[', self.ws], default='[')
-
     if node.lower:
       self.visit(node.lower)
     self.attr(node, 'lowerspace', [self.ws, ':', self.ws], default=':')
@@ -1138,9 +1131,6 @@ class BaseVisitor(ast.NodeVisitor):
       self.optional_token(node, 'step_colon_2', ':', default=True)
       node.step.is_explicit_step = True
       self.visit(node.step)
-
-    if len(self._stack) > 1 and not isinstance(self._stack[-2], ast.ExtSlice):
-      self.attr(node, 'slice_close', [self.ws, ']'], default=']')
 
   def check_slice_includes_step(self, node):
     """Helper function for Slice node to determine whether to visit its step."""
