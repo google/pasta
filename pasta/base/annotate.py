@@ -891,9 +891,9 @@ class BaseVisitor(ast.NodeVisitor):
   @expression
   def visit_Subscript(self, node):
     self.visit(node.value)
-    self.attr(node, 'slice_open', ['[', self.ws], default='[')
+    self.attr(node, 'slice_open', [self.ws, '[', self.ws], default='[')
     self.visit(node.slice)
-    self.attr(node, 'slice_close', [']', self.ws], default=']')
+    self.attr(node, 'slice_close', [self.ws, ']'], default=']')
 
   @expression
   def visit_Tuple(self, node):
