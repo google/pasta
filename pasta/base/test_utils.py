@@ -31,7 +31,11 @@ class TestCase(unittest.TestCase):
 
     Ignores `ctx` fields and formatting info.
     """
+    if a is None and b is None:
+      return
     try:
+      self.assertIsNotNone(a)
+      self.assertIsNotNone(b)
       for node_a, node_b in zip(ast.walk(a), ast.walk(b)):
         self.assertEqual(type(node_a), type(node_b))
         for field in type(node_a)()._fields:
