@@ -6,6 +6,8 @@
 (9, 0)       ImportFrom           	prefix=|\n|	suffix=|\n|	indent=||
 (11, 0)      ImportFrom m         	prefix=|\n|	suffix=|\n|	indent=||
 (13, 0)      ImportFrom o         	prefix=|\n|	suffix=|\n|	indent=||
+(15, 0)      ImportFrom           	prefix=|\n|	suffix=|\n|	indent=||
+(17, 0)      ImportFrom           	prefix=|\n|	suffix=|\n|	indent=||
 (-1, -1)     alias b              	prefix=||	suffix=||	indent=||
 (-1, -1)     alias d              	prefix=||	suffix=||	indent=||
 (-1, -1)     alias f              	prefix=||	suffix=||	indent=||
@@ -13,3 +15,5 @@
 (-1, -1)     alias l              	prefix=||	suffix=||	indent=||
 (-1, -1)     alias n              	prefix=||	suffix=||	indent=||
 (-1, -1)     alias p              	prefix=||	suffix=||	indent=||
+(-1, -1)     alias q              	prefix=||	suffix=||	indent=||
+(-1, -1)     alias s              	prefix=||	suffix=||	indent=||
