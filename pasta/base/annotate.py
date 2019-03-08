@@ -190,6 +190,10 @@ class BaseVisitor(ast.NodeVisitor):
     """
     return ''
 
+  def dots(self, num_dots):
+    """Account for a number of dots."""
+    return '.' * num_dots
+
   def ws_oneline(self):
     """Account for up to one line of whitespace."""
     return self.ws(max_lines=1)
@@ -597,7 +601,9 @@ class BaseVisitor(ast.NodeVisitor):
     self.token('from')
     self.attr(node, 'module_prefix', [self.ws], default=' ')
 
-    module_pattern = ['.', self.ws] * node.level
+    module_pattern = []
+    if node.level > 0:
+      module_pattern.extend([self.dots(node.level), self.ws])
     if node.module:
       parts = node.module.split('.')
       for part in parts[:-1]:
@@ -1264,6 +1270,12 @@ class AstAnnotator(BaseVisitor):
         result += self.tokens.whitespace(max_lines=1)
       return result
     return self.tokens.whitespace(max_lines=max_lines, comment=comment)
+
+  def dots(self, num_dots):
+    """Parse a number of dots."""
+    def _parse_dots():
+      return self.tokens.dots(num_dots)
+    return _parse_dots
 
   def block_suffix(self, node, indent_level):
     fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
