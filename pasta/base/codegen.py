@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import collections
 
 from pasta.base import annotate
@@ -60,6 +61,33 @@ class Printer(annotate.BaseVisitor):
     self.prefix(node)
     content = fmt.get(node, 'content')
     self.code += content if content is not None else repr(node.s)
+    self.suffix(node)
+
+  def visit_JoinedStr(self, node):
+    self.prefix(node)
+    content = fmt.get(node, 'content')
+
+    if content is None:
+      parts = []
+      for val in node.values:
+        if isinstance(v, ast.Str):
+          parts.append(v.s)
+        else:
+          parts.append('{__pasta_fstring_val_%d__}' % len(parts))
+      content = repr(''.join(parts))
+
+    formatted_values = (v for v in node.values
+                        if isinstance(v, ast.FormattedValue))
+    for i, val in enumerate(formatted_values):
+      content = content.replace('{__pasta_fstring_val_%d__}' % i,
+                                '{%s}' % to_str(val))
+
+    self.code += content
+    self.suffix(node)
+
+  def visit_FormattedValue(self, node):
+    self.prefix(node)
+    self.visit(node.value)
     self.suffix(node)
 
   def visit_Bytes(self, node):

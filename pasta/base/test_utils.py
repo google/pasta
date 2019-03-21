@@ -80,4 +80,6 @@ def supports_feature(feature):
     except SyntaxError:
       return False
     return True
+  if feature == 'fstring':
+    return hasattr(ast, 'JoinedStr') and issubclass(ast.JoinedStr, ast.AST)
   return False
