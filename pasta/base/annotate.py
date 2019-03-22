@@ -62,7 +62,7 @@ def expression(f):
 
 
 def fstring_expression(f):
-  """Decorates a function where the node is an expression."""
+  """Decorates a function where the node is a FormattedValue in an fstring."""
   return _gen_wrapper(f)
 
 
