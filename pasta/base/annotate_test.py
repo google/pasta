@@ -384,6 +384,28 @@ class ManualEditsTest(test_utils.TestCase):
     self.assertEqual('f(a, b=0)', pasta.dump(t))
 
 
+class FstringTest(test_utils.TestCase):
+  """Tests fstring support more in-depth."""
+
+  @test_utils.requires_features('fstring')
+  def test_fstring(self):
+    src = 'f"a {b} c d {e}"'
+    t = pasta.parse(src)
+    node = t.body[0].value
+    self.assertEqual(
+        fmt.get(node, 'content'),
+        'f"a {__pasta_fstring_val_0__} c d {__pasta_fstring_val_1__}"')
+
+  @test_utils.requires_features('fstring')
+  def test_fstring_escaping(self):
+    src = 'f"a {{{b} {{c}}"'
+    t = pasta.parse(src)
+    node = t.body[0].value
+    self.assertEqual(
+        fmt.get(node, 'content'),
+        'f"a {{{__pasta_fstring_val_0__} {{c}}"')
+
+
 def _get_diff(before, after):
   return difflib.ndiff(after.splitlines(), before.splitlines())
 
@@ -394,6 +416,7 @@ def suite():
   result.addTests(unittest.makeSuite(SymmetricTest))
   result.addTests(unittest.makeSuite(PrefixSuffixTest))
   result.addTests(unittest.makeSuite(PrefixSuffixGoldenTest))
+  result.addTests(unittest.makeSuite(FstringTest))
   return result
 
 

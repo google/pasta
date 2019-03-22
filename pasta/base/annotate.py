@@ -61,6 +61,11 @@ def expression(f):
   return _gen_wrapper(f, max_suffix_lines=0)
 
 
+def fstring_expression(f):
+  """Decorates a function where the node is a FormattedValue in an fstring."""
+  return _gen_wrapper(f)
+
+
 def space_around(f):
   """Decorates a function where the node has whitespace prefix and suffix."""
   return _gen_wrapper(f, scope=False)
@@ -1222,6 +1227,28 @@ class AstAnnotator(BaseVisitor):
   def visit_Str(self, node):
     """Annotate a Str node with the exact string format."""
     self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
+
+  @expression
+  def visit_JoinedStr(self, node):
+    """Annotate a Str node with the exact string format."""
+    fstr_iter = self.tokens.fstr()()
+    res = ''
+    values = (v for v in node.values if isinstance(v, ast.FormattedValue))
+    while True:
+      res_part, tg = next(fstr_iter)
+      res += res_part
+      if tg is None:
+        break
+      prev_tokens = self.tokens
+      self.tokens = tg
+      self.visit(next(values))
+      self.tokens = prev_tokens
+
+    self.attr(node, 'content', [lambda: res], default=res)
+
+  @fstring_expression
+  def visit_FormattedValue(self, node):
+    self.visit(node.value)
 
   @expression
   def visit_Bytes(self, node):

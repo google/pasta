@@ -18,10 +18,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import collections
 
 from pasta.base import annotate
 from pasta.base import formatting as fmt
+from pasta.base import fstring_utils
 
 
 class PrintError(Exception):
@@ -60,6 +62,28 @@ class Printer(annotate.BaseVisitor):
     self.prefix(node)
     content = fmt.get(node, 'content')
     self.code += content if content is not None else repr(node.s)
+    self.suffix(node)
+
+  def visit_JoinedStr(self, node):
+    self.prefix(node)
+    content = fmt.get(node, 'content')
+
+    if content is None:
+      parts = []
+      for val in node.values:
+        if isinstance(v, ast.Str):
+          parts.append(v.s)
+        else:
+          parts.append(fstring_utils.placeholder(len(parts)))
+      content = repr(''.join(parts))
+
+    values = [to_str(v) for v in fstring_utils.get_formatted_values(node)]
+    self.code += fstring_utils.perform_replacements(content, values)
+    self.suffix(node)
+
+  def visit_FormattedValue(self, node):
+    self.prefix(node)
+    self.visit(node.value)
     self.suffix(node)
 
   def visit_Bytes(self, node):

@@ -30,6 +30,7 @@ import tokenize
 from six import StringIO
 
 from pasta.base import formatting as fmt
+from pasta.base import fstring_utils
 
 # Alias for extracting token names
 TOKENS = tokenize
@@ -51,18 +52,24 @@ class TokenGenerator(object):
   _i: Index of the last token that was parsed. Initially -1.
   _loc: (lineno, column_offset) pair of the position in the source that has been
      parsed to. This should be either the start or end of the token at index _i.
+
+  Arguments:
+    ignore_error_tokens: If True, will stop parsing tokens when an error token
+      is reached. Otherwise, an error token will cause an exception.
   """
 
-  def __init__(self, source):
+  def __init__(self, source, ignore_error_token=False):
     self.lines = source.splitlines(True)
-    _token_generator = tokenize.generate_tokens(StringIO(source).readline)
-    self._tokens = list(Token(*tok) for tok in _token_generator)
+    self._tokens = list(_generate_tokens(source, ignore_error_token))
     self._parens = []
     self._hints = 0
     self._scope_stack = []
     self._len = len(self._tokens)
     self._i = -1
     self._loc = self.loc_begin()
+
+  def chars_consumed(self):
+    return len(self._space_between((1, 0), self._tokens[self._i]))
 
   def loc_begin(self):
     """Get the start column of the current location parsed to."""
@@ -326,6 +333,55 @@ class TokenGenerator(object):
       self._loc = tok.end
     return content
 
+  def fstr(self):
+    """Parses an fstring, including subexpressions.
+
+    Returns:
+      A generator function which, when repeatedly reads a chunk of the fstring
+      up until the next subexpression and yields that chunk, plus a new token
+      generator to use to parse the subexpression. The subexpressions in the
+      original fstring data are replaced by placeholders to make it possible to
+      fill them in with new values, if desired.
+    """
+    def fstr_parser():
+      # Reads the whole fstring as a string, then parses it char by char
+      str_content = self.str()
+      indexed_chars = enumerate(str_content)
+      val_idx = 0
+      i = 0
+      result = ''
+      while i < len(str_content) - 1:
+        i, c = next(indexed_chars)
+        result += c
+        
+        # When an open bracket is encountered, start parsing a subexpression
+        if c == '{':
+          # First check if this is part of an escape sequence
+          # (f"{{" is used to escape a bracket literal)
+          nexti, nextc = next(indexed_chars)
+          if nextc == '{':
+            result += c
+            continue
+          indexed_chars = itertools.chain([(nexti, nextc)], indexed_chars)
+
+          # Add a placeholder onto the result
+          result += fstring_utils.placeholder(val_idx) + '}'
+          val_idx += 1
+          
+          # Yield a new token generator to parse the subexpression only
+          tg = TokenGenerator(str_content[i+1:], ignore_error_token=True)
+          yield (result, tg)
+          result = ''
+          
+          # Skip the number of characters consumed by the subexpression
+          for tg_i in range(tg.chars_consumed()):
+            i, c = next(indexed_chars)
+          while c != '}':
+            i, c = next(indexed_chars)
+      # Yield the rest of the fstring, when done
+      yield (result, None)
+    return fstr_parser
+
   def _space_between(self, prev_loc, tok):
     """Parse the space between a location and the next token"""
     next_loc = tok.start
@@ -418,3 +474,13 @@ def _scope_helper(node):
   if isinstance(node, ast.IfExp):
     return (node,) + _scope_helper(node.body)
   return (node,)
+   
+
+def _generate_tokens(source, ignore_error_token=False):
+  token_generator = tokenize.generate_tokens(StringIO(source).readline)
+  try:
+    for tok in token_generator:
+      yield Token(*tok) 
+  except tokenize.TokenError:
+    if not ignore_error_token:
+      raise
