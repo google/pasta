@@ -1081,9 +1081,10 @@ class BaseVisitor(ast.NodeVisitor):
 
     for i, (arg, default) in enumerate(zip(kwonlyargs, kw_defaults)):
       self.visit(arg)
-      self.attr(node, 'kw_default_%d' % i, [self.ws, '=', self.ws],
-                default='=')
-      self.visit(default)
+      if default is not None:
+        self.attr(node, 'kw_default_%d' % i, [self.ws, '=', self.ws],
+                  default='=')
+        self.visit(default)
       arg_i += 1
       if arg_i < total_args:
         self.attr(node, 'comma_%d' % arg_i, [self.ws, ',', self.ws],
