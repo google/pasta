@@ -23,6 +23,7 @@ import collections
 
 from pasta.base import annotate
 from pasta.base import formatting as fmt
+from pasta.base import fstring_utils
 
 
 class PrintError(Exception):
@@ -73,16 +74,11 @@ class Printer(annotate.BaseVisitor):
         if isinstance(v, ast.Str):
           parts.append(v.s)
         else:
-          parts.append('{__pasta_fstring_val_%d__}' % len(parts))
+          parts.append(fstring_utils.placeholder(len(parts)))
       content = repr(''.join(parts))
 
-    formatted_values = (v for v in node.values
-                        if isinstance(v, ast.FormattedValue))
-    for i, val in enumerate(formatted_values):
-      content = content.replace('{__pasta_fstring_val_%d__}' % i,
-                                '{%s}' % to_str(val))
-
-    self.code += content
+    values = [to_str(v) for v in fstring_utils.get_formatted_values(node)]
+    self.code += fstring_utils.perform_replacements(content, values)
     self.suffix(node)
 
   def visit_FormattedValue(self, node):

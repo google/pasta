@@ -30,6 +30,7 @@ import tokenize
 from six import StringIO
 
 from pasta.base import formatting as fmt
+from pasta.base import fstring_utils
 
 # Alias for extracting token names
 TOKENS = tokenize
@@ -51,6 +52,10 @@ class TokenGenerator(object):
   _i: Index of the last token that was parsed. Initially -1.
   _loc: (lineno, column_offset) pair of the position in the source that has been
      parsed to. This should be either the start or end of the token at index _i.
+
+  Arguments:
+    ignore_error_tokens: If True, will stop parsing tokens when an error token
+      is reached. Otherwise, an error token will cause an exception.
   """
 
   def __init__(self, source, ignore_error_token=False):
@@ -341,27 +346,27 @@ class TokenGenerator(object):
     def fstr_parser():
       # Reads the whole fstring as a string, then parses it char by char
       str_content = self.str()
-      chars = enumerate(str_content)
-      val_num = 0
+      indexed_chars = enumerate(str_content)
+      val_idx = 0
       i = 0
       result = ''
       while i < len(str_content) - 1:
-        i, c = next(chars)
+        i, c = next(indexed_chars)
         result += c
         
         # When an open bracket is encountered, start parsing a subexpression
         if c == '{':
           # First check if this is part of an escape sequence
           # (f"{{" is used to escape a bracket literal)
-          nexti, nextc = next(chars)
+          nexti, nextc = next(indexed_chars)
           if nextc == '{':
             result += c
             continue
-          chars = itertools.chain([(nexti, nextc)], chars)
+          indexed_chars = itertools.chain([(nexti, nextc)], indexed_chars)
 
           # Add a placeholder onto the result
-          result += '__pasta_fstring_val_%d__}' % val_num
-          val_num += 1
+          result += fstring_utils.placeholder(val_idx) + '}'
+          val_idx += 1
           
           # Yield a new token generator to parse the subexpression only
           tg = TokenGenerator(str_content[i+1:], ignore_error_token=True)
@@ -370,9 +375,9 @@ class TokenGenerator(object):
           
           # Skip the number of characters consumed by the subexpression
           for tg_i in range(tg.chars_consumed()):
-            i, c = next(chars)
+            i, c = next(indexed_chars)
           while c != '}':
-            i, c = next(chars)
+            i, c = next(indexed_chars)
       # Yield the rest of the fstring, when done
       yield (result, None)
     return fstr_parser
