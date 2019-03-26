@@ -69,7 +69,7 @@ class TokenGenerator(object):
     self._loc = self.loc_begin()
 
   def chars_consumed(self):
-    return len(self._space_between((1, 0), self._tokens[self._i]))
+    return len(self._space_between((1, 0), self._tokens[self._i].start))
 
   def loc_begin(self):
     """Get the start column of the current location parsed to."""
@@ -138,7 +138,7 @@ class TokenGenerator(object):
     result = ''
     for tok in itertools.chain(whitespace,
                                ((next_token,) if next_token else ())):
-      result += self._space_between(self._loc, tok)
+      result += self._space_between(self._loc, tok.start)
       if tok != next_token:
         result += tok.src
         self._loc = tok.end
@@ -192,7 +192,7 @@ class TokenGenerator(object):
     while dots_seen < num_dots:
       tok = self.next()
       assert tok.src in ('.', '...')
-      result += self._space_between(prev_loc, tok) + tok.src
+      result += self._space_between(prev_loc, tok.start) + tok.src
       dots_seen += tok.src.count('.')
       prev_loc = self._loc
     return result
@@ -208,7 +208,7 @@ class TokenGenerator(object):
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src == '('):
       # Stores all the code up to and including this token
-      result += self._space_between(prev_loc, tok)
+      result += self._space_between(prev_loc, tok.start)
 
       if tok.src == '(' and single_paren and parens:
         self.rewind()
@@ -227,7 +227,7 @@ class TokenGenerator(object):
     if parens:
       # Add any additional whitespace on to the last open-paren
       next_tok = self.peek()
-      parens[-1] += result + self._space_between(self._loc, next_tok)
+      parens[-1] += result + self._space_between(self._loc, next_tok.start)
       self._loc = next_tok.start
       # Add each paren onto the stack
       for paren in parens:
@@ -260,7 +260,7 @@ class TokenGenerator(object):
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src in symbols):
       # Consume all space up to this token
-      result += self._space_between(prev_loc, tok)
+      result += self._space_between(prev_loc, tok.start)
       if tok.src == ')' and single_paren and encountered_paren:
         self.rewind()
         parsed_to_i = self._i
@@ -325,7 +325,7 @@ class TokenGenerator(object):
     prev_loc = self._loc
     tok = None
     for tok in self.takewhile(predicate, advance=False):
-      content += self._space_between(prev_loc, tok)
+      content += self._space_between(prev_loc, tok.start)
       content += tok.src
       prev_loc = tok.end
 
@@ -382,23 +382,22 @@ class TokenGenerator(object):
       yield (result, None)
     return fstr_parser
 
-  def _space_between(self, prev_loc, tok):
+  def _space_between(self, start_loc, end_loc):
     """Parse the space between a location and the next token"""
-    next_loc = tok.start
-    if prev_loc > next_loc:
-      raise ValueError('prev_loc > token start', prev_loc, next_loc)
-    if prev_loc[0] > len(self.lines):
+    if start_loc > end_loc:
+      raise ValueError('start_loc > end_loc', start_loc, end_loc)
+    if start_loc[0] > len(self.lines):
       return ''
 
-    prev_row, prev_col = prev_loc
-    next_row, next_col = next_loc
-    if prev_row == next_row:
-      return self.lines[prev_row - 1][prev_col:next_col]
+    prev_row, prev_col = start_loc
+    end_row, end_col = end_loc
+    if prev_row == end_row:
+      return self.lines[prev_row - 1][prev_col:end_col]
 
     return ''.join(itertools.chain(
         (self.lines[prev_row - 1][prev_col:],),
-        self.lines[prev_row:next_row - 1],
-        (self.lines[next_row - 1][:next_col],) if next_col > 0 else '',
+        self.lines[prev_row:end_row - 1],
+        (self.lines[end_row - 1][:end_col],) if end_col > 0 else '',
     ))
 
   def next_name(self):
