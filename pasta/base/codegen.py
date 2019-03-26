@@ -81,11 +81,6 @@ class Printer(annotate.BaseVisitor):
     self.code += fstring_utils.perform_replacements(content, values)
     self.suffix(node)
 
-  def visit_FormattedValue(self, node):
-    self.prefix(node)
-    self.visit(node.value)
-    self.suffix(node)
-
   def visit_Bytes(self, node):
     self.prefix(node)
     content = fmt.get(node, 'content')

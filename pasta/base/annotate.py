@@ -1155,6 +1155,18 @@ class BaseVisitor(ast.NodeVisitor):
       return True
     return not (isinstance(node.step, ast.Name) and node.step.id == 'None')
 
+  @fstring_expression
+  def visit_FormattedValue(self, node):
+    self.visit(node.value)
+    if node.conversion != -1:
+      self.attr(node, 'conversion',
+                [self.ws, '!', chr(node.conversion)], deps=('conversion',),
+                default='!%c' % node.conversion)
+    if node.format_spec:
+      self.attr(node, 'format_spec_prefix', [self.ws, ':', self.ws],
+                default=':')
+      self.visit(node.format_spec)
+
 
 class AnnotationError(Exception):
   """An exception for when we failed to annotate the tree."""
@@ -1231,7 +1243,7 @@ class AstAnnotator(BaseVisitor):
 
   @expression
   def visit_JoinedStr(self, node):
-    """Annotate a Str node with the exact string format."""
+    """Annotate a JoinedStr node with the fstr formatting metadata."""
     fstr_iter = self.tokens.fstr()()
     res = ''
     values = (v for v in node.values if isinstance(v, ast.FormattedValue))
@@ -1246,10 +1258,6 @@ class AstAnnotator(BaseVisitor):
       self.tokens = prev_tokens
 
     self.attr(node, 'content', [lambda: res], default=res)
-
-  @fstring_expression
-  def visit_FormattedValue(self, node):
-    self.visit(node.value)
 
   @expression
   def visit_Bytes(self, node):
