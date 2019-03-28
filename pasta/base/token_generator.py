@@ -356,10 +356,10 @@ class TokenGenerator(object):
         # spaces, e.g.: f"Hello, {name}"
         str_content = self.str()
       else:
-        # Format specifiers in fstrings are also JoinedStr nodes, but there are
+        # Format specifiers in fstrings are also JoinedStr nodes, but these are
         # arbitrary expressions, e.g. in: f"{value:{width}.{precision}}", the
-        # format specifier is an fstring: "{width}.precision}" but these are not
-        # STRING tokens.
+        # format specifier is an fstring: "{width}.{precision}" but these are
+        # not STRING tokens.
         def fstr_eater(tok):
           if tok.type == TOKENS.OP and tok.src == '}':
             if fstr_eater.level <= 0:
@@ -399,8 +399,7 @@ class TokenGenerator(object):
           result = ''
 
           # Skip the number of characters consumed by the subexpression
-          cc = tg.chars_consumed()
-          for tg_i in range(cc):
+          for tg_i in range(tg.chars_consumed()):
             i, c = next(indexed_chars)
 
           # Eat up to and including the close bracket
