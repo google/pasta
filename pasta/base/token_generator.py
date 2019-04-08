@@ -54,8 +54,9 @@ class TokenGenerator(object):
      parsed to. This should be either the start or end of the token at index _i.
 
   Arguments:
-    ignore_error_tokens: If True, will stop parsing tokens when an error token
-      is reached. Otherwise, an error token will cause an exception.
+    ignore_error_tokens: If True, will ignore error tokens. Otherwise, an error
+      token will cause an exception. This is useful when the source being parsed
+      contains invalid syntax, e.g. if it is in an fstring context.
   """
 
   def __init__(self, source, ignore_error_token=False):
@@ -69,7 +70,7 @@ class TokenGenerator(object):
     self._loc = self.loc_begin()
 
   def chars_consumed(self):
-    return len(self._space_between((1, 0), self._tokens[self._i]))
+    return len(self._space_between((1, 0), self._tokens[self._i].end))
 
   def loc_begin(self):
     """Get the start column of the current location parsed to."""
@@ -131,6 +132,7 @@ class TokenGenerator(object):
     def predicate(token):
       return (token.type in (TOKENS.INDENT, TOKENS.DEDENT) or
               token.type == TOKENS.COMMENT and (comment or self._hints) or
+              token.type == TOKENS.ERRORTOKEN and token.src == ' ' or
               max_lines is None and token.type in (TOKENS.NL, TOKENS.NEWLINE))
     whitespace = list(self.takewhile(predicate, advance=False))
     next_token = self.peek()
@@ -138,7 +140,7 @@ class TokenGenerator(object):
     result = ''
     for tok in itertools.chain(whitespace,
                                ((next_token,) if next_token else ())):
-      result += self._space_between(self._loc, tok)
+      result += self._space_between(self._loc, tok.start)
       if tok != next_token:
         result += tok.src
         self._loc = tok.end
@@ -192,7 +194,7 @@ class TokenGenerator(object):
     while dots_seen < num_dots:
       tok = self.next()
       assert tok.src in ('.', '...')
-      result += self._space_between(prev_loc, tok) + tok.src
+      result += self._space_between(prev_loc, tok.start) + tok.src
       dots_seen += tok.src.count('.')
       prev_loc = self._loc
     return result
@@ -208,7 +210,7 @@ class TokenGenerator(object):
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src == '('):
       # Stores all the code up to and including this token
-      result += self._space_between(prev_loc, tok)
+      result += self._space_between(prev_loc, tok.start)
 
       if tok.src == '(' and single_paren and parens:
         self.rewind()
@@ -227,7 +229,7 @@ class TokenGenerator(object):
     if parens:
       # Add any additional whitespace on to the last open-paren
       next_tok = self.peek()
-      parens[-1] += result + self._space_between(self._loc, next_tok)
+      parens[-1] += result + self._space_between(self._loc, next_tok.start)
       self._loc = next_tok.start
       # Add each paren onto the stack
       for paren in parens:
@@ -260,7 +262,7 @@ class TokenGenerator(object):
     for tok in self.takewhile(
         lambda t: t.type in FORMATTING_TOKENS or t.src in symbols):
       # Consume all space up to this token
-      result += self._space_between(prev_loc, tok)
+      result += self._space_between(prev_loc, tok.start)
       if tok.src == ')' and single_paren and encountered_paren:
         self.rewind()
         parsed_to_i = self._i
@@ -321,11 +323,15 @@ class TokenGenerator(object):
       return (token.type in (TOKENS.STRING, TOKENS.COMMENT) or
               self.is_in_scope() and token.type in (TOKENS.NL, TOKENS.NEWLINE))
 
+    return self.eat_tokens(predicate)
+
+  def eat_tokens(self, predicate):
+    """Parse input from tokens while a given condition is met."""
     content = ''
     prev_loc = self._loc
     tok = None
     for tok in self.takewhile(predicate, advance=False):
-      content += self._space_between(prev_loc, tok)
+      content += self._space_between(prev_loc, tok.start)
       content += tok.src
       prev_loc = tok.end
 
@@ -345,15 +351,34 @@ class TokenGenerator(object):
     """
     def fstr_parser():
       # Reads the whole fstring as a string, then parses it char by char
-      str_content = self.str()
+      if self.peek_non_whitespace().type == TOKENS.STRING:
+        # Normal fstrings are one ore more STRING tokens, maybe mixed with
+        # spaces, e.g.: f"Hello, {name}"
+        str_content = self.str()
+      else:
+        # Format specifiers in fstrings are also JoinedStr nodes, but these are
+        # arbitrary expressions, e.g. in: f"{value:{width}.{precision}}", the
+        # format specifier is an fstring: "{width}.{precision}" but these are
+        # not STRING tokens.
+        def fstr_eater(tok):
+          if tok.type == TOKENS.OP and tok.src == '}':
+            if fstr_eater.level <= 0:
+              return False
+            fstr_eater.level -= 1
+          if tok.type == TOKENS.OP and tok.src == '{':
+            fstr_eater.level += 1
+          return True
+        fstr_eater.level = 0
+        str_content = self.eat_tokens(fstr_eater)
+
       indexed_chars = enumerate(str_content)
       val_idx = 0
-      i = 0
+      i = -1
       result = ''
       while i < len(str_content) - 1:
         i, c = next(indexed_chars)
         result += c
-        
+
         # When an open bracket is encountered, start parsing a subexpression
         if c == '{':
           # First check if this is part of an escape sequence
@@ -367,38 +392,40 @@ class TokenGenerator(object):
           # Add a placeholder onto the result
           result += fstring_utils.placeholder(val_idx) + '}'
           val_idx += 1
-          
+
           # Yield a new token generator to parse the subexpression only
           tg = TokenGenerator(str_content[i+1:], ignore_error_token=True)
           yield (result, tg)
           result = ''
-          
+
           # Skip the number of characters consumed by the subexpression
           for tg_i in range(tg.chars_consumed()):
             i, c = next(indexed_chars)
+
+          # Eat up to and including the close bracket
+          i, c = next(indexed_chars)
           while c != '}':
             i, c = next(indexed_chars)
       # Yield the rest of the fstring, when done
       yield (result, None)
     return fstr_parser
 
-  def _space_between(self, prev_loc, tok):
+  def _space_between(self, start_loc, end_loc):
     """Parse the space between a location and the next token"""
-    next_loc = tok.start
-    if prev_loc > next_loc:
-      raise ValueError('prev_loc > token start', prev_loc, next_loc)
-    if prev_loc[0] > len(self.lines):
+    if start_loc > end_loc:
+      raise ValueError('start_loc > end_loc', start_loc, end_loc)
+    if start_loc[0] > len(self.lines):
       return ''
 
-    prev_row, prev_col = prev_loc
-    next_row, next_col = next_loc
-    if prev_row == next_row:
-      return self.lines[prev_row - 1][prev_col:next_col]
+    prev_row, prev_col = start_loc
+    end_row, end_col = end_loc
+    if prev_row == end_row:
+      return self.lines[prev_row - 1][prev_col:end_col]
 
     return ''.join(itertools.chain(
         (self.lines[prev_row - 1][prev_col:],),
-        self.lines[prev_row:next_row - 1],
-        (self.lines[next_row - 1][:next_col],) if next_col > 0 else '',
+        self.lines[prev_row:end_row - 1],
+        (self.lines[end_row - 1][:end_col],) if end_col > 0 else '',
     ))
 
   def next_name(self):
