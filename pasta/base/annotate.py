@@ -1078,6 +1078,11 @@ class BaseVisitor(ast.NodeVisitor):
       arg_i += 1
       if arg_i < total_args:
         self.token(',')
+    elif kwonlyargs:
+      # If no vararg, but we have kwonlyargs, insert a naked *, which will
+      # definitely not be the last arg.
+      self.token('*')
+      self.token(',')
 
     for i, (arg, default) in enumerate(zip(kwonlyargs, kw_defaults)):
       self.visit(arg)
