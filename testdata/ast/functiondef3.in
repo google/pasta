@@ -3,3 +3,9 @@ def a(*b, c=0):
 
 def e(*f, g):
   h
+
+def i(*, k=l):
+  m
+
+def s(*, u):
+  v
