@@ -800,9 +800,13 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Dict(self, node):
     self.token('{')
     for i, key, value in zip(range(len(node.keys)), node.keys, node.values):
-      self.visit(key)
-      self.attr(node, 'key_val_sep_%d' % i, [self.ws, ':', self.ws],
-                default=': ')
+      if key is None:
+        # Handle Python 3.5+ dict unpacking syntax (PEP-448)
+        self.attr(node, 'starstar_%d' % i, [self.ws, '**'], default='**')
+      else:
+        self.visit(key)
+        self.attr(node, 'key_val_sep_%d' % i, [self.ws, ':', self.ws],
+                  default=': ')
       self.visit(value)
       if value is not node.values[-1]:
         self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
