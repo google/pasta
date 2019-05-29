@@ -15,6 +15,7 @@
 (29, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (31, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (34, -1)     Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(36, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (1, 0)       JoinedStr            	prefix=||	suffix=||	indent=||
 (3, 0)       JoinedStr            	prefix=||	suffix=||	indent=||
 (5, 0)       JoinedStr            	prefix=||	suffix=||	indent=||
@@ -31,6 +32,7 @@
 (29, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
 (31, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
 (34, -1)     JoinedStr            	prefix=||	suffix=||	indent=||
+(36, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
 (1, 0)       Str                  	prefix=||	suffix=||	indent=||
 (3, 0)       FormattedValue       	prefix=||	suffix=||	indent=||
 (5, 0)       Str                  	prefix=||	suffix=||	indent=||
@@ -55,6 +57,7 @@
 (29, 0)      FormattedValue       	prefix=||	suffix=||	indent=||
 (31, 0)      FormattedValue       	prefix=||	suffix=||	indent=||
 (34, -1)     FormattedValue       	prefix=|\n  |	suffix=||	indent=||
+(36, 0)      FormattedValue       	prefix=||	suffix=||	indent=||
 (3, 3)       Name b               	prefix=||	suffix=||	indent=||
 (5, 5)       Name d               	prefix=||	suffix=||	indent=||
 (7, 5)       Name g               	prefix=||	suffix=||	indent=||
@@ -75,6 +78,7 @@
 (31, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
 (35, 2)      Name l               	prefix=||	suffix=||	indent=||
 (34, -1)     JoinedStr            	prefix=||	suffix=| |	indent=||
+(36, 4)      Attribute c          	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -103,10 +107,15 @@
 (34, -1)     Str                  	prefix=||	suffix=||	indent=||
 (34, -1)     FormattedValue       	prefix=||	suffix=||	indent=||
 (34, -1)     Str                  	prefix=||	suffix=||	indent=||
+(36, 4)      Attribute b          	prefix=|(|	suffix=|)|	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (29, 6)      Name g               	prefix=||	suffix=||	indent=||
 (31, 12)     Name i               	prefix=||	suffix=||	indent=||
 (31, 17)     Name j               	prefix=||	suffix=||	indent=||
 (34, 9)      Name m               	prefix=||	suffix=||	indent=||
+(36, 4)      Name a               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
