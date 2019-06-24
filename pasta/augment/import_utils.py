@@ -177,3 +177,41 @@ def remove_import_alias_node(sc, node):
     ast_utils.remove_child(import_parent, import_node)
   else:
     ast_utils.remove_child(import_node, node)
+
+
+def remove_duplicates(tree, sc=None):
+  """Remove duplicate imports, where it is safe to do so.
+
+  This does NOT remove imports that create new aliases
+
+  Arguments:
+    tree: (ast.AST) An ast to modify imports in.
+    sc: A scope.Scope representing tree (generated from scratch if not
+    provided).
+
+  Returns:
+    Whether any changes were made.
+  """
+  if sc is None:
+    sc = scope.analyze(tree)
+
+  modified = False
+  seen_names = set()
+  for node in tree.body:
+    if isinstance(node, (ast.Import, ast.ImportFrom)):
+      for alias in list(node.names):
+        import_node = sc.parent(alias)
+        if isinstance(import_node, ast.Import):
+          full_name = alias.name
+        elif import_node.module:
+          full_name = '%s%s.%s' % ('.' * import_node.level,
+                                   import_node.module, alias.name)
+        else:
+          full_name = '%s%s' % ('.' * import_node.level, alias.name)
+        full_name += ':' + (alias.asname or alias.name)
+        if full_name in seen_names:
+          remove_import_alias_node(sc, alias)
+          modified = True
+        else:
+          seen_names.add(full_name)
+  return modified
