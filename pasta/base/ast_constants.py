@@ -36,3 +36,7 @@ NODE_TYPE_TO_TOKENS = {
     ast.In: ('in',),
     ast.NotIn: ('not', 'in',),
 }
+
+
+if hasattr(ast, 'MatMult'):
+  NODE_TYPE_TO_TOKENS[ast.MatMult] = ('@',)
