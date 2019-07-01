@@ -232,6 +232,22 @@ class IndentationTest(test_utils.TestCase):
     b = if_node.body[0]
     self.assertEqual('  ', fmt.get(b, 'indent_diff'))
 
+  def test_autoindent(self):
+    src = textwrap.dedent('''\
+        def a():
+            b
+            c
+        ''')
+    expected = textwrap.dedent('''\
+        def a():
+            b
+            new_node
+        ''')
+    t = pasta.parse(src)
+    # Repace the second node and make sure the indent level is corrected
+    t.body[0].body[1] = ast.Expr(ast.Name(id='new_node'))
+    self.assertMultiLineEqual(expected, codegen.to_str(t))
+
 
 def _is_syntax_valid(filepath):
   with open(filepath, 'r') as f:

@@ -144,14 +144,15 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'suffix', [_ws], default=default)
 
   def indented(self, node, children_attr):
+    children = getattr(node, children_attr)
     prev_indent = self._indent
     prev_indent_diff = self._indent_diff
-    new_diff = fmt.get(node, 'indent')
+    new_diff = fmt.get(children[0], 'indent')
     if new_diff is None:
       new_diff = '  '
     self._indent_diff = new_diff
     self._indent = prev_indent + self._indent_diff
-    for child in getattr(node, children_attr):
+    for child in children:
       yield child
     self.attr(node, 'block_suffix_%s' % children_attr, [])
     self._indent = prev_indent
