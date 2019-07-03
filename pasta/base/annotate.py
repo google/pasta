@@ -126,6 +126,7 @@ class BaseVisitor(ast.NodeVisitor):
     self._stack = []
     self._indent = ''
     self._indent_diff = ''
+    self._default_indent_diff = '  '
 
   def visit(self, node):
     self._stack.append(node)
@@ -149,7 +150,7 @@ class BaseVisitor(ast.NodeVisitor):
     prev_indent_diff = self._indent_diff
     new_diff = fmt.get(children[0], 'indent')
     if new_diff is None:
-      new_diff = '  '
+      new_diff = self._default_indent_diff
     self._indent_diff = new_diff
     self._indent = prev_indent + self._indent_diff
     for child in children:
@@ -157,6 +158,9 @@ class BaseVisitor(ast.NodeVisitor):
     self.attr(node, 'block_suffix_%s' % children_attr, [])
     self._indent = prev_indent
     self._indent_diff = prev_indent_diff
+
+  def set_default_indent_diff(self, indent):
+    self._default_indent_diff = indent
 
   @contextlib.contextmanager
   def scope(self, node, attr=None, trailing_comma=False, default_parens=False):

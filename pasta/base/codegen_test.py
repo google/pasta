@@ -87,6 +87,14 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
     t = ast.parse(src)
     self.assertEqual("b'foo'\n", pasta.dump(t))
 
+  def test_default_indentation(self):
+    for indent in ('  ', '    ', '\t'):
+      src ='def a():\n' + indent + 'b\n'
+      t = pasta.parse(src)
+      t.body.extend(ast.parse('def c(): d').body)
+      self.assertEqual(codegen.to_str(t),
+                       src + 'def c():\n' + indent + 'd\n')
+
 
 def suite():
   result = unittest.TestSuite()

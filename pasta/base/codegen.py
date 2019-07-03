@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import ast
 import collections
+import six
 
 from pasta.base import annotate
 from pasta.base import formatting as fmt
@@ -142,5 +143,17 @@ class Printer(annotate.BaseVisitor):
 def to_str(tree):
   """Convenient function to get the python source for an AST."""
   p = Printer()
+
+  # Detect the most prevalent indentation style in the file and use it when
+  # printing indented nodes which don't have formatting data.
+  seen_indent_diffs = collections.defaultdict(lambda: 0)
+  for node in ast.walk(tree):
+    seen_indent_diffs[fmt.get(node, 'indent_diff', '')] += 1
+  del seen_indent_diffs['']
+  if seen_indent_diffs:
+    indent_diff, _ = max(six.iteritems(seen_indent_diffs),
+                         key=lambda tup: tup[1] if tup[0] else -1)
+    p.set_default_indent_diff(indent_diff)
+
   p.visit(tree)
   return p.code
