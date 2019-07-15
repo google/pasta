@@ -1222,15 +1222,14 @@ class AstAnnotator(BaseVisitor):
     indent_token = self.tokens.peek_conditional(
         lambda t: t.type == token_generator.TOKENS.INDENT)
     new_indent = indent_token.src
-    if (not new_indent.startswith(prev_indent) or
-        len(new_indent) <= len(prev_indent)):
-      raise AnnotationError(
-          'Indent detection failed (line %d); inner indentation level is not '
-          'more than the outer indentation.' % cur_loc[0])
+    new_diff = _get_indent_diff(prev_indent, new_indent)
+    if not new_diff:
+      print('Indent detection failed (line %d); inner indentation level is not '
+            'more than the outer indentation.' % cur_loc[0], file=sys.stderr)
 
     # Set the indent level to the child's indent and iterate over the children
     self._indent = new_indent
-    self._indent_diff = new_indent[len(prev_indent):]
+    self._indent_diff = new_diff
     for child in children:
       yield child
     # Store the suffix at this indentation level, which could be many lines
@@ -1436,3 +1435,41 @@ class AstAnnotator(BaseVisitor):
     else:
       self.tokens.next()
       return token.src + self.ws()
+
+
+def _get_indent_diff(outer, inner):
+  """Computes the whitespace added to an indented block.
+
+  Normally, the inner indent is just the outer indent + <some whitespace>,
+  and the whitespace added is returned. However, Python2 treats tabs the same
+  as 8 spaces when determining indentation level, so the inner indent may not
+  necessarily have the outer indent as a prefix.
+
+  Arguments:
+    outer: (string) Indentation of the outer block.
+    inner: (string) Indentation of the inner block.
+  Returns:
+    The string whitespace which is added to the indentation level when moving
+    from outer to inner.
+  """
+  outer_i = iter(outer)
+  inner_i = iter(inner)
+
+  try:
+    while True:
+      try:
+        outer_c = next(outer_i)
+      except StopIteration:
+        break
+      inner_c = next(inner_i)
+      if inner_c != outer_c:
+        # Python2 treats a tab as 8 spaces
+        if sys.version_info[0] < 3:
+          spaces_i = outer_i if inner_c == '\t' else inner_i
+          if not all(' ' == next(spaces_i) for _ in range(7)):
+            return None
+        else:
+          return None
+  except StopIteration:
+    return None
+  return ''.join(inner_i)
