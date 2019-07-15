@@ -74,8 +74,7 @@ rename.rename_external(tree, 'pkg.module.Query', 'pkg.module.ExecuteQuery')
   written for and the version used to run pasta are the same. This is because
   pasta relies on [`ast.parse`](https://docs.python.org/2/library/ast.html#ast.parse)
 
-* Some python features are not fully supported, including `global` and python3
-  language features including PEP-498.
+* Some python features are not fully supported, including `global`.
 
 ## Developing
 
