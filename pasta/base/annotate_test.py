@@ -248,18 +248,33 @@ class IndentationTest(test_utils.TestCase):
     t.body[0].body[1] = ast.Expr(ast.Name(id='new_node'))
     self.assertMultiLineEqual(expected, codegen.to_str(t))
 
-  @test_utils.requires_features('mixed_tabs_spaces')
-  def test_mixed_tabs_spaces(self):
-    t = pasta.parse(textwrap.dedent('''\
+  @unittest.skipIf(sys.version_info[0] > 2, 'Python2-only syntax')
+  def test_mixed_tabs_spaces_indentation(self):
+    pasta.parse(textwrap.dedent('''\
         if a:
                 b
-        \tc
-                if d:
-        \t        e
-        '''))
-    if_a = t.body[0]
-    if_d = if_a.body[2]
-    self.assertEqual(fmt.get(if_d.body[0], 'indent_diff'), ' ' * 8)
+        {ONETAB}c
+        ''').format(ONETAB='\t'))
+
+  def test_tab_below_spaces(self):
+    for num_spaces in range(1, 8):
+      t = pasta.parse(textwrap.dedent('''\
+          if a:
+          {WS}if b:
+          {ONETAB}c
+          ''').format(ONETAB='\t', WS=' ' * num_spaces))
+      node_c = t.body[0].body[0].body[0]
+      self.assertEqual(fmt.get(node_c, 'indent_diff'), ' ' * (8 - num_spaces))
+
+  def test_tabs_below_spaces_and_tab(self):
+    for num_spaces in range(1, 8):
+      t = pasta.parse(textwrap.dedent('''\
+          if a:
+          {WS}{ONETAB}if b:
+          {ONETAB}{ONETAB}c
+          ''').format(ONETAB='\t', WS=' ' * num_spaces))
+      node_c = t.body[0].body[0].body[0]
+      self.assertEqual(fmt.get(node_c, 'indent_diff'), '\t')
 
 
 def _is_syntax_valid(filepath):
