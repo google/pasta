@@ -421,6 +421,7 @@ def suite():
   result.addTests(unittest.makeSuite(GetUnusedImportsTest))
   result.addTests(unittest.makeSuite(RemoveImportTest))
   result.addTests(unittest.makeSuite(AddImportTest))
+  result.addTests(unittest.makeSuite(RemoveDuplicatesTest))
   return result
 
 if __name__ == '__main__':
