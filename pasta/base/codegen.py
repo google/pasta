@@ -149,7 +149,10 @@ def to_str(tree):
   seen_indent_diffs = collections.defaultdict(lambda: 0)
   for node in ast.walk(tree):
     seen_indent_diffs[fmt.get(node, 'indent_diff', '')] += 1
-  del seen_indent_diffs['']
+  try:
+    del seen_indent_diffs['']
+  except KeyError:
+    pass
   if seen_indent_diffs:
     indent_diff, _ = max(six.iteritems(seen_indent_diffs),
                          key=lambda tup: tup[1] if tup[0] else -1)
