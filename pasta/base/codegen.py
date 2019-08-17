@@ -72,8 +72,8 @@ class Printer(annotate.BaseVisitor):
     if content is None:
       parts = []
       for val in node.values:
-        if isinstance(v, ast.Str):
-          parts.append(v.s)
+        if isinstance(val, ast.Str):
+          parts.append(val.s)
         else:
           parts.append(fstring_utils.placeholder(len(parts)))
       content = repr(''.join(parts))
