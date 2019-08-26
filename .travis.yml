@@ -4,14 +4,11 @@ python:
   - "3.4"
   - "3.5"
   - "3.6"
-  - "3.7"
 matrix:
   include:
     - python: "3.7"
-      before_script: python3.7 setup.py test -s pasta.base.annotate_test.generate_goldens
-  allow_failures:
-    - python: "3.7"
-before_script:
-  - pip install flake8
-  - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      before_script:
+        - pip install flake8
+        - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        - python3.7 setup.py test -s pasta.base.annotate_test.generate_goldens
 script: python setup.py test
