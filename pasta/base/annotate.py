@@ -673,7 +673,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'return_value_prefix', [self.ws], default=' ')
       self.visit(node.value)
 
-  @statement
+  @expression
   def visit_Yield(self, node):
     self.token('yield')
     if node.value:
@@ -1201,7 +1201,7 @@ class AstAnnotator(BaseVisitor):
       raise AnnotationError(e)
 
   def indented(self, node, children_attr):
-    """Generator white annotates child nodes with their indentation level."""
+    """Generator which annotates child nodes with their indentation level."""
     children = getattr(node, children_attr)
     cur_loc = self.tokens._loc
     next_loc = self.tokens.peek_non_whitespace().start
