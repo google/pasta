@@ -1224,15 +1224,15 @@ class AstAnnotator(BaseVisitor):
     indent_token = self.tokens.peek_conditional(
         lambda t: t.type == token_generator.TOKENS.INDENT)
     new_indent = indent_token.src
-    if (not new_indent.startswith(prev_indent) or
-        len(new_indent) <= len(prev_indent)):
-      raise AnnotationError(
-          'Indent detection failed (line %d); inner indentation level is not '
-          'more than the outer indentation.' % cur_loc[0])
+    new_diff = _get_indent_diff(prev_indent, new_indent)
+    if not new_diff:
+      new_diff = ' ' * 4  # Sensible default
+      print('Indent detection failed (line %d); inner indentation level is not '
+            'more than the outer indentation.' % cur_loc[0], file=sys.stderr)
 
     # Set the indent level to the child's indent and iterate over the children
     self._indent = new_indent
-    self._indent_diff = new_indent[len(prev_indent):]
+    self._indent_diff = new_diff
     for child in children:
       yield child
     # Store the suffix at this indentation level, which could be many lines
@@ -1438,3 +1438,53 @@ class AstAnnotator(BaseVisitor):
     else:
       self.tokens.next()
       return token.src + self.ws()
+
+
+def _get_indent_width(indent):
+  width = 0
+  for c in indent:
+    if c == ' ':
+      width += 1
+    elif c == '\t':
+      width += 8 - (width % 8)
+  return width
+
+
+def _ltrim_indent(indent, remove_width):
+  width = 0
+  for i, c in enumerate(indent):
+    if width == remove_width:
+      break
+    if c == ' ':
+      width += 1
+    elif c == '\t':
+      if width + 8 - (width % 8) <= remove_width:
+        width += 8 - (width % 8)
+      else:
+        return ' ' * (width + 8 - remove_width) + indent[i + 1:]
+  return indent[i:]
+
+
+def _get_indent_diff(outer, inner):
+  """Computes the whitespace added to an indented block.
+
+  Finds the portion of an indent prefix that is added onto the outer indent. In
+  most cases, the inner indent starts with the outer indent, but this is not
+  necessarily true. For example, the outer block could be indented to four
+  spaces and its body indented with one tab (effectively 8 spaces).
+
+  Arguments:
+    outer: (string) Indentation of the outer block.
+    inner: (string) Indentation of the inner block.
+  Returns:
+    The string whitespace which is added to the indentation level when moving
+    from outer to inner.
+  """
+  outer_w = _get_indent_width(outer)
+  inner_w = _get_indent_width(inner)
+  diff_w = inner_w - outer_w
+
+  if diff_w <= 0:
+    return None
+
+  return _ltrim_indent(inner, inner_w - diff_w)

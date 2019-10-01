@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import sys
 import unittest
 
 from six.moves import zip
@@ -82,4 +83,7 @@ def supports_feature(feature):
     return True
   if feature == 'fstring':
     return hasattr(ast, 'JoinedStr') and issubclass(ast.JoinedStr, ast.AST)
+  # Python 2 counts tabs as 8 spaces for indentation
+  if feature == 'mixed_tabs_spaces':
+    return sys.version_info[0] < 3
   return False

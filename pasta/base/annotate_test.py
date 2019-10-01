@@ -248,6 +248,36 @@ class IndentationTest(test_utils.TestCase):
     t.body[0].body[1] = ast.Expr(ast.Name(id='new_node'))
     self.assertMultiLineEqual(expected, codegen.to_str(t))
 
+  @test_utils.requires_features('mixed_tabs_spaces')
+  def test_mixed_tabs_spaces_indentation(self):
+    pasta.parse(textwrap.dedent('''\
+        if a:
+                b
+        {ONETAB}c
+        ''').format(ONETAB='\t'))
+
+  @test_utils.requires_features('mixed_tabs_spaces')
+  def test_tab_below_spaces(self):
+    for num_spaces in range(1, 8):
+      t = pasta.parse(textwrap.dedent('''\
+          if a:
+          {WS}if b:
+          {ONETAB}c
+          ''').format(ONETAB='\t', WS=' ' * num_spaces))
+      node_c = t.body[0].body[0].body[0]
+      self.assertEqual(fmt.get(node_c, 'indent_diff'), ' ' * (8 - num_spaces))
+
+  @test_utils.requires_features('mixed_tabs_spaces')
+  def test_tabs_below_spaces_and_tab(self):
+    for num_spaces in range(1, 8):
+      t = pasta.parse(textwrap.dedent('''\
+          if a:
+          {WS}{ONETAB}if b:
+          {ONETAB}{ONETAB}c
+          ''').format(ONETAB='\t', WS=' ' * num_spaces))
+      node_c = t.body[0].body[0].body[0]
+      self.assertEqual(fmt.get(node_c, 'indent_diff'), '\t')
+
 
 def _is_syntax_valid(filepath):
   with open(filepath, 'r') as f:
