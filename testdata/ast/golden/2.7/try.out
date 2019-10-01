@@ -5,23 +5,23 @@
 (25, 0)      TryExcept            	prefix=|\n|	suffix=||	indent=||
 (34, 0)      TryFinally           	prefix=|\n|	suffix=||	indent=||
 (43, 0)      TryFinally           	prefix=|\n|	suffix=||	indent=||
-(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (3, 0)       ExceptHandler        	prefix=||	suffix=||	indent=||
-(7, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=||
+(7, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (8, 0)       ExceptHandler        	prefix=||	suffix=||	indent=||
 (11, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (13, 0)      TryExcept            	prefix=|  |	suffix=||	indent=||
 (22, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (23, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(27, 2)      TryExcept            	prefix=|  # 1\n  |	suffix=||	indent=||
+(27, 2)      TryExcept            	prefix=|  # 1\n  |	suffix=||	indent=|  |
 (31, 0)      ExceptHandler        	prefix=||	suffix=||	indent=||
-(36, 2)      TryExcept            	prefix=|  # 2\n  |	suffix=||	indent=||
+(36, 2)      TryExcept            	prefix=|  # 2\n  |	suffix=||	indent=|  |
 (41, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(45, 2)      TryFinally           	prefix=|  # 3\n  |	suffix=||	indent=||
+(45, 2)      TryFinally           	prefix=|  # 3\n  |	suffix=||	indent=|  |
 (50, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(2, 2)       Name a               	prefix=||	suffix=||	indent=||
+(2, 2)       Name a               	prefix=||	suffix=||	indent=|  |
 (4, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(7, 2)       Name c               	prefix=||	suffix=||	indent=||
+(7, 2)       Name c               	prefix=||	suffix=||	indent=|  |
 (8, 7)       Name d               	prefix=| |	suffix=| |	indent=||
 (8, 12)      Name e               	prefix=||	suffix=|  |	indent=||
 (9, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
@@ -32,13 +32,13 @@
 (19, 0)      ExceptHandler        	prefix=||	suffix=||	indent=||
 (22, 2)      Name p               	prefix=||	suffix=||	indent=|  |
 (23, 2)      Name q               	prefix=||	suffix=||	indent=|  |
-(28, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=||
-(29, 2)      ExceptHandler        	prefix=|  |	suffix=||	indent=||
+(28, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
+(29, 2)      ExceptHandler        	prefix=|  |	suffix=||	indent=|  |
 (32, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(37, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=||
-(38, 2)      ExceptHandler        	prefix=|  |	suffix=||	indent=||
+(37, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
+(38, 2)      ExceptHandler        	prefix=|  |	suffix=||	indent=|  |
 (41, 2)      Name w               	prefix=||	suffix=||	indent=|  |
-(46, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=||
+(46, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
 (48, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
 (50, 2)      Name z               	prefix=||	suffix=||	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -58,13 +58,13 @@
 (20, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(28, 4)      Name r               	prefix=||	suffix=||	indent=||
+(28, 4)      Name r               	prefix=||	suffix=||	indent=|    |
 (30, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
 (32, 2)      Name t               	prefix=||	suffix=||	indent=|  |
-(37, 4)      Name u               	prefix=||	suffix=||	indent=||
+(37, 4)      Name u               	prefix=||	suffix=||	indent=|    |
 (39, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(46, 4)      Name x               	prefix=||	suffix=||	indent=||
+(46, 4)      Name x               	prefix=||	suffix=||	indent=|    |
 (48, 4)      Name y               	prefix=||	suffix=||	indent=|    |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

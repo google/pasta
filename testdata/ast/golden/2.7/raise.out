@@ -28,9 +28,9 @@
 (12, 2)      Raise                	prefix=|  |	suffix=|\n|	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(9, 4)       Expr                 	prefix=|    |	suffix=|\n|	indent=|  |
+(9, 4)       Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
 (10, 2)      ExceptHandler        	prefix=|  |	suffix=||	indent=|  |
-(9, 4)       Name d               	prefix=||	suffix=||	indent=|  |
+(9, 4)       Name d               	prefix=||	suffix=||	indent=|    |
 (11, 4)      Raise                	prefix=|    |	suffix=|\n|	indent=|    |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (11, 10)     Name e               	prefix=||	suffix=||	indent=|    |

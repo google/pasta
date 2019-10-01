@@ -2,17 +2,17 @@
 (1, 0)       TryExcept            	prefix=||	suffix=||	indent=||
 (6, 0)       TryExcept            	prefix=|\n|	suffix=||	indent=||
 (11, 0)      TryFinally           	prefix=|\n|	suffix=||	indent=||
-(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (3, 0)       ExceptHandler        	prefix=||	suffix=||	indent=||
-(7, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=||
+(7, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (8, 0)       ExceptHandler        	prefix=||	suffix=||	indent=||
 (11, 0)      TryExcept            	prefix=|  |	suffix=||	indent=||
 (16, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(2, 2)       Name a               	prefix=||	suffix=||	indent=||
+(2, 2)       Name a               	prefix=||	suffix=||	indent=|  |
 (3, 7)       Name b               	prefix=| |	suffix=||	indent=||
 (3, 10)      Name c               	prefix=||	suffix=||	indent=||
 (4, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(7, 2)       Name e               	prefix=||	suffix=||	indent=||
+(7, 2)       Name e               	prefix=||	suffix=||	indent=|  |
 (8, 10)      Name d               	prefix=|    |	suffix=|   |	indent=||
 (8, 15)      Name e               	prefix=||	suffix=||	indent=||
 (9, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |

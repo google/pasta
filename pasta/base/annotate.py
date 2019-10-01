@@ -424,8 +424,10 @@ class BaseVisitor(ast.NodeVisitor):
     # TODO(soupytwist): Find a cleaner solution for differentiating this.
     if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
       node.body[0].is_continued = True
-    for stmt in node.body:
-      self.visit(stmt)
+      self.visit(node.body[0])
+    else:
+      for stmt in self.indented(node, 'body'):
+        self.visit(stmt)
     self.attr(node, 'open_finally',
               [self.ws, 'finally', self.ws, ':', self.ws_oneline],
               default='finally:\n')
@@ -437,7 +439,7 @@ class BaseVisitor(ast.NodeVisitor):
     if not getattr(node, 'is_continued', False):
       self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
                 default='try:\n')
-    for stmt in node.body:
+    for stmt in self.indented(node, 'body'):
       self.visit(stmt)
     for handler in node.handlers:
       self.visit(handler)
@@ -453,7 +455,7 @@ class BaseVisitor(ast.NodeVisitor):
     # Python 3
     self.attr(node, 'open_try', [self.ws, 'try', self.ws, ':', self.ws_oneline],
               default='try:\n')
-    for stmt in node.body:
+    for stmt in self.indented(node, 'body'):
       self.visit(stmt)
     for handler in node.handlers:
       self.visit(handler)
