@@ -28,7 +28,7 @@ def all_tests():
 
 setup(
     name="google-pasta",
-    version="0.1.7",
+    version="0.1.8",
     packages=find_packages(),
 
     # metadata for upload to PyPI
@@ -48,5 +48,8 @@ setup(
         'Programming Language :: Python :: 3.4',
         'Programming Language :: Python :: 3.5',
         'Programming Language :: Python :: 3.6',
+    ],
+    install_requires=[
+        'six',
     ],
 )
