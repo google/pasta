@@ -1,0 +1,5 @@
+class a(object, b=c):
+  pass
+
+class d(  e=  f ,g =h,):
+  pass

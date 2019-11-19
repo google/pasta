@@ -373,13 +373,20 @@ class BaseVisitor(ast.NodeVisitor):
                 default='\n' + self._indent)
     self.attr(node, 'class_def', ['class', self.ws, node.name, self.ws],
               default='class %s' % node.name, deps=('name',))
-    with self.scope(node, 'bases', trailing_comma=bool(node.bases),
+    class_args = getattr(node, 'bases', []) + getattr(node, 'keywords', [])
+    with self.scope(node, 'bases', trailing_comma=bool(class_args),
                     default_parens=True):
       for i, base in enumerate(node.bases):
         self.visit(base)
         self.attr(node, 'base_suffix_%d' % i, [self.ws])
-        if base != node.bases[-1]:
+        if base != class_args[-1]:
           self.attr(node, 'base_sep_%d' % i, [',', self.ws], default=', ')
+      if hasattr(node, 'keywords'):
+        for i, keyword in enumerate(node.keywords):
+          self.visit(keyword)
+          self.attr(node, 'keyword_suffix_%d' % i, [self.ws])
+          if keyword != node.keywords[-1]:
+            self.attr(node, 'keyword_sep_%d' % i, [',', self.ws], default=', ')
     self.attr(node, 'open_block', [self.ws, ':', self.ws_oneline],
               default=':\n')
     for stmt in self.indented(node, 'body'):
