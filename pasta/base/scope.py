@@ -116,6 +116,7 @@ class ScopeVisitor(ast.NodeVisitor):
     self.generic_visit(node)
 
   def visit_FunctionDef(self, node):
+    # Visit decorator list first to avoid declarations in args
     self.visit_in_order(node, 'decorator_list')
     if isinstance(self.root_scope.parent(node), ast.ClassDef):
       pass # TODO: Support referencing methods by "self" where possible
@@ -123,7 +124,6 @@ class ScopeVisitor(ast.NodeVisitor):
       self.scope.define_name(node.name, node)
     try:
       self.scope = self.scope.create_scope(node)
-      # Visit decorator list first to avoid declarations in args
       self.visit_in_order(node, 'args', 'returns', 'body')
     finally:
       self.scope = self.scope.parent_scope
