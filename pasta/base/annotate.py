@@ -689,6 +689,12 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'yield_value_prefix', [self.ws], default=' ')
       self.visit(node.value)
 
+  @expression
+  def visit_YieldFrom(self, node):
+    self.attr(node, 'yield_from', ['yield', self.ws, 'from', self.ws],
+              default='yield from ')
+    self.visit(node.value)
+
   # ============================================================================
   # == EXPRESSIONS: Anything that evaluates and can be in parens              ==
   # ============================================================================

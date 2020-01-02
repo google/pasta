@@ -1,0 +1,5 @@
+def a():
+  yield b
+
+def c():
+  yield    d
