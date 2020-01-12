@@ -37,7 +37,7 @@ setup(
     description="pasta is an AST-based Python refactoring library",
     license="Apache 2.0",
     keywords="python refactoring ast",
-    #url="http://example.com/HelloWorld/",
+    url="https://github.com/google/pasta",
     test_suite='setup.all_tests',
     classifiers=[
         "Development Status :: 2 - Pre-Alpha",
