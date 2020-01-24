@@ -148,11 +148,9 @@ def to_str(tree):
   # printing indented nodes which don't have formatting data.
   seen_indent_diffs = collections.defaultdict(lambda: 0)
   for node in ast.walk(tree):
-    seen_indent_diffs[fmt.get(node, 'indent_diff', '')] += 1
-  try:
-    del seen_indent_diffs['']
-  except KeyError:
-    pass
+    indent_diff = fmt.get(node, 'indent_diff', '')
+    if indent_diff:
+      seen_indent_diffs[indent_diff] += 1
   if seen_indent_diffs:
     indent_diff, _ = max(six.iteritems(seen_indent_diffs),
                          key=lambda tup: tup[1] if tup[0] else -1)

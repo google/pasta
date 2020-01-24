@@ -148,7 +148,7 @@ class BaseVisitor(ast.NodeVisitor):
     children = getattr(node, children_attr)
     prev_indent = self._indent
     prev_indent_diff = self._indent_diff
-    new_diff = fmt.get(children[0], 'indent')
+    new_diff = fmt.get(children[0], 'indent_diff')
     if new_diff is None:
       new_diff = self._default_indent_diff
     self._indent_diff = new_diff
