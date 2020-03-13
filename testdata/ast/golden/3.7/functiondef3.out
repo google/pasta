@@ -18,10 +18,10 @@
 (4, 7)       arg f                	prefix=||	suffix=||	indent=||
 (4, 10)      arg g                	prefix=| |	suffix=||	indent=||
 (5, 2)       Name h               	prefix=||	suffix=||	indent=|  |
-(7, 9)       arg k                	prefix=| |	suffix=||	indent=||
+(7, 9)       arg k                	prefix=||	suffix=||	indent=||
 (7, 11)      Name l               	prefix=||	suffix=||	indent=||
 (8, 2)       Name m               	prefix=||	suffix=||	indent=|  |
-(10, 9)      arg u                	prefix=| |	suffix=||	indent=||
+(10, 9)      arg u                	prefix=||	suffix=||	indent=||
 (11, 2)      Name v               	prefix=||	suffix=||	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

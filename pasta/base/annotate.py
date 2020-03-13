@@ -1099,11 +1099,13 @@ class BaseVisitor(ast.NodeVisitor):
     assert len(kwonlyargs) == len(kw_defaults)
 
     total_args = sum((len(node.args + kwonlyargs),
+                      len(getattr(node, 'posonlyargs', [])),
                       1 if node.vararg else 0,
                       1 if node.kwarg else 0))
     arg_i = 0
 
-    positional = node.args[:-len(node.defaults)] if node.defaults else node.args
+    pos_args = getattr(node, 'posonlyargs', []) + node.args
+    positional = pos_args[:-len(node.defaults)] if node.defaults else pos_args
     keyword = node.args[-len(node.defaults):] if node.defaults else node.args
 
     for arg in positional:
@@ -1112,6 +1114,9 @@ class BaseVisitor(ast.NodeVisitor):
       if arg_i < total_args:
         self.attr(node, 'comma_%d' % arg_i, [self.ws, ',', self.ws],
                   default=', ')
+      if arg_i == len(getattr(node, 'posonlyargs', [])):
+        self.attr(node, 'posonly_sep', [self.ws, '/', self.ws, ',', self.ws],
+                  default='/, ')
 
     for i, (arg, default) in enumerate(zip(keyword, node.defaults)):
       self.visit(arg)
@@ -1136,8 +1141,7 @@ class BaseVisitor(ast.NodeVisitor):
     elif kwonlyargs:
       # If no vararg, but we have kwonlyargs, insert a naked *, which will
       # definitely not be the last arg.
-      self.token('*')
-      self.token(',')
+      self.attr(node, 'kwonly_sep', [self.ws, '*', self.ws, ',', self.ws]);
 
     for i, (arg, default) in enumerate(zip(kwonlyargs, kw_defaults)):
       self.visit(arg)
