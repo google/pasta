@@ -670,6 +670,11 @@ class BaseVisitor(ast.NodeVisitor):
         if alias is not node.names[-1]:
           self.attr(node, 'alias_sep_%d' % i, [self.ws, ','], default=',')
 
+  @expression
+  def visit_NamedExpr(self, node):
+    self.visit(target)
+    self.attr(node, 'equal' % i, [self.ws, ':=', self.ws], default=' := ')
+    self.visit(node.value)
 
   @statement
   def visit_Nonlocal(self, node):
