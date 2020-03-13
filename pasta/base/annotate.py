@@ -286,7 +286,11 @@ class BaseVisitor(ast.NodeVisitor):
 
   @block_statement
   def visit_For(self, node):
-    self.attr(node, 'for_keyword', ['for', self.ws], default='for ')
+    if hasattr(ast, 'AsyncFor') and isinstance(node, ast.AsyncFor):
+      self.attr(node, 'for_keyword', ['async', self.ws, 'for', self.ws],
+                default='async for ')
+    else:
+      self.attr(node, 'for_keyword', ['for', self.ws], default='for ')
     self.visit(node.target)
     self.attr(node, 'for_in', [self.ws, 'in', self.ws], default=' in ')
     self.visit(node.iter)
@@ -301,6 +305,9 @@ class BaseVisitor(ast.NodeVisitor):
 
       for stmt in self.indented(node, 'orelse'):
         self.visit(stmt)
+
+  def visit_AsyncFor(self, node):
+    return self.visit_For(node)
 
   @block_statement
   def visit_With(self, node):
@@ -321,6 +328,9 @@ class BaseVisitor(ast.NodeVisitor):
                 default=':\n')
     for stmt in self.indented(node, 'body'):
       self.visit(stmt)
+
+  def visit_AsyncWith(self, node):
+    return self.visit_With(node)
 
   @abc.abstractmethod
   def check_is_continued_try(self, node):
@@ -346,7 +356,11 @@ class BaseVisitor(ast.NodeVisitor):
     """
 
   def visit_With_3(self, node):
-    self.attr(node, 'with', ['with', self.ws], default='with ')
+    if hasattr(ast, 'AsyncWith') and isinstance(node, ast.AsyncWith):
+      self.attr(node, 'with', ['async', self.ws, 'with', self.ws],
+                default='async with ')
+    else:
+      self.attr(node, 'with', ['with', self.ws], default='with ')
 
     for i, withitem in enumerate(node.items):
       self.visit(withitem)
@@ -400,9 +414,15 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(decorator)
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws_oneline],
                 default='\n' + self._indent)
-    self.attr(node, 'function_def',
-              [self.ws, 'def', self.ws, node.name, self.ws],
-              deps=('name',), default='def %s' % node.name)
+    if (hasattr(ast, 'AsyncFunctionDef') and
+        isinstance(node, ast.AsyncFunctionDef)):
+      self.attr(node, 'function_def',
+                [self.ws, 'async', self.ws, 'def', self.ws, node.name, self.ws],
+                deps=('name',), default='async def %s' % node.name)
+    else:
+      self.attr(node, 'function_def',
+                [self.ws, 'def', self.ws, node.name, self.ws],
+                deps=('name',), default='def %s' % node.name)
     # In Python 3, there can be extra args in kwonlyargs
     kwonlyargs = getattr(node.args, 'kwonlyargs', [])
     args_count = sum((len(node.args.args + kwonlyargs),
@@ -421,6 +441,9 @@ class BaseVisitor(ast.NodeVisitor):
               default=':\n')
     for stmt in self.indented(node, 'body'):
       self.visit(stmt)
+
+  def visit_AsyncFunctionDef(self, node):
+    return self.visit_FunctionDef(node)
 
   @block_statement
   def visit_TryFinally(self, node):
@@ -560,6 +583,11 @@ class BaseVisitor(ast.NodeVisitor):
     if node.value:
       self.attr(node, 'equal', [self.ws, '=', self.ws], default=' = ')
       self.visit(node.value)
+
+  @expression
+  def visit_Await(self, node):
+    self.attr(node, 'await', ['await', self.ws], default='await ')
+    self.visit(node.value)
 
   @statement
   def visit_Break(self, node):
@@ -839,8 +867,7 @@ class BaseVisitor(ast.NodeVisitor):
     self.visit(node.key)
     self.attr(node, 'key_val_sep', [self.ws, ':', self.ws], default=': ')
     self.visit(node.value)
-    for i, comp in enumerate(node.generators):
-      self.attr(node, 'for_%d' % i, [self.ws, 'for', self.ws], default=' for ')
+    for comp in node.generators:
       self.visit(comp)
     self.attr(node, 'close_dict', [self.ws, '}'], default='}')
 
@@ -885,7 +912,6 @@ class BaseVisitor(ast.NodeVisitor):
       self.attr(node, 'compexp_open', [open_brace, self.ws], default=open_brace)
     self.visit(node.elt)
     for i, comp in enumerate(node.generators):
-      self.attr(node, 'for_%d' % i, [self.ws, 'for', self.ws], default=' for ')
       self.visit(comp)
     if close_brace:
       self.attr(node, 'compexp_close', [self.ws, close_brace],
@@ -1129,6 +1155,11 @@ class BaseVisitor(ast.NodeVisitor):
 
   @space_around
   def visit_comprehension(self, node):
+    if getattr(node, 'is_async', False):
+      self.attr(node, 'for', [self.ws, 'async', self.ws, 'for', self.ws],
+                default=' async for ')
+    else:
+      self.attr(node, 'for', [self.ws, 'for', self.ws], default=' for ')
     self.visit(node.target)
     self.attr(node, 'in', [self.ws, 'in', self.ws], default=' in ')
     self.visit(node.iter)

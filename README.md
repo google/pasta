@@ -24,7 +24,7 @@ Sample use cases:
 
 ## Python Version Support
 
-Supports python `2.7` and up to `3.6`.
+Supports python `2.7` and up to `3.8`.
 
 ## Dependencies
 
