@@ -53,6 +53,14 @@ class Printer(annotate.BaseVisitor):
       raise PrintError(e)
     del node._printer_info
 
+  def visit_Module(self, node):
+    self.prefix(node)
+    bom = fmt.get(node, 'bom')
+    if bom is not None:
+      self.code += bom
+    self.generic_visit(node)
+    self.suffix(node)
+
   def visit_Num(self, node):
     self.prefix(node)
     content = fmt.get(node, 'content')

@@ -27,6 +27,7 @@ import numbers
 import six
 from six.moves import zip
 import sys
+import token
 
 from pasta.base import ast_constants
 from pasta.base import ast_utils
@@ -223,6 +224,13 @@ class BaseVisitor(ast.NodeVisitor):
   # Keeps the entire suffix, so @block_statement is not useful here.
   @module
   def visit_Module(self, node):
+    try:
+      self.attr(
+          node, 'bom',
+          [lambda: self.tokens.eat_tokens(lambda t: t.type == token.ERRORTOKEN)],
+          default='')
+    except:
+      pass
     self.generic_visit(node)
 
   @block_statement

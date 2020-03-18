@@ -1,0 +1,5 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Assign               	prefix=||	suffix=||	indent=||
+(1, 0)       Name x               	prefix=||	suffix=||	indent=||
+(1, 2)       Num                  	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
