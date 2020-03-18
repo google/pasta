@@ -23,6 +23,7 @@ import ast
 import contextlib
 import functools
 import itertools
+import numbers
 import six
 from six.moves import zip
 import sys
@@ -850,6 +851,27 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(comparator)
 
   @expression
+  def visit_Constant(self, node):
+    if hasattr(node, 'kind') and node.kind:
+      self.attr(node, 'content', [self.tokens.str],
+                default='%s"%s"' % (node.kind, node.value), deps=('value',))
+    elif isinstance(node.value, bool):
+      self.attr(node, 'content', [str(node.value)], default=str(node.value),
+                deps=('value',))
+    elif node.value is Ellipsis:
+      self.token('...')
+    elif isinstance(node.value, numbers.Number):
+      token_number_type = token_generator.TOKENS.NUMBER
+      self.attr(node, 'content',
+                [lambda: self.tokens.next_of_type(token_number_type).src],
+                deps=('value',), default=str(node.value))
+    elif isinstance(node.value, six.text_type) or isinstance(node.value, bytes):
+      self.attr(node, 'content', [self.tokens.str], deps=('value',),
+                default=node.value)
+    else:
+      self.token(str(node.value))
+
+  @expression
   def visit_Dict(self, node):
     self.token('{')
     for i, key, value in zip(range(len(node.keys)), node.keys, node.values):
@@ -988,6 +1010,12 @@ class BaseVisitor(ast.NodeVisitor):
   def visit_Ellipsis(self, node):
     self.token('...')
 
+  def visit_And(self, node):
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+
+  def visit_Or(self, node):
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+
   def visit_Add(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
@@ -998,6 +1026,9 @@ class BaseVisitor(ast.NodeVisitor):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Div(self, node):
+    self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+
+  def visit_MatMult(self, node):
     self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
   def visit_Mod(self, node):
@@ -1389,6 +1420,7 @@ class AstAnnotator(BaseVisitor):
     """Parse a single token with exactly the given value."""
     token = self.tokens.next()
     if token.src != token_val:
+      print(type(token.src), type(token_val))
       raise AnnotationError("Expected %r but found %r\nline %d: %s" % (
           token_val, token.src, token.start[0], token.line))
 

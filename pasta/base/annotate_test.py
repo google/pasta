@@ -18,8 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import _ast
 import ast
 import difflib
+import inspect
 import itertools
 import os.path
 from six import with_metaclass
@@ -452,6 +454,48 @@ class FstringTest(test_utils.TestCase):
         'f"a {{{__pasta_fstring_val_0__} {{c}}"')
 
 
+
+class VersionSupportTest(test_utils.TestCase):
+
+  def test_all_ast_nodes_supported(self):
+    functions = inspect.getmembers(annotate.AstAnnotator)
+    handled_nodes = {name[6:] for name, _ in functions
+                     if name.startswith('visit_')}
+
+    def should_ignore_type(n):
+      if not issubclass(n, _ast.AST):
+        return True
+      # Expression contexts are not visited since the have no formatting
+      if hasattr(_ast, 'expr_context') and issubclass(n, _ast.expr_context):
+        return True
+      return False
+
+    ast_nodes = {
+        name for name, member in inspect.getmembers(_ast, inspect.isclass)
+        if not should_ignore_type(member)
+    }
+    ignored_nodes = {
+        'AST',
+        'Expression',
+        'FunctionType',
+        'Interactive',
+        'MatMult',
+        'Suite',
+        'TypeIgnore',  # TODO: Support syntax for this?
+        'boolop',
+        'cmpop',
+        'excepthandler',
+        'expr',
+        'mod',
+        'operator',
+        'slice',
+        'stmt',
+        'type_ignore',
+        'unaryop',
+    }
+    self.assertEqual(set(), ast_nodes - handled_nodes - ignored_nodes)
+
+
 def _get_diff(before, after):
   return difflib.ndiff(after.splitlines(), before.splitlines())
 
@@ -463,6 +507,7 @@ def suite():
   result.addTests(unittest.makeSuite(PrefixSuffixTest))
   result.addTests(unittest.makeSuite(PrefixSuffixGoldenTest))
   result.addTests(unittest.makeSuite(FstringTest))
+  result.addTests(unittest.makeSuite(VersionSupportTest))
   return result
 
 

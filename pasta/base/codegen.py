@@ -88,6 +88,15 @@ class Printer(annotate.BaseVisitor):
     self.code += content if content is not None else repr(node.s)
     self.suffix(node)
 
+  def visit_Constant(self, node):
+    self.prefix(node)
+    if node.value is Ellipsis:
+      content = '...'
+    else:
+      content = fmt.get(node, 'content')
+    self.code += content if content is not None else repr(node.s)
+    self.suffix(node)
+
   def token(self, value):
     self.code += value
 
