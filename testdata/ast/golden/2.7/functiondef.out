@@ -16,7 +16,7 @@
 (10, 2)      Return               	prefix=|  |	suffix=|\n|	indent=|  |
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
 (16, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(12, 0)      Call                 	prefix=||	suffix=||	indent=||
+(12, 1)      Call                 	prefix=||	suffix=||	indent=||
 (13, 1)      Name p               	prefix=||	suffix=||	indent=||
 (14, 1)      Call                 	prefix=||	suffix=||	indent=||
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||

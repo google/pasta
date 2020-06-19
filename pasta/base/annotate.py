@@ -682,7 +682,7 @@ class BaseVisitor(ast.NodeVisitor):
   @expression
   def visit_NamedExpr(self, node):
     self.visit(target)
-    self.attr(node, 'equal' % i, [self.ws, ':=', self.ws], default=' := ')
+    self.attr(node, 'equal', [self.ws, ':=', self.ws], default=' := ')
     self.visit(node.value)
 
   @statement

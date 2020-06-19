@@ -22,6 +22,7 @@ import _ast
 import ast
 import difflib
 import inspect
+import io
 import itertools
 import os.path
 from six import with_metaclass
@@ -368,7 +369,7 @@ class PrefixSuffixGoldenTestMeta(type):
           return
 
         try:
-          with open(golden_file, 'r') as f:
+          with io.open(golden_file, 'r', encoding='UTF-8') as f:
             golden = f.read()
         except IOError:
           self.fail('Missing golden data.')
