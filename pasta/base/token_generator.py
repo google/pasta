@@ -375,9 +375,54 @@ class TokenGenerator(object):
       val_idx = 0
       i = -1
       result = ''
+      in_fstring = False
+      string_quote = None
       while i < len(str_content) - 1:
         i, c = next(indexed_chars)
         result += c
+
+        # If we haven't actually parsing string content yet, check if a string
+        # (with or without fstring prefix) has started
+        if string_quote is None:
+          if str_content[i:i+4] in ('f"""', "f'''"):
+            string_quote = str_content[i+1:i+4]
+            in_fstring = True
+          elif str_content[i:i+3] in ('"""', "'''"):
+            string_quote = str_content[i:i+3]
+            in_fstring = False
+          elif str_content[i:+2] in ('f"', "f'"):
+            string_quote = str_content[i+1]
+            in_fstring = True
+          elif c in ('"', "'"):
+            string_quote = c
+            in_fstring = False
+          if string_quote:
+            # Skip uneaten quote characters
+            for _ in range(len(string_quote) + (1 if in_fstring else 0) - 1):
+              i, c = next(indexed_chars)
+              result += c
+            continue
+
+        # If we are still not parsing characters in a string, no extra
+        # processing is needed
+        if string_quote is None:
+          continue
+
+        # If we ARE in a string, check if the next characters are the
+        # close-quote for that string
+        if (str_content[i:i+len(string_quote)] == string_quote and
+            str_content[i-1] != '\\'):
+          # Skip uneaten quote characters
+          for _ in range(len(string_quote) - 1):
+            i, c = next(indexed_chars)
+            result += c
+          string_quote = None
+          in_fstring = False
+          continue
+
+        # If we are NOT in an fstring, skip all FormattedValue processing.
+        if not in_fstring:
+          continue
 
         # When an open bracket is encountered, start parsing a subexpression
         if c == '{':
