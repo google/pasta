@@ -294,8 +294,8 @@ class BaseVisitor(ast.NodeVisitor):
         self.visit(stmt)
 
   @block_statement
-  def visit_For(self, node):
-    if hasattr(ast, 'AsyncFor') and isinstance(node, ast.AsyncFor):
+  def visit_For(self, node, is_async=False):
+    if is_async:
       self.attr(node, 'for_keyword', ['async', self.ws, 'for', self.ws],
                 default='async for ')
     else:
@@ -316,12 +316,12 @@ class BaseVisitor(ast.NodeVisitor):
         self.visit(stmt)
 
   def visit_AsyncFor(self, node):
-    return self.visit_For(node)
+    return self.visit_For(node, is_async=True)
 
   @block_statement
-  def visit_With(self, node):
+  def visit_With(self, node, is_async=False):
     if hasattr(node, 'items'):
-      return self.visit_With_3(node)
+      return self.visit_With_3(node, is_async)
     if not getattr(node, 'is_continued', False):
       self.attr(node, 'with', ['with', self.ws], default='with ')
     self.visit(node.context_expr)
@@ -339,7 +339,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(stmt)
 
   def visit_AsyncWith(self, node):
-    return self.visit_With(node)
+    return self.visit_With(node, is_async=True)
 
   @abc.abstractmethod
   def check_is_continued_try(self, node):
@@ -364,8 +364,8 @@ class BaseVisitor(ast.NodeVisitor):
     This method should return True for the `with b` and `with c` nodes.
     """
 
-  def visit_With_3(self, node):
-    if hasattr(ast, 'AsyncWith') and isinstance(node, ast.AsyncWith):
+  def visit_With_3(self, node, is_async=False):
+    if is_async:
       self.attr(node, 'with', ['async', self.ws, 'with', self.ws],
                 default='async with ')
     else:
@@ -416,15 +416,14 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(stmt)
 
   @block_statement
-  def visit_FunctionDef(self, node):
+  def visit_FunctionDef(self, node, is_async=False):
     for i, decorator in enumerate(node.decorator_list):
       self.attr(node, 'decorator_symbol_%d' % i, [self.ws, '@', self.ws],
                 default='@')
       self.visit(decorator)
       self.attr(node, 'decorator_suffix_%d' % i, [self.ws_oneline],
                 default='\n' + self._indent)
-    if (hasattr(ast, 'AsyncFunctionDef') and
-        isinstance(node, ast.AsyncFunctionDef)):
+    if is_async:
       self.attr(node, 'function_def',
                 [self.ws, 'async', self.ws, 'def', self.ws, node.name, self.ws],
                 deps=('name',), default='async def %s' % node.name)
@@ -452,7 +451,7 @@ class BaseVisitor(ast.NodeVisitor):
       self.visit(stmt)
 
   def visit_AsyncFunctionDef(self, node):
-    return self.visit_FunctionDef(node)
+    return self.visit_FunctionDef(node, is_async=True)
 
   @block_statement
   def visit_TryFinally(self, node):
