@@ -150,5 +150,7 @@ def _rename_reads(sc, t, old_name, new_name):
       ast_utils.replace_child(sc.parent(ref_node), ref_node,
                               ast.parse(new_name).body[0].value)
       has_changed = True
+    elif isinstance(ref_node, ast.Str) and ref_node.s.startswith(old_name):
+      ref_node.s = ref_node.s.replace(old_name, new_name, 1)
 
   return has_changed

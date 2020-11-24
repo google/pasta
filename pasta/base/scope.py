@@ -143,6 +143,16 @@ class ScopeVisitor(ast.NodeVisitor):
 
   def visit_arg(self, node):
     self.scope.define_name(node.arg, node)
+
+    # PEP 484 forward reference type annotations
+    if hasattr(node, 'annotation') and isinstance(node.annotation, ast.Str):
+      name_parts = node.annotation.s.split('.')
+      # TODO: Fix this; the name may not be defined in the root scope.
+      name = self.root_scope.forward_define_name(name_parts[0], node.annotation)
+      for part in name_parts[1:]:
+        name = name.lookup_name(part)
+        name.add_reference(node.annotation)
+
     self.generic_visit(node)
 
   def visit_ClassDef(self, node):
@@ -176,6 +186,15 @@ class Scope(object):
     except KeyError:
       name_obj = self.names[name] = Name(name)
     name_obj.define(node)
+    return name_obj
+
+  def forward_define_name(self, name, node):
+    """Define this name as a forward-reference (does not set definition)."""
+    try:
+      name_obj = self.names[name]
+    except KeyError:
+      name_obj = self.names[name] = Name(name)
+    name_obj.add_reference(node)
     return name_obj
 
   def lookup_name(self, name):

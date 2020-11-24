@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import textwrap
 import unittest
 
 from pasta.augment import rename
@@ -108,6 +109,20 @@ class RenameTest(test_utils.TestCase):
     rename._rename_reads(sc, t, 'aaa.bbb.ccc.ddd', 'xxx.yyy')
     rename._rename_reads(sc, t, 'bbb.aaa', 'xxx.yyy')
     self.checkAstsEqual(t, ast.parse(src))
+
+  @test_utils.requires_features('type_annotations')
+  def test_rename_reads_type_annotation(self):
+    src = textwrap.dedent("""\
+        def foo(bar: 'aaa.bbb.ccc.Bar'):
+          pass
+        """)
+    t = ast.parse(src)
+    sc = scope.analyze(t)
+    rename._rename_reads(sc, t, 'aaa.bbb', 'xxx.yyy')
+    self.checkAstsEqual(t, ast.parse(textwrap.dedent("""\
+        def foo(bar: 'xxx.yyy.ccc.Bar'):
+          pass
+        """)))
 
 
 def suite():

@@ -351,6 +351,66 @@ class ScopeTest(test_utils.TestCase):
     self.assertItemsEqual(s.names['aaa'].reads,
                           [func.args.args[0].annotation.value])
 
+  @test_utils.requires_features('type_annotations')
+  def test_import_in_argument_type_string(self):
+    source = textwrap.dedent("""\
+        import aaa
+        def foo(bar: 'aaa.Bar'):
+          pass
+        """)
+    tree = ast.parse(source)
+    nodes = tree.body
+
+    func = nodes[1]
+
+    s = scope.analyze(tree)
+
+    self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
+    self.assertItemsEqual(s.external_references.keys(), {'aaa'})
+    self.assertItemsEqual(s.names['aaa'].reads,
+                          [func.args.args[0].annotation])
+    self.assertItemsEqual(s.names['aaa'].lookup_name('Bar').reads,
+                          [func.args.args[0].annotation])
+
+  @test_utils.requires_features('type_annotations')
+  def test_forward_type_reference(self):
+    source = textwrap.dedent("""\
+        class A():
+          def foo(self, a: 'A'): pass
+        """)
+    tree = ast.parse(source)
+    nodes = tree.body
+
+    classdef = nodes[0]
+
+    s = scope.analyze(tree)
+
+    self.assertItemsEqual(s.names.keys(), {'A'})
+    self.assertItemsEqual(s.names['A'].reads,
+                          [classdef.body[0].args.args[1].annotation])
+
+  @test_utils.requires_features('type_annotations')
+  def test_forward_type_reference2(self):
+    source = textwrap.dedent("""\
+        class A():
+          def foo(self, b: 'B'): pass
+        class B():
+          def foo(self, a: 'A'): pass
+        """)
+    tree = ast.parse(source)
+    nodes = tree.body
+
+    a_classdef = nodes[0]
+    b_classdef = nodes[1]
+
+    s = scope.analyze(tree)
+
+    self.assertItemsEqual(s.names.keys(), {'A', 'B'})
+    self.assertItemsEqual(s.names['A'].reads,
+                          [b_classdef.body[0].args.args[1].annotation])
+    self.assertItemsEqual(s.names['B'].reads,
+                          [a_classdef.body[0].args.args[1].annotation])
+
   def test_import_attribute_references(self):
     source = textwrap.dedent("""\
         import aaa.bbb.ccc, ddd.eee
