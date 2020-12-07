@@ -21,13 +21,22 @@ from __future__ import print_function
 import ast
 import copy
 import logging
+from typing import Tuple
+from typed_ast import ast27
+from typed_ast import ast3
 
+import pasta
 from pasta.augment import errors
 from pasta.base import ast_utils
 from pasta.base import scope
 
 
-def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_imports=True):
+def add_import(tree,
+               name_to_import,
+               py_ver: Tuple[int, int],
+               asname=None,
+               from_import=True,
+               merge_from_imports=True):
   """Adds an import to the module.
   
   This function will try to ensure not to create duplicate imports. If name_to_import is
@@ -50,7 +59,7 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
     The name (as a string) that can be used to reference the imported name. This
       can be the fully-qualified name, the basename, or an alias name.
   """
-  sc = scope.analyze(tree)
+  sc = scope.analyze(tree, py_ver)
 
   # Don't add anything if it's already imported
   if name_to_import in sc.external_references:
@@ -61,41 +70,52 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
 
   import_node = None
   added_name = None
-  
+
   def make_safe_alias_node(alias_name, asname):
     # Try to avoid name conflicts
-    new_alias = ast.alias(name=alias_name, asname=asname)
+    if py_ver < (3, 0):
+      new_alias = ast27.alias(name=alias_name, asname=asname)
+    else:
+      new_alias = ast3.alias(name=alias_name, asname=asname)
     imported_name = asname or alias_name
     counter = 0
     while imported_name in sc.names:
       counter += 1
-      imported_name = new_alias.asname = '%s_%d' % (asname or alias_name, 
-                                                    counter)
+      imported_name = new_alias.asname = '%s_%d' % (asname or
+                                                    alias_name, counter)
     return new_alias
-        
+
   # Add an ImportFrom node if requested and possible
   if from_import and '.' in name_to_import:
     from_module, alias_name = name_to_import.rsplit('.', 1)
 
     new_alias = make_safe_alias_node(alias_name, asname)
-    
+
     if merge_from_imports:
       # Try to add to an existing ImportFrom from the same module
       existing_from_import = next(
-          (node for node in tree.body if isinstance(node, ast.ImportFrom)
-           and node.module == from_module and node.level == 0), None)
+          (node for node in tree.body
+           if isinstance(node, (ast27.ImportFrom, ast3.ImportFrom)) and
+           node.module == from_module and node.level == 0), None)
       if existing_from_import:
         existing_from_import.names.append(new_alias)
         return new_alias.asname or new_alias.name
 
     # Create a new node for this import
-    import_node = ast.ImportFrom(module=from_module, names=[new_alias], level=0)
+    if py_ver < (3, 0):
+      import_node = ast27.ImportFrom(
+          module=from_module, names=[new_alias], level=0)
+    else:
+      import_node = ast3.ImportFrom(
+          module=from_module, names=[new_alias], level=0)
 
   # If not already created as an ImportFrom, create a normal Import node
   if not import_node:
     new_alias = make_safe_alias_node(alias_name=name_to_import, asname=asname)
-    import_node = ast.Import(
-        names=[new_alias])
+    if py_ver < (3, 0):
+      import_node = ast27.Import(names=[new_alias])
+    else:
+      import_node = ast3.Import(names=[new_alias])
 
   # Insert the node at the top of the module and return the name in scope
   tree.body.insert(1 if ast_utils.has_docstring(tree) else 0, import_node)
@@ -134,7 +154,7 @@ def split_import(sc, node, alias_to_remove):
   return new_import
 
 
-def get_unused_import_aliases(tree, sc=None):
+def get_unused_import_aliases(tree, py_ver: Tuple[int, int], sc=None):
   """Get the import aliases that aren't used.
 
   Arguments:
@@ -147,10 +167,10 @@ def get_unused_import_aliases(tree, sc=None):
     the given tree.
   """
   if sc is None:
-    sc = scope.analyze(tree)
+    sc = scope.analyze(tree, py_ver)
   unused_aliases = set()
-  for node in ast.walk(tree):
-    if isinstance(node, ast.alias):
+  for node in pasta.ast_walk(tree, py_ver):
+    if isinstance(node, (ast27.alias, ast3.alias)):
       str_name = node.asname if node.asname is not None else node.name
       if str_name in sc.names:
         name = sc.names[str_name]
@@ -179,7 +199,7 @@ def remove_import_alias_node(sc, node):
     ast_utils.remove_child(import_node, node)
 
 
-def remove_duplicates(tree, sc=None):
+def remove_duplicates(tree, py_ver: Tuple[int, int], sc=None):
   """Remove duplicate imports, where it is safe to do so.
 
   This does NOT remove imports that create new aliases
@@ -193,15 +213,16 @@ def remove_duplicates(tree, sc=None):
     Whether any changes were made.
   """
   if sc is None:
-    sc = scope.analyze(tree)
+    sc = scope.analyze(tree, py_ver)
 
   modified = False
   seen_names = set()
   for node in tree.body:
-    if isinstance(node, (ast.Import, ast.ImportFrom)):
+    if isinstance(
+        node, (ast27.Import, ast3.Import, ast27.ImportFrom, ast3.ImportFrom)):
       for alias in list(node.names):
         import_node = sc.parent(alias)
-        if isinstance(import_node, ast.Import):
+        if isinstance(import_node, (ast27.Import, ast3.Import)):
           full_name = alias.name
         elif import_node.module:
           full_name = '%s%s.%s' % ('.' * import_node.level,

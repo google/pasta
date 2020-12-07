@@ -22,11 +22,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
+# import ast
 import collections
 import contextlib
 import itertools
 import tokenize
+from typed_ast import ast27
+from typed_ast import ast3
 from six import StringIO
 
 from pasta.base import formatting as fmt
@@ -375,54 +377,9 @@ class TokenGenerator(object):
       val_idx = 0
       i = -1
       result = ''
-      in_fstring = False
-      string_quote = None
       while i < len(str_content) - 1:
         i, c = next(indexed_chars)
         result += c
-
-        # If we haven't actually parsing string content yet, check if a string
-        # (with or without fstring prefix) has started
-        if string_quote is None:
-          if str_content[i:i+4] in ('f"""', "f'''"):
-            string_quote = str_content[i+1:i+4]
-            in_fstring = True
-          elif str_content[i:i+3] in ('"""', "'''"):
-            string_quote = str_content[i:i+3]
-            in_fstring = False
-          elif str_content[i:+2] in ('f"', "f'"):
-            string_quote = str_content[i+1]
-            in_fstring = True
-          elif c in ('"', "'"):
-            string_quote = c
-            in_fstring = False
-          if string_quote:
-            # Skip uneaten quote characters
-            for _ in range(len(string_quote) + (1 if in_fstring else 0) - 1):
-              i, c = next(indexed_chars)
-              result += c
-            continue
-
-        # If we are still not parsing characters in a string, no extra
-        # processing is needed
-        if string_quote is None:
-          continue
-
-        # If we ARE in a string, check if the next characters are the
-        # close-quote for that string
-        if (str_content[i:i+len(string_quote)] == string_quote and
-            str_content[i-1] != '\\'):
-          # Skip uneaten quote characters
-          for _ in range(len(string_quote) - 1):
-            i, c = next(indexed_chars)
-            result += c
-          string_quote = None
-          in_fstring = False
-          continue
-
-        # If we are NOT in an fstring, skip all FormattedValue processing.
-        if not in_fstring:
-          continue
 
         # When an open bracket is encountered, start parsing a subexpression
         if c == '{':
@@ -521,38 +478,38 @@ def _scope_helper(node):
   Returns:
     A closure of nodes which that scope might apply to.
   """
-  if isinstance(node, ast.Attribute):
+  if isinstance(node, (ast27.Attribute, ast3.Attribute)):
     return (node,) + _scope_helper(node.value)
-  if isinstance(node, ast.Subscript):
+  if isinstance(node, (ast27.Subscript, ast3.Subscript)):
     return (node,) + _scope_helper(node.value)
-  if isinstance(node, ast.Assign):
+  if isinstance(node, (ast27.Assign, ast3.Assign)):
     return (node,) + _scope_helper(node.targets[0])
-  if isinstance(node, ast.AugAssign):
+  if isinstance(node, (ast27.AugAssign, ast3.AugAssign)):
     return (node,) + _scope_helper(node.target)
-  if isinstance(node, ast.Expr):
+  if isinstance(node, (ast27.Expr, ast3.Expr)):
     return (node,) + _scope_helper(node.value)
-  if isinstance(node, ast.Compare):
+  if isinstance(node, (ast27.Compare, ast3.Compare)):
     return (node,) + _scope_helper(node.left)
-  if isinstance(node, ast.BoolOp):
+  if isinstance(node, (ast27.BoolOp, ast3.BoolOp)):
     return (node,) + _scope_helper(node.values[0])
-  if isinstance(node, ast.BinOp):
+  if isinstance(node, (ast27.BinOp, ast3.BinOp)):
     return (node,) + _scope_helper(node.left)
-  if isinstance(node, ast.Tuple) and node.elts:
+  if isinstance(node, (ast27.Tuple, ast3.Tuple)) and node.elts:
     return (node,) + _scope_helper(node.elts[0])
-  if isinstance(node, ast.Call):
+  if isinstance(node, (ast27.Call, ast3.Call)):
     return (node,) + _scope_helper(node.func)
-  if isinstance(node, ast.GeneratorExp):
+  if isinstance(node, (ast27.GeneratorExp, ast3.GeneratorExp)):
     return (node,) + _scope_helper(node.elt)
-  if isinstance(node, ast.IfExp):
+  if isinstance(node, (ast27.IfExp, ast3.IfExp)):
     return (node,) + _scope_helper(node.body)
   return (node,)
-   
+
 
 def _generate_tokens(source, ignore_error_token=False):
   token_generator = tokenize.generate_tokens(StringIO(source).readline)
   try:
     for tok in token_generator:
-      yield Token(*tok) 
+      yield Token(*tok)
   except tokenize.TokenError:
     if not ignore_error_token:
       raise

@@ -60,7 +60,7 @@ class C():
   def g(x):
     return x + 3
 """
-    tree = pasta.parse(src)
+    tree = pasta.parse(src, pasta_test.py_ver)
     class_node = tree.body[0]
     meth1_node = class_node.body[0]
 
@@ -76,7 +76,7 @@ class C():
 
   def testRemoveAlias(self):
     src = "from a import b, c"
-    tree = pasta.parse(src)
+    tree = pasta.parse(src, pasta_test.py_ver)
     import_node = tree.body[0]
     alias1 = import_node.names[0]
     ast_utils.remove_child(import_node, alias1)
@@ -89,7 +89,7 @@ if a:
   print("foo!")
   x = 1
 """
-    tree = pasta.parse(src)
+    tree = pasta.parse(src, pasta_test.py_ver)
     if_block = tree.body[0]
     print_stmt = if_block.body[0]
     ast_utils.remove_child(if_block, print_stmt)
@@ -102,9 +102,10 @@ if a:
 
   def testReplaceChildInBody(self):
     src = 'def foo():\n  a = 0\n  a += 1 # replace this\n  return a\n'
-    replace_with = pasta.parse('foo(a + 1)  # trailing comment\n').body[0]
+    replace_with = pasta.parse('foo(a + 1)  # trailing comment\n',
+                               pasta_test.py_ver).body[0]
     expected = 'def foo():\n  a = 0\n  foo(a + 1) # replace this\n  return a\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, pasta_test.py_ver)
 
     parent = t.body[0]
     node_to_replace = parent.body[1]
@@ -114,8 +115,8 @@ if a:
 
   def testReplaceChildInvalid(self):
     src = 'def foo():\n  return 1\nx = 1\n'
-    replace_with = pasta.parse('bar()').body[0]
-    t = pasta.parse(src)
+    replace_with = pasta.parse('bar()', pasta_test.py_ver).body[0]
+    t = pasta.parse(src, pasta_test.py_ver)
 
     parent = t.body[0]
     node_to_replace = t.body[1]
