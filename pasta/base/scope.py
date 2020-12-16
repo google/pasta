@@ -152,10 +152,6 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
         # Visit defaults first to avoid declarations in args
         self.visit_in_order(node, 'vararg', 'kwarg')
 
-      # BEGIN GOOGLE: add "types" to support Google pytypes
-      self.visit_in_order(node, 'types')
-      # END GOOGLE
-
     def visit_arg(self, node: Union[ast27.AST, ast3.AST]):
       self.scope.define_name(node.arg, node)
       

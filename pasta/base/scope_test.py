@@ -322,59 +322,6 @@ def suite(py_ver: str):
       self.assertItemsEqual(s.external_references.keys(), {'aaa'})
       self.assertItemsEqual(s.names['aaa'].reads, [decorator])
 
-    # BEGIN GOOGLE
-    # Type annotations produce a different ast in Google python than PEP-0484.
-    # These tests are modified to check the right nodes.
-    @test_utils.requires_features(['type_annotations'], py_ver)
-    def test_import_in_return_type(self):
-      source = textwrap.dedent("""\
-          from __future__ import google_type_annotations
-          import aaa
-          def foo() -> aaa.Foo:
-            pass
-          """)
-      tree = pasta.ast_parse(source, py_ver)
-      nodes = tree.body
-
-      func = nodes[2]
-
-      s = scope.analyze(tree, py_ver)
-
-      self.assertItemsEqual(s.names.keys(),
-                            {'aaa', 'foo', 'google_type_annotations'})
-      self.assertItemsEqual(s.external_references.keys(),
-                            {'aaa', '__future__',
-                             '__future__.google_type_annotations'})
-      self.assertItemsEqual(s.names['aaa'].reads, [func.returns.value])
-
-    @test_utils.requires_features(['type_annotations'], py_ver)
-    def test_import_in_argument_type(self):
-      source = textwrap.dedent("""\
-          from __future__ import google_type_annotations
-          import aaa
-          def foo(bar: aaa.Bar):
-            pass
-          """)
-      tree = pasta.ast_parse(source, py_ver)
-      nodes = tree.body
-
-      func = nodes[2]
-
-      s = scope.analyze(tree, py_ver)
-
-      self.assertItemsEqual(s.names.keys(),
-                            {'aaa', 'foo', 'google_type_annotations'})
-      self.assertItemsEqual(s.external_references.keys(),
-                            {'aaa', '__future__',
-                             '__future__.google_type_annotations'})
-      if hasattr(func.args.args[0], 'annotation'):
-        self.assertItemsEqual(s.names['aaa'].reads,
-                              [func.args.args[0].annotation.value])
-      else:
-        self.assertItemsEqual(s.names['aaa'].reads,
-                              [func.args.types[0].value])
-    # END GOOGLE
-
     @test_utils.requires_features(['type_annotations'], py_ver)
     def test_import_in_argument_type_string(self):
       source = textwrap.dedent("""\

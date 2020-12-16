@@ -1281,25 +1281,10 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       pos_args = getattr(node, 'posonlyargs', []) + node.args
       positional = pos_args[:-len(node.defaults)] if node.defaults else pos_args
       keyword = node.args[-len(node.defaults):] if node.defaults else node.args
-      # BEGIN GOOGLE
-      # `types` combines argument types for positional and keyword arguments.
-      # Arguments without types have  a `None` value in the list.
-      # `varargs` and `kwargs` have type definitions separate from this list.
-      types = (
-          iter(node.types) if hasattr(node, 'types') else iter(
-              lambda: None, True))
-      # END GOOGLE
-
+      
       for arg in positional:
         self.visit(arg)
         arg_i += 1
-        # BEGIN GOOGLE
-        arg_type = next(types)
-        if arg_type:
-          self.token(':')
-          self.visit(arg_type)
-          self.suffix(arg_type)
-        # END GOOGLE
         if arg_i < total_args:
           self.attr(
               node, 'comma_%d' % arg_i, [self.ws, ',', self.ws], default=', ')
@@ -1311,13 +1296,6 @@ def get_base_visitor(py_ver: Tuple[int, int]):
 
       for i, (arg, default) in enumerate(zip(keyword, node.defaults)):
         self.visit(arg)
-        # BEGIN GOOGLE
-        arg_type = next(types)
-        if arg_type:
-          self.attr(
-              node, 'type_prefix_%d' % i, [self.ws, ':', self.ws], default=': ')
-          self.visit(arg_type)
-        # END GOOGLE
         self.attr(node, 'default_%d' % i, [self.ws, '=', self.ws], default='=')
         self.visit(default)
         arg_i += 1
@@ -1333,12 +1311,6 @@ def get_base_visitor(py_ver: Tuple[int, int]):
           self.token(node.vararg)
           self.attr(node, 'vararg_suffix', [self.ws])
         arg_i += 1
-        # BEGIN GOOGLE
-        if hasattr(node, 'vararg_type') and node.vararg_type:
-          self.token(':')
-          self.visit(node.vararg_type)
-          self.suffix(node.vararg_type)
-        # END GOOGLE
         if arg_i < total_args:
           self.token(',')
       elif kwonlyargs:
@@ -1348,15 +1320,6 @@ def get_base_visitor(py_ver: Tuple[int, int]):
 
       for i, (arg, default) in enumerate(zip(kwonlyargs, kw_defaults)):
         self.visit(arg)
-        # BEGIN GOOGLE
-        arg_type = next(types)
-        if arg_type:
-          self.attr(
-              node,
-              'kw_type_prefix_%d' % i, [self.ws, ':', self.ws],
-              default=': ')
-          self.visit(arg_type)
-        # END GOOGLE
         if default is not None:
           self.attr(
               node, 'kw_default_%d' % i, [self.ws, '=', self.ws], default='=')
@@ -1373,12 +1336,6 @@ def get_base_visitor(py_ver: Tuple[int, int]):
         else:
           self.token(node.kwarg)
           self.attr(node, 'kwarg_suffix', [self.ws])
-        # BEGIN GOOGLE
-        if hasattr(node, 'kwarg_type') and node.kwarg_type:
-          self.token(':')
-          self.visit(node.kwarg_type)
-          self.suffix(node.kwarg_type)
-        # END GOOGLE
 
     @space_around
     def visit_comprehension(self, node):

@@ -40,18 +40,6 @@ from pasta.base import codegen
 from pasta.base import formatting as fmt
 from pasta.base import test_utils
 
-# BEGIN GOOGLE
-from absl import flags
-FLAGS = flags.FLAGS
-# END GOOGLE
-
-# BEGIN GOOGLE
-# TESTDATA_DIR = os.path.realpath(
-#     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
-TESTDATA_DIR = os.path.realpath(
-    os.path.join(os.path.dirname(pasta.__file__), '../pasta/testdata'))
-# END GOOGLE
-
 
 def suite(py_ver: Tuple[int, int]):
 
@@ -386,16 +374,6 @@ def suite(py_ver: Tuple[int, int]):
 
           # If specified, write the golden data instead of checking it
           if getattr(self, 'generate_goldens', False):
-            # BEGIN GOOGLE
-            local_testdata_dir = os.path.join(sys.argv[1], 'testdata')
-            local_golden_file = golden_file.replace(TESTDATA_DIR,
-                                                    local_testdata_dir)
-            if not os.path.isdir(os.path.dirname(local_golden_file)):
-              os.makedirs(os.path.dirname(local_golden_file))
-            with open(local_golden_file, 'w') as f:
-              f.write(result)
-            print('Wrote: ' + local_golden_file)
-            # END GOOGLE
             return
 
         try:
@@ -411,12 +389,6 @@ def suite(py_ver: Tuple[int, int]):
       # Add a test method for each input file
       test_method_prefix = 'test_golden_prefix_suffix_'
       data_dir = os.path.join(TESTDATA_DIR, 'ast')
-      # BEGIN GOOGLE
-      # Maintain a separate set of golden data for Google python
-      #python_version = '%d.%d' % sys.version_info[:2]
-      python_version = '%d.%d_google' % (sys.version_info.major,
-                                         sys.version_info.minor)
-      # END GOOGLE
       for dirpath, dirs, files in os.walk(data_dir):
         for filename in files:
           if filename.endswith('.in'):
