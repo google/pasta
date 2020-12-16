@@ -41,6 +41,10 @@ from pasta.base import formatting as fmt
 from pasta.base import test_utils
 
 
+TESTDATA_DIR = os.path.realpath(
+    os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
+
+
 def suite(py_ver: Tuple[int, int]):
 
   class PrefixSuffixTest(test_utils.TestCase):
