@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import textwrap
 from typing import Tuple
 import unittest
 
@@ -130,6 +131,20 @@ def suite(py_ver: Tuple[int, int]):
       rename._rename_reads(sc, t, 'aaa.bbb.ccc.ddd', 'xxx.yyy', py_ver)
       rename._rename_reads(sc, t, 'bbb.aaa', 'xxx.yyy', py_ver)
       self.checkAstsEqual(t, pasta.ast_parse(src, py_ver), py_ver)
+
+  @test_utils.requires_features('type_annotations', py_ver)
+  def test_rename_reads_type_annotation(self):
+    src = textwrap.dedent("""\
+        def foo(bar: 'aaa.bbb.ccc.Bar'):
+          pass
+        """)
+    t = ast.parse(src)
+    sc = scope.analyze(t)
+    rename._rename_reads(sc, t, 'aaa.bbb', 'xxx.yyy')
+    self.checkAstsEqual(t, ast.parse(textwrap.dedent("""\
+        def foo(bar: 'xxx.yyy.ccc.Bar'):
+          pass
+        """)))
 
   result = unittest.TestSuite()
   result.addTests(unittest.makeSuite(RenameTest))

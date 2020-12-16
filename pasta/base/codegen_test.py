@@ -53,7 +53,7 @@ def suite(py_ver: str):
           with open(input_file, 'r') as handle:
             src = handle.read()
           t = pasta.ast_parse(src, py_ver)
-          auto_formatted = codegen.to_str(t)
+          auto_formatted = pasta.dump(t, py_ver)
           self.assertMultiLineEqual(src, auto_formatted)
 
         return test
@@ -113,17 +113,31 @@ def func():
       print(pasta.dump(t, py_ver))
       self.assertEqual(src, pasta.dump(t, py_ver))
 
-  def test_default_indentation(self):
-    for indent in ('  ', '    ', '\t'):
-      src = 'def a():\n' + indent + 'b\n'
-      t = pasta.parse(src, py_ver)
-      t.body.extend(ast.parse('def c(): d').body)
-      self.assertEqual(codegen.to_str(t), src + 'def c():\n' + indent + 'd\n')
+    def test_default_indentation(self):
+      for indent in ('  ', '    ', '\t'):
+        src = 'def a():\n' + indent + 'b\n'
+        t = pasta.parse(src, py_ver)
+        t.body.extend(pasta.ast_parse('def c(): d', py_ver).body)
+        self.assertEqual(pasta.dump(t, py_ver), src + 'def c():\n' + indent + 'd\n')
 
-  def test_globals_where_first_ident_reoccurs(self):
-    src = 'global a, b, a'
-    t = pasta.ast_parse(src, py_ver)
-    self.assertEqual('global a, b, a', pasta.dump(t, py_ver))
+    def test_globals_where_first_ident_reoccurs(self):
+      src = 'global a, b, a'
+      t = pasta.parse(src, py_ver)
+      self.assertEqual('global a, b, a', pasta.dump(t, py_ver))
+
+    def test_compare_where_separator_whitespace_deleted(self):
+      src = "if a     in      b:\n  pass"
+      t = pasta.parse(src, py_ver)
+      t.body[0].test.left.__pasta__['suffix'] = ''
+      t.body[0].test.__pasta__['op_suffix_0'] = ''
+      self.assertEqual("if a in b:\n  pass", pasta.dump(t, py_ver))
+
+    def test_except_where_separator_whitespace_deleted(self):
+      src = "try:\n  pass\nexcept Type      as    var:\n  pass"
+      t = pasta.parse(src, py_ver)
+      t.body[0].handlers[0].type.__pasta__['suffix'] = ''
+      self.assertEqual("try:\n  pass\nexcept Type as    var:\n  pass", pasta.dump(t, py_ver))
+
 
   result = unittest.TestSuite()
   result.addTests(unittest.makeSuite(AutoFormatTest))

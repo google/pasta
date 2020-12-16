@@ -120,8 +120,19 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
       self.code += content if content is not None else repr(node.s)
       self.suffix(node)
 
-    def token(self, value):
-      self.code += value
+    def token(self, token_val,
+             separate_before: bool = False):
+      """Emits a single token with exactly the given value.
+
+      Arguments:
+        token_val: the token to be emitted.
+        separate_before: indicates whether it is necessary to separate the
+          tokens parsed in this call from preceding text using whitespace.
+      """
+      if separate_before and self.code and self.code[-1].isalnum() and \
+            (not token_val or token_val[0].isalnum()):
+          self.code += ' '
+      self.code += token_val
 
     def optional_token(self,
                        node: Union[ast27.AST, ast3.AST],
@@ -140,7 +151,8 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
              attr_name: str,
              attr_vals: List[str],
              deps: Set[str] = None,
-             default: str = None):
+             default: str = None,
+             separate_before: bool = False):
       """Add the formatted data stored for a given attribute on this node.
 
       If any of the dependent attributes of the node have changed since it was
@@ -154,6 +166,8 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
         deps: (optional, set of strings) Attributes of the node which the stored
           formatting data depends on.
         default: (string) Default formatted data for this attribute.
+        separate_before: indicates whether it is necessary to separate the
+          tokens parsed in this call from preceding text using whitespace.
       """
       del attr_vals
       if not hasattr(node, '_printer_info') or node._printer_info[attr_name]:
@@ -165,7 +179,12 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
           (getattr(node, dep, None) != fmt.get(node, dep + '__src'))
           for dep in deps)):
         val = default
-      self.code += val if val is not None else ''
+
+      val = val if val is not None else ''
+      if separate_before and self.code and self.code[-1].isalnum() and \
+            (not val or val[0].isalnum()):
+          self.code += ' '
+      self.code += val
 
     def check_is_elif(self, node: Union[ast27.AST, ast3.AST]) -> bool:
       try:

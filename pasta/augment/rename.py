@@ -158,5 +158,7 @@ def _rename_reads(sc, t, old_name, new_name, py_ver: Tuple[int, int]):
           sc.parent(ref_node), ref_node,
           pasta.ast_parse(new_name, py_ver).body[0].value)
       has_changed = True
+    elif isinstance(ref_node, ast.Str) and ref_node.s.startswith(old_name):
+      ref_node.s = ref_node.s.replace(old_name, new_name, 1)
 
   return has_changed

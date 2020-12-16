@@ -398,11 +398,11 @@ def suite(py_ver: Tuple[int, int]):
             # END GOOGLE
             return
 
-          try:
-            with open(golden_file, 'r') as f:
-              golden = f.read()
-          except IOError:
-            self.fail('Missing golden data.')
+        try:
+          with io.open(golden_file, 'r', encoding='UTF-8') as f:
+            golden = f.read()
+        except IOError:
+          self.fail('Missing golden data.')
 
           self.assertMultiLineEqual(golden, result)
 

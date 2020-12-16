@@ -338,8 +338,8 @@ def get_base_visitor(py_ver: Tuple[int, int]):
           self.visit(stmt)
 
     @block_statement
-    def visit_For(self, node):
-      if isinstance(node, (ast3.AsyncFor)):
+    def visit_For(self, node, is_async=False):
+      if is_async:
         self.attr(
             node,
             'for_keyword', ['async', self.ws, 'for', self.ws],
@@ -353,7 +353,7 @@ def get_base_visitor(py_ver: Tuple[int, int]):
           node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
       for stmt in self.indented(node, 'body'):
         self.visit(stmt)
-
+      
       if node.orelse:
         self.attr(
             node,
@@ -364,12 +364,12 @@ def get_base_visitor(py_ver: Tuple[int, int]):
           self.visit(stmt)
 
     def visit_AsyncFor(self, node):
-      return self.visit_For(node)
+      return self.visit_For(node, is_async=True)
 
     @block_statement
-    def visit_With(self, node):
+    def visit_With(self, node, is_async=False):
       if hasattr(node, 'items'):
-        return self.visit_With_3(node)
+        return self.visit_With_3(node, is_async)
       if not getattr(node, 'is_continued', False):
         self.attr(node, 'with', ['with', self.ws], default='with ')
       self.visit(node.context_expr)
@@ -377,17 +377,17 @@ def get_base_visitor(py_ver: Tuple[int, int]):
         self.attr(node, 'with_as', [self.ws, 'as', self.ws], default=' as ')
         self.visit(node.optional_vars)
 
-      if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
-        node.body[0].is_continued = True
-        self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
-      else:
-        self.attr(
-            node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
-      for stmt in self.indented(node, 'body'):
-        self.visit(stmt)
+        if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
+          node.body[0].is_continued = True
+          self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
+        else:
+          self.attr(
+              node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
+        for stmt in self.indented(node, 'body'):
+          self.visit(stmt)
 
     def visit_AsyncWith(self, node):
-      return self.visit_With(node)
+      return self.visit_With(node, is_async=True)
 
     @abc.abstractmethod
     def check_is_continued_try(self, node):
@@ -410,26 +410,24 @@ def get_base_visitor(py_ver: Tuple[int, int]):
           with c:
             do_something()
 
-      This method should return True for the `with b` and `with c` nodes.
-      """
+    This method should return True for the `with b` and `with c` nodes.
+    """
 
-    def visit_With_3(self, node):
-      if isinstance(node, ast3.AsyncWith):
-        self.attr(
-            node,
-            'with', ['async', self.ws, 'with', self.ws],
-            default='async with ')
+    def visit_With_3(self, node, is_async=False):
+      if is_async:
+        self.attr(node, 'with', ['async', self.ws, 'with', self.ws],
+                  default='async with ')
       else:
         self.attr(node, 'with', ['with', self.ws], default='with ')
 
-      for i, withitem in enumerate(node.items):
-        self.visit(withitem)
-        if i != len(node.items) - 1:
-          self.token(',')
+        for i, withitem in enumerate(node.items):
+          self.visit(withitem)
+          if i != len(node.items) - 1:
+            self.token(',')
 
-      self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
-      for stmt in self.indented(node, 'body'):
-        self.visit(stmt)
+        self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
+        for stmt in self.indented(node, 'body'):
+          self.visit(stmt)
 
     @space_around
     def visit_withitem(self, node):
@@ -473,51 +471,64 @@ def get_base_visitor(py_ver: Tuple[int, int]):
         self.visit(stmt)
 
     @block_statement
-    def visit_FunctionDef(self, node):
+    def visit_FunctionDef(self, node, is_async=False):
       for i, decorator in enumerate(node.decorator_list):
-        self.attr(
-            node,
-            'decorator_symbol_%d' % i, [self.ws, '@', self.ws],
-            default='@')
+        self.attr(node, 'decorator_symbol_%d' % i, [self.ws, '@', self.ws],
+                  default='@')
         self.visit(decorator)
-        self.attr(
-            node,
-            'decorator_suffix_%d' % i, [self.ws_oneline],
-            default='\n' + self._indent)
-      if isinstance(node, ast3.AsyncFunctionDef):
-        self.attr(
-            node,
-            'function_def',
-            [self.ws, 'async', self.ws, 'def', self.ws, node.name, self.ws],
-            deps=('name',),
-            default='async def %s' % node.name)
+        self.attr(node, 'decorator_suffix_%d' % i, [self.ws_oneline],
+                  default='\n' + self._indent)
+      if is_async:
+        self.attr(node, 'function_def',
+                  [self.ws, 'async', self.ws, 'def', self.ws, node.name, self.ws],
+                  deps=('name',), default='async def %s' % node.name)
       else:
-        self.attr(
-            node,
-            'function_def', [self.ws, 'def', self.ws, node.name, self.ws],
-            deps=('name',),
-            default='def %s' % node.name)
+        self.attr(node, 'function_def',
+                  [self.ws, 'def', self.ws, node.name, self.ws],
+                  deps=('name',), default='def %s' % node.name)
       # In Python 3, there can be extra args in kwonlyargs
       kwonlyargs = getattr(node.args, 'kwonlyargs', [])
-      args_count = sum(
-          (len(node.args.args + kwonlyargs), 1 if node.args.vararg else 0,
-           1 if node.args.kwarg else 0))
-      with self.scope(
-          node, 'args', trailing_comma=args_count > 0, default_parens=True):
+      args_count = sum((len(node.args.args + kwonlyargs),
+                        1 if node.args.vararg else 0,
+                        1 if node.args.kwarg else 0))
+      with self.scope(node, 'args', trailing_comma=args_count > 0,
+                      default_parens=True):
         self.visit(node.args)
+        # In Python 3, there can be extra args in kwonlyargs
+        kwonlyargs = getattr(node.args, 'kwonlyargs', [])
+        args_count = sum(
+            (len(node.args.args + kwonlyargs), 1 if node.args.vararg else 0,
+             1 if node.args.kwarg else 0))
+        with self.scope(
+            node, 'args', trailing_comma=args_count > 0, default_parens=True):
+          self.visit(node.args)
 
       if getattr(node, 'returns', None):
-        self.attr(
-            node,
-            'returns_prefix', [self.ws, '->', self.ws],
-            deps=('returns',),
-            default=' -> ')
+        self.attr(node, 'returns_prefix', [self.ws, '->', self.ws],
+                  deps=('returns',), default=' -> ')
         self.visit(node.returns)
 
-      self.attr(
-          node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
+      self.attr(node, 'open_block', [self.ws, ':', self.ws_oneline],
+                default=':\n')
       for stmt in self.indented(node, 'body'):
         self.visit(stmt)
+
+    def visit_AsyncFunctionDef(self, node):
+      return self.visit_FunctionDef(node, is_async=True)
+
+    @block_statement
+    def visit_TryFinally(self, node):
+      # Try with except and finally is a TryFinally with the first statement as a
+      # TryExcept in Python2
+      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
+                default='try:\n')
+      # TODO(soupytwist): Find a cleaner solution for differentiating this.
+      if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
+        node.body[0].is_continued = True
+        self.visit(node.body[0])
+      else:
+        for stmt in self.indented(node, 'body'):
+          self.visit(stmt)
 
     def visit_AsyncFunctionDef(self, node):
       return self.visit_FunctionDef(node)
@@ -592,13 +603,15 @@ def get_base_visitor(py_ver: Tuple[int, int]):
     @block_statement
     def visit_ExceptHandler(self, node):
       self.token('except')
+      self.attr(node, 'leading_ws', [self.ws], default=' ')
       if node.type:
         self.visit(node.type)
       if node.type and node.name:
         self.attr(
             node,
             'as', [self.ws, self.one_of_symbols('as', ','), self.ws],
-            default=' as ')
+            default=' as ',
+            separate_before=True)
       if node.name:
         if isinstance(node.name, (ast27.AST, ast3.AST)):
           self.visit(node.name)
@@ -957,7 +970,7 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       for i, (op, comparator) in enumerate(zip(node.ops, node.comparators)):
         self.attr(node, 'op_prefix_%d' % i, [self.ws], default=' ')
         self.visit(op)
-        self.attr(node, 'op_suffix_%d' % i, [self.ws], default=' ')
+        self.attr(node, 'op_suffix_%d' % i, [self.ws], default=' ', separate_before=True)
         self.visit(comparator)
 
     @expression
@@ -1030,7 +1043,11 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       self.visit(node.body)
       self.attr(node, 'if', [self.ws, 'if', self.ws], default=' if ')
       self.visit(node.test)
-      self.attr(node, 'else', [self.ws, 'else', self.ws], default=' else ')
+      self.attr(
+          node,
+          'else', [self.ws, 'else', self.ws],
+          default=' else ',
+          separate_before=True)
       self.visit(node.orelse)
 
     @expression
@@ -1140,10 +1157,10 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       self.token('...')
 
     def visit_And(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
 
     def visit_Or(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
 
     def visit_Add(self, node):
       self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
@@ -1215,16 +1232,16 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
 
     def visit_Is(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
 
     def visit_IsNot(self, node):
-      self.attr(node, 'content', ['is', self.ws, 'not'], default='is not')
+      self.attr(node, 'content', ['is', self.ws, 'not'], default='is not', separate_before=True)
 
     def visit_In(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
 
     def visit_NotIn(self, node):
-      self.attr(node, 'content', ['not', self.ws, 'in'], default='not in')
+      self.attr(node, 'content', ['not', self.ws, 'in'], default='not in', separate_before=True)
 
     # ============================================================================
     # == MISC NODES: Nodes which are neither statements nor expressions         ==
@@ -1618,8 +1635,14 @@ def get_ast_annotator(py_ver: Tuple[int, int]):
     def block_suffix(self, node, indent_level):
       fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
-    def token(self, token_val):
-      """Parse a single token with exactly the given value."""
+    def token(self, token_val,
+             separate_before: bool = False):
+      """Parse a single token with exactly the given value.
+
+      Arguments:
+        token_val: the token to be parsed.
+        separate_before: (bool) Unused here.
+      """
       token = self.tokens.next()
       if token.src != token_val:
         print(type(token.src), type(token_val))
@@ -1666,15 +1689,13 @@ def get_ast_annotator(py_ver: Tuple[int, int]):
 
       return _one_of_symbols
 
-    def attr(self, node, attr_name, attr_vals, deps=None, default=None):
+    def attr(self, node, attr_name, attr_vals, deps=None, default=None, separate_before: bool = False):
       """Parses some source and sets an attribute on the given node.
 
       Stores some arbitrary formatting information on the node. This takes a
-      list
-      attr_vals which tell what parts of the source to parse. The result of each
-      function is concatenated onto the formatting data, and strings in this
-      list
-      are a shorthand to look for an exactly matching token.
+      list attr_vals which tell what parts of the source to parse. The result of
+      each function is concatenated onto the formatting data, and strings in
+      this list are a shorthand to look for an exactly matching token.
 
       For example:
         self.attr(node, 'foo', ['(', self.ws, 'Hello, world!', self.ws, ')'],
@@ -1699,6 +1720,7 @@ def get_ast_annotator(py_ver: Tuple[int, int]):
         deps: (optional, set of strings) Attributes of the node which attr_vals
           depends on.
         default: (string) Unused here.
+        separate_before: (bool) Unused here.
       """
       del default  # unused
       attr_parts = []

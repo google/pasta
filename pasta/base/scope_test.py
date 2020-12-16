@@ -342,9 +342,9 @@ def suite(py_ver: str):
 
       self.assertItemsEqual(s.names.keys(),
                             {'aaa', 'foo', 'google_type_annotations'})
-      self.assertItemsEqual(
-          s.external_references.keys(),
-          {'aaa', '__future__', '__future__.google_type_annotations'})
+      self.assertItemsEqual(s.external_references.keys(),
+                            {'aaa', '__future__',
+                             '__future__.google_type_annotations'})
       self.assertItemsEqual(s.names['aaa'].reads, [func.returns.value])
 
     @test_utils.requires_features(['type_annotations'], py_ver)
@@ -364,16 +364,76 @@ def suite(py_ver: str):
 
       self.assertItemsEqual(s.names.keys(),
                             {'aaa', 'foo', 'google_type_annotations'})
-      self.assertItemsEqual(
-          s.external_references.keys(),
-          {'aaa', '__future__', '__future__.google_type_annotations'})
+      self.assertItemsEqual(s.external_references.keys(),
+                            {'aaa', '__future__',
+                             '__future__.google_type_annotations'})
       if hasattr(func.args.args[0], 'annotation'):
         self.assertItemsEqual(s.names['aaa'].reads,
                               [func.args.args[0].annotation.value])
       else:
-        self.assertItemsEqual(s.names['aaa'].reads, [func.args.types[0].value])
-
+        self.assertItemsEqual(s.names['aaa'].reads,
+                              [func.args.types[0].value])
     # END GOOGLE
+
+    @test_utils.requires_features(['type_annotations'], py_ver)
+    def test_import_in_argument_type_string(self):
+      source = textwrap.dedent("""\
+          import aaa
+          def foo(bar: 'aaa.Bar'):
+            pass
+          """)
+      tree = pasta.ast_parse(source, py_ver)
+      nodes = tree.body
+
+      func = nodes[1]
+
+      s = scope.analyze(tree, py_ver)
+
+      self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
+      self.assertItemsEqual(s.external_references.keys(), {'aaa'})
+      self.assertItemsEqual(s.names['aaa'].reads,
+                            [func.args.args[0].annotation])
+      self.assertItemsEqual(s.names['aaa'].lookup_name('Bar').reads,
+                            [func.args.args[0].annotation])
+
+    @test_utils.requires_features(['type_annotations'], py_ver)
+    def test_forward_type_reference(self):
+      source = textwrap.dedent("""\
+          class A():
+            def foo(self, a: 'A'): pass
+          """)
+      tree = pasta.ast_parse(source, py_ver)
+      nodes = tree.body
+
+      classdef = nodes[0]
+
+      s = scope.analyze(tree, py_ver)
+
+      self.assertItemsEqual(s.names.keys(), {'A'})
+      self.assertItemsEqual(s.names['A'].reads,
+                            [classdef.body[0].args.args[1].annotation])
+
+    @test_utils.requires_features(['type_annotations'], py_ver)
+    def test_forward_type_reference2(self):
+      source = textwrap.dedent("""\
+          class A():
+            def foo(self, b: 'B'): pass
+          class B():
+            def foo(self, a: 'A'): pass
+          """)
+      tree = pasta.ast_parse(source, py_ver)
+      nodes = tree.body
+
+      a_classdef = nodes[0]
+      b_classdef = nodes[1]
+
+      s = scope.analyze(tree, py_ver)
+
+      self.assertItemsEqual(s.names.keys(), {'A', 'B'})
+      self.assertItemsEqual(s.names['A'].reads,
+                            [b_classdef.body[0].args.args[1].annotation])
+      self.assertItemsEqual(s.names['B'].reads,
+                            [a_classdef.body[0].args.args[1].annotation])
 
     def test_import_attribute_references(self):
       source = textwrap.dedent("""\
