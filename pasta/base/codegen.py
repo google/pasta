@@ -25,7 +25,7 @@ from typing import List
 from typing import Set
 from typing import Tuple
 from typing import Union
-from typed_ast
+import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
 

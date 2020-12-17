@@ -784,7 +784,7 @@ def get_base_visitor(py_ver: Tuple[int, int]):
     @expression
     def visit_NamedExpr(self, node):
       self.visit(node.target)
-      self.attr(node, 'equal' % i, [self.ws, ':=', self.ws], default=' := ')
+      self.attr(node, 'equal', [self.ws, ':=', self.ws], default=' := ')
       self.visit(node.value)
 
     @statement
