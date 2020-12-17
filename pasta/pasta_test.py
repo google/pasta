@@ -28,10 +28,13 @@ class PastaTestCase(googletest.TestCase):
 
 class PastaBaseTest(PastaTestCase):
 
+  def test_ast_utils(self):
+    self.run_test_suite(ast_utils_test.suite((3, 8)))
+    self.run_test_suite(ast_utils_test.suite((2, 7)))
+
   def test_annotate(self):
     self.run_test_suite(annotate_test.suite((3, 8)))
     self.run_test_suite(annotate_test.suite((2, 7)))
-
 
   def test_scope(self):
     self.run_test_suite(scope_test.suite((3, 8)))

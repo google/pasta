@@ -18,107 +18,116 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from typing import Tuple
+import unittest
+
 import pasta
 from pasta.augment import errors
 from pasta.base import ast_utils
+from pasta.base import codegen
 from pasta.base import test_utils
 
+def suite(py_ver: Tuple[int, int]):
+  class UtilsTest(test_utils.TestCase):
 
-class UtilsTest(test_utils.TestCase):
+    def test_sanitize_source(self):
+      coding_lines = (
+          '# -*- coding: latin-1 -*-',
+          '# -*- coding: iso-8859-15 -*-',
+          '# vim: set fileencoding=ascii :',
+          '# This Python file uses the following encoding: utf-8',
+      )
+      src_template = '{coding}\na = 123\n'
+      sanitized_src = '# (removed coding)\na = 123\n'
+      for line in coding_lines:
+        src = src_template.format(coding=line)
 
-  def test_sanitize_source(self):
-    coding_lines = (
-        '# -*- coding: latin-1 -*-',
-        '# -*- coding: iso-8859-15 -*-',
-        '# vim: set fileencoding=ascii :',
-        '# This Python file uses the following encoding: utf-8',
-    )
-    src_template = '{coding}\na = 123\n'
-    sanitized_src = '# (removed coding)\na = 123\n'
-    for line in coding_lines:
-      src = src_template.format(coding=line)
+        # Replaced on lines 1 and 2
+        self.assertEqual(sanitized_src, ast_utils.sanitize_source(src))
+        src_prefix = '"""Docstring."""\n'
+        self.assertEqual(src_prefix + sanitized_src,
+                         ast_utils.sanitize_source(src_prefix + src))
 
-      # Replaced on lines 1 and 2
-      self.assertEqual(sanitized_src, ast_utils.sanitize_source(src))
-      src_prefix = '"""Docstring."""\n'
-      self.assertEqual(src_prefix + sanitized_src,
-                       ast_utils.sanitize_source(src_prefix + src))
-
-      # Unchanged on line 3
-      src_prefix = '"""Docstring."""\n# line 2\n'
-      self.assertEqual(src_prefix + src,
-                       ast_utils.sanitize_source(src_prefix + src))
+        # Unchanged on line 3
+        src_prefix = '"""Docstring."""\n# line 2\n'
+        self.assertEqual(src_prefix + src,
+                         ast_utils.sanitize_source(src_prefix + src))
 
 
-class AlterChildTest(test_utils.TestCase):
+  class AlterChildTest(test_utils.TestCase):
 
-  def testRemoveChildMethod(self):
-    src = """\
+    def testRemoveChildMethod(self):
+      src = """\
 class C():
   def f(x):
     return x + 2
   def g(x):
-    return x + 3
-"""
-    tree = pasta.parse(src, pasta_test.py_ver)
-    class_node = tree.body[0]
-    meth1_node = class_node.body[0]
+    return x + 3"""
+      tree = pasta.parse(src, py_ver)
+      class_node = tree.body[0]
+      meth1_node = class_node.body[0]
 
-    ast_utils.remove_child(class_node, meth1_node)
+      ast_utils.remove_child(class_node, meth1_node)
 
-    result = pasta.dump(tree)
-    expected = """\
+      result = pasta.dump(tree, py_ver)
+      expected = """\
 class C():
   def g(x):
-    return x + 3
-"""
-    self.assertEqual(result, expected)
+    return x + 3"""
+      self.assertEqual(result, expected)
 
-  def testRemoveAlias(self):
-    src = "from a import b, c"
-    tree = pasta.parse(src, pasta_test.py_ver)
-    import_node = tree.body[0]
-    alias1 = import_node.names[0]
-    ast_utils.remove_child(import_node, alias1)
+    def testRemoveAlias(self):
+      src = "from a import b, c"
+      tree = pasta.parse(src, py_ver)
 
-    self.assertEqual(pasta.dump(tree), "from a import c")
+      import_node = tree.body[0]
+      alias1 = import_node.names[0]
+      ast_utils.remove_child(import_node, alias1)
 
-  def testRemoveFromBlock(self):
-    src = """\
+      self.assertEqual(pasta.dump(tree, py_ver), "from a import c")
+
+    def testRemoveFromBlock(self):
+      src = """\
 if a:
   print("foo!")
-  x = 1
-"""
-    tree = pasta.parse(src, pasta_test.py_ver)
-    if_block = tree.body[0]
-    print_stmt = if_block.body[0]
-    ast_utils.remove_child(if_block, print_stmt)
+  x = 1"""
+      tree = pasta.parse(src, py_ver)
+      if_block = tree.body[0]
+      print_stmt = if_block.body[0]
+      ast_utils.remove_child(if_block, print_stmt)
 
-    expected = """\
+      expected = """\
 if a:
-  x = 1
-"""
-    self.assertEqual(pasta.dump(tree), expected)
+  x = 1"""
+      self.assertEqual(pasta.dump(tree, py_ver), expected)
 
-  def testReplaceChildInBody(self):
-    src = 'def foo():\n  a = 0\n  a += 1 # replace this\n  return a\n'
-    replace_with = pasta.parse('foo(a + 1)  # trailing comment\n',
-                               pasta_test.py_ver).body[0]
-    expected = 'def foo():\n  a = 0\n  foo(a + 1) # replace this\n  return a\n'
-    t = pasta.parse(src, pasta_test.py_ver)
+    def testReplaceChildInBody(self):
+      src = 'def foo():\n  a = 0\n  a += 1 # replace this\n  return a\n'
+      replace_with = pasta.parse('foo(a + 1)  # trailing comment\n',
+                                 py_ver).body[0]
+      expected = 'def foo():\n  a = 0\n  foo(a + 1) # replace this\n  return a\n'
+      t = pasta.parse(src, py_ver)
 
-    parent = t.body[0]
-    node_to_replace = parent.body[1]
-    ast_utils.replace_child(parent, node_to_replace, replace_with)
-
-    self.assertEqual(expected, pasta.dump(t))
-
-  def testReplaceChildInvalid(self):
-    src = 'def foo():\n  return 1\nx = 1\n'
-    replace_with = pasta.parse('bar()', pasta_test.py_ver).body[0]
-    t = pasta.parse(src, pasta_test.py_ver)
-
-    parent = t.body[0]
-    node_to_replace = t.body[1]
-    with self.assertRaises(errors.InvalidAstError):
+      parent = t.body[0]
+      node_to_replace = parent.body[1]
       ast_utils.replace_child(parent, node_to_replace, replace_with)
+
+      self.assertEqual(expected, pasta.dump(t, py_ver))
+
+    def testReplaceChildInvalid(self):
+      src = 'def foo():\n  return 1\nx = 1\n'
+      replace_with = pasta.parse('bar()', py_ver).body[0]
+      t = pasta.parse(src, py_ver)
+
+      parent = t.body[0]
+      node_to_replace = t.body[1]
+      with self.assertRaises(errors.InvalidAstError):
+        ast_utils.replace_child(parent, node_to_replace, replace_with)
+
+  result = unittest.TestSuite()
+  result.addTests(unittest.makeSuite(UtilsTest))
+  result.addTests(unittest.makeSuite(AlterChildTest))
+  return result
+
+if __name__ == '__main__':
+  unittest.main()

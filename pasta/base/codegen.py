@@ -222,7 +222,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
   return p.code
 
 
-def to_tree_str(node: Union[ast27.AST, ast3.AST], indent: str) -> str:
+def to_tree_str(node: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int], indent: str) -> str:
   """Returns a human-readable representation of the sub-tree rooted at node.
 
   This is a depth-first traversal of the tree that emits a string
@@ -233,7 +233,7 @@ def to_tree_str(node: Union[ast27.AST, ast3.AST], indent: str) -> str:
   if hasattr(node, '__dict__'):
     print('%s%s' % (
         indent,
-        typed_ast.dump(node),
+        ast27.dump(node) if py_ver < (3, 0) else ast3.dump(node),
     ))
     if hasattr(node, '__pasta__'):
       for attr in node.__pasta__.keys():
@@ -257,6 +257,6 @@ def to_tree_str(node: Union[ast27.AST, ast3.AST], indent: str) -> str:
     ))
     if isinstance(value, list):
       for item in value:
-        to_tree_str(item, indent + '    ')
+        to_tree_str(item, py_ver, indent + '    ')
     elif value is not None:
-      to_tree_str(value, indent + '    ')
+      to_tree_str(value, py_ver, indent + '    ')

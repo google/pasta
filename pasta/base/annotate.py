@@ -420,14 +420,14 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       else:
         self.attr(node, 'with', ['with', self.ws], default='with ')
 
-        for i, withitem in enumerate(node.items):
-          self.visit(withitem)
-          if i != len(node.items) - 1:
-            self.token(',')
+      for i, withitem in enumerate(node.items):
+        self.visit(withitem)
+        if i != len(node.items) - 1:
+          self.token(',')
 
-        self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
-        for stmt in self.indented(node, 'body'):
-          self.visit(stmt)
+      self.attr(node, 'with_body_open', [':', self.ws_oneline], default=':\n')
+      for stmt in self.indented(node, 'body'):
+        self.visit(stmt)
 
     @space_around
     def visit_withitem(self, node):
@@ -529,9 +529,6 @@ def get_base_visitor(py_ver: Tuple[int, int]):
       else:
         for stmt in self.indented(node, 'body'):
           self.visit(stmt)
-
-    def visit_AsyncFunctionDef(self, node):
-      return self.visit_FunctionDef(node)
 
     @block_statement
     def visit_TryFinally(self, node):
