@@ -10,6 +10,7 @@ from typing import Union
 import unittest
 
 import google3
+from pasta.augment import ast_utils_test
 from pasta.augment import import_utils_test
 from pasta.augment import rename_test
 from pasta.base import annotate_test
