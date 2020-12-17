@@ -380,11 +380,11 @@ def suite(py_ver: Tuple[int, int]):
           if getattr(self, 'generate_goldens', False):
             return
 
-        try:
-          with io.open(golden_file, 'r', encoding='UTF-8') as f:
-            golden = f.read()
-        except IOError:
-          self.fail('Missing golden data.')
+          try:
+            with io.open(golden_file, 'r', encoding='UTF-8') as f:
+              golden = f.read()
+          except IOError:
+            self.fail('Missing golden data.')
 
           self.assertMultiLineEqual(golden, result)
 
@@ -393,6 +393,7 @@ def suite(py_ver: Tuple[int, int]):
       # Add a test method for each input file
       test_method_prefix = 'test_golden_prefix_suffix_'
       data_dir = os.path.join(TESTDATA_DIR, 'ast')
+      python_version = '%d.%d' % sys.version_info[:2]
       for dirpath, dirs, files in os.walk(data_dir):
         for filename in files:
           if filename.endswith('.in'):
