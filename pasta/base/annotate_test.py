@@ -299,7 +299,7 @@ def suite(py_ver):
         node_c = t.body[0].body[0].body[0]
         self.assertEqual(fmt.get(node_c, 'indent_diff'), '\t')
 
-  def _is_syntax_valid(filepath, py_ver) -> bool:
+  def _is_syntax_valid(filepath, py_ver):
     with io.open(filepath, 'r', encoding='UTF-8') as f:
       try:
         pasta.ast_parse(f.read(), py_ver)

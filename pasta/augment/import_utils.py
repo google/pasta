@@ -21,7 +21,6 @@ from __future__ import print_function
 import ast
 import copy
 import logging
-from typing import Tuple
 from typed_ast import ast27
 from typed_ast import ast3
 
@@ -154,7 +153,7 @@ def split_import(sc, node, alias_to_remove):
   return new_import
 
 
-def get_unused_import_aliases(tree, py_ver: Tuple[int, int], sc=None):
+def get_unused_import_aliases(tree, py_ver, sc=None):
   """Get the import aliases that aren't used.
 
   Arguments:
@@ -199,7 +198,7 @@ def remove_import_alias_node(sc, node):
     ast_utils.remove_child(import_node, node)
 
 
-def remove_duplicates(tree, py_ver: Tuple[int, int], sc=None):
+def remove_duplicates(tree, py_ver, sc=None):
   """Remove duplicate imports, where it is safe to do so.
 
   This does NOT remove imports that create new aliases

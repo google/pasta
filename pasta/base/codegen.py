@@ -35,7 +35,7 @@ class PrintError(Exception):
   """An exception for when we failed to print the tree."""
 
 
-def to_str(tree, py_ver) -> str:
+def to_str(tree, py_ver):
 
   class Printer(annotate.get_base_visitor(py_ver)):
     """Traverses an AST and generates formatted python source code.
@@ -147,8 +147,8 @@ def to_str(tree, py_ver) -> str:
     def attr(self,
              node,
              attr_name,
-             attr_vals: List[str],
-             deps: Set[str] = None,
+             attr_vals,
+             deps = None,
              default = None,
              separate_before = False):
       """Add the formatted data stored for a given attribute on this node.
@@ -184,17 +184,17 @@ def to_str(tree, py_ver) -> str:
           self.code += ' '
       self.code += val
 
-    def check_is_elif(self, node) -> bool:
+    def check_is_elif(self, node):
       try:
         return fmt.get(node, 'is_elif')
       except AttributeError:
         return False
 
-    def check_is_continued_try(self, node) -> bool:
+    def check_is_continued_try(self, node):
       # TODO: Don't set extra attributes on nodes
       return getattr(node, 'is_continued', False)
 
-    def check_is_continued_with(self, node) -> bool:
+    def check_is_continued_with(self, node):
       # TODO: Don't set extra attributes on nodes
       return getattr(node, 'is_continued', False)
 
@@ -218,7 +218,7 @@ def to_str(tree, py_ver) -> str:
   return p.code
 
 
-def to_tree_str(node, py_ver, indent) -> str:
+def to_tree_str(node, py_ver, indent):
   """Returns a human-readable representation of the sub-tree rooted at node.
 
   This is a depth-first traversal of the tree that emits a string

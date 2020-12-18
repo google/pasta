@@ -18,7 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from typing import Tuple
 import unittest
 
 import pasta
@@ -27,7 +26,7 @@ from pasta.base import ast_utils
 from pasta.base import codegen
 from pasta.base import test_utils
 
-def suite(py_ver: Tuple[int, int]):
+def suite(py_ver):
   class UtilsTest(test_utils.TestCase):
 
     def test_sanitize_source(self):

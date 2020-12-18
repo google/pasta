@@ -276,7 +276,7 @@ def analyze(tree, py_ver):
   # Should probably also have a scope?
   class Name(object):
 
-    def __init__(self, id: int):
+    def __init__(self, id):
       self.id = id
       self.definition = None
       self.reads = []
