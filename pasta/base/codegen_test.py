@@ -27,6 +27,7 @@ from typed_ast import ast3
 import pasta
 from pasta.base import codegen
 from pasta.base import test_utils
+from pasta import pasta_test
 
 TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))

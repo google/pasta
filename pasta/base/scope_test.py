@@ -28,6 +28,7 @@ import pasta
 from pasta.base import ast_utils
 from pasta.base import scope
 from pasta.base import test_utils
+from pasta import pasta_test
 
 
 def suite(py_ver):
