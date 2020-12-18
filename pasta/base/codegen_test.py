@@ -32,7 +32,7 @@ TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
-def suite(py_ver: str):
+def suite(py_ver):
 
   def _is_syntax_valid(filepath, py_ver):
     with open(filepath, 'r') as f:

@@ -28,7 +28,6 @@ import os.path
 from six import with_metaclass
 import sys
 import textwrap
-from typing import Tuple
 from typed_ast import ast27
 from typed_ast import ast3
 import unittest
@@ -45,7 +44,7 @@ TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
-def suite(py_ver: Tuple[int, int]):
+def suite(py_ver):
 
   class PrefixSuffixTest(test_utils.TestCase):
 
@@ -300,7 +299,7 @@ def suite(py_ver: Tuple[int, int]):
         node_c = t.body[0].body[0].body[0]
         self.assertEqual(fmt.get(node_c, 'indent_diff'), '\t')
 
-  def _is_syntax_valid(filepath: str, py_ver: Tuple[int, int]) -> bool:
+  def _is_syntax_valid(filepath: str, py_ver) -> bool:
     with io.open(filepath, 'r', encoding='UTF-8') as f:
       try:
         pasta.ast_parse(f.read(), py_ver)

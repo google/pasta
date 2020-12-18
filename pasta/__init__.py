@@ -21,15 +21,11 @@ from pasta.base import ast_utils
 from pasta.base import codegen
 from typed_ast import ast27
 from typed_ast import ast3
-from typing import Iterable
-from typing import Tuple
-from typing import Union
 
 
 def ast_parse(
-    source: str,
-    py_ver: Tuple[int,
-                  int] = sys.version_info[:2]) -> Union[ast27.AST, ast3.AST]:
+    source,
+    py_ver = sys.version_info[:2]):
   if py_ver < (3, 0):
     return ast27.parse(source)
   else:
@@ -37,22 +33,21 @@ def ast_parse(
 
 
 def ast_walk(
-    tree: Union[ast27.AST, ast3.AST],
-    py_ver: Tuple[int, int] = sys.version_info[:2]
-) -> Iterable[Union[ast27.AST, ast3.AST]]:
+    tree,
+    py_ver = sys.version_info[:2]):
   if py_ver < (3, 0):
     return ast27.walk(tree)
   else:
     return ast3.walk(tree)
 
 
-def parse(src: str, py_ver: Tuple[int, int] = sys.version_info[:2]):
+def parse(src, py_ver = sys.version_info[:2]):
   t = ast_utils.parse(src, py_ver)
   annotator = annotate.get_ast_annotator(py_ver)(src)
   annotator.visit(t)
   return t
 
 
-def dump(tree: Union[ast27.AST, ast3.AST],
-         py_ver: Tuple[int, int] = sys.version_info[:2]):
+def dump(tree,
+         py_ver = sys.version_info[:2]):
   return codegen.to_str(tree, py_ver)

@@ -21,10 +21,6 @@ from __future__ import print_function
 import ast
 import collections
 import six
-from typing import List
-from typing import Set
-from typing import Tuple
-from typing import Union
 import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
@@ -39,7 +35,7 @@ class PrintError(Exception):
   """An exception for when we failed to print the tree."""
 
 
-def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
+def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
 
   class Printer(annotate.get_base_visitor(py_ver)):
     """Traverses an AST and generates formatted python source code.
@@ -222,7 +218,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]) -> str:
   return p.code
 
 
-def to_tree_str(node: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int], indent: str) -> str:
+def to_tree_str(node: Union[ast27.AST, ast3.AST], py_ver, indent: str) -> str:
   """Returns a human-readable representation of the sub-tree rooted at node.
 
   This is a depth-first traversal of the tree that emits a string

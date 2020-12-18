@@ -22,9 +22,6 @@ from __future__ import print_function
 import sys
 from typed_ast import ast27
 from typed_ast import ast3
-from typing import List
-from typing import Tuple
-from typing import Union
 import unittest
 
 from six.moves import zip
@@ -34,7 +31,7 @@ import pasta
 
 class TestCase(unittest.TestCase):
 
-  def checkAstsEqual(self, a, b, py_ver: Tuple[int, int]):
+  def checkAstsEqual(self, a, b, py_ver):
     """Compares two ASTs and fails if there are differences.
 
     Ignores `ctx` fields and formatting info.
@@ -76,7 +73,7 @@ if not hasattr(TestCase, 'assertItemsEqual'):
   setattr(TestCase, 'assertItemsEqual', TestCase.assertCountEqual)
 
 
-def requires_features(features: List[str], py_ver: Tuple[int, int]) -> bool:
+def requires_features(features: List[str], py_ver) -> bool:
   return unittest.skipIf(
       any(not supports_feature(feature, py_ver) for feature in features),
       ('Tests features which are not supported by this version of python %s. ' %
@@ -85,7 +82,7 @@ def requires_features(features: List[str], py_ver: Tuple[int, int]) -> bool:
        ([f for f in features if not supports_feature(f, py_ver)])))
 
 
-def supports_feature(feature: str, py_ver: Tuple[int, int]) -> bool:
+def supports_feature(feature: str, py_ver) -> bool:
   if feature == 'ur_str_literal':
     return py_ver < (3, 0)
   if feature == 'bytes_node':

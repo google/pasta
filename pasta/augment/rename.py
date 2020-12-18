@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import ast
 import six
-from typing import Tuple
 from typed_ast import ast27
 from typed_ast import ast3
 
@@ -30,7 +29,7 @@ from pasta.base import ast_utils
 from pasta.base import scope
 
 
-def rename_external(t, old_name, new_name, py_ver: Tuple[int, int]):
+def rename_external(t, old_name, new_name, py_ver):
   """Rename an imported name in a module.
 
   This will rewrite all import statements in `tree` that reference the old
@@ -130,7 +129,7 @@ def _rename_name_in_importfrom(sc, node, old_name, new_name):
   return True
 
 
-def _rename_reads(sc, t, old_name, new_name, py_ver: Tuple[int, int]):
+def _rename_reads(sc, t, old_name, new_name, py_ver):
   """Updates all locations in the module where the given name is read.
 
   Arguments:

@@ -28,7 +28,6 @@ import six
 from six.moves import zip
 import sys
 import token
-from typing import Tuple
 import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
@@ -134,7 +133,7 @@ def block_statement(f):
 # ==============================================================================
 
 
-def get_base_visitor(py_ver: Tuple[int, int]):
+def get_base_visitor(py_ver):
 
   class BaseVisitor(ast27.NodeVisitor if py_ver < (3, 0) else ast3.NodeVisitor):
     # class BaseVisitor(ast.NodeVisitor):
@@ -1421,7 +1420,7 @@ class AnnotationError(Exception):
   """An exception for when we failed to annotate the tree."""
 
 
-def get_ast_annotator(py_ver: Tuple[int, int]):
+def get_ast_annotator(py_ver):
 
   class AstAnnotator(get_base_visitor(py_ver)):
 

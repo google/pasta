@@ -24,7 +24,7 @@ import unittest
 from pasta.base import test_utils
 
 
-def suite(py_ver: str):
+def suite(py_ver):
 
   class CheckAstEqualityTest(test_utils.TestCase):
 

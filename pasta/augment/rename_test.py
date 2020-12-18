@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import ast
 import textwrap
-from typing import Tuple
 import unittest
 
 import pasta
@@ -29,7 +28,7 @@ from pasta.base import scope
 from pasta.base import test_utils
 
 
-def suite(py_ver: Tuple[int, int]):
+def suite(py_ver):
 
   class RenameTest(test_utils.TestCase):
 
