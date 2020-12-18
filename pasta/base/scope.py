@@ -21,8 +21,6 @@ from __future__ import print_function
 import ast
 import collections
 import six
-from typing import Tuple
-from typing import Union
 from typed_ast import ast27
 from typed_ast import ast3
 
@@ -38,7 +36,7 @@ ExternalReference = collections.namedtuple('ExternalReference',
                                            ('name', 'node', 'name_ref'))
 
 
-def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
+def analyze(tree, py_ver):
 
   class ScopeVisitor(ast27.NodeVisitor if py_ver <
                      (3, 0) else ast3.NodeVisitor):
@@ -48,7 +46,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       self._parent = None
       self.root_scope = self.scope = RootScope(None)
 
-    def visit(self, node: Union[ast27.AST, ast3.AST]):
+    def visit(self, node):
       if node is None:
         return
       if self.root_scope.node is None:
@@ -59,7 +57,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       super(ScopeVisitor, self).visit(node)
       self._parent = tmp
 
-    def visit_in_order(self, node: Union[ast27.AST, ast3.AST], *attrs):
+    def visit_in_order(self, node, *attrs):
       for attr in attrs:
         val = getattr(node, attr, None)
         if val is None:
@@ -70,7 +68,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
         elif isinstance(val, (ast27.AST, ast3.AST)):
           self.visit(val)
 
-    def visit_Import(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Import(self, node):
       for alias in node.names:
         name_parts = alias.name.split('.')
 
@@ -102,7 +100,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
 
       self.generic_visit(node)
 
-    def visit_ImportFrom(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_ImportFrom(self, node):
       if node.module:
         name_parts = node.module.split('.')
         for i in range(1, len(name_parts) + 1):
@@ -115,7 +113,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
         # TODO: else? relative imports
       self.generic_visit(node)
 
-    def visit_Name(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Name(self, node):
       if isinstance(node.ctx,
                     (ast27.Store, ast3.Store, ast27.Param, ast3.Param)):
         self.scope.define_name(node.id, node)
@@ -124,7 +122,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
         self.root_scope.set_name_for_node(node, self.scope.lookup_name(node.id))
       self.generic_visit(node)
 
-    def visit_FunctionDef(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_FunctionDef(self, node):
       # Visit decorator list first to avoid declarations in args
       self.visit_in_order(node, 'decorator_list')
       if isinstance(
@@ -139,7 +137,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       finally:
         self.scope = self.scope.parent_scope
 
-    def visit_arguments(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_arguments(self, node):
       self.visit_in_order(node, 'defaults', 'args')
       if py_ver < (3, 0):
         # In python 2.x, these names are not Name nodes. Define them explicitly
@@ -152,7 +150,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
         # Visit defaults first to avoid declarations in args
         self.visit_in_order(node, 'vararg', 'kwarg')
 
-    def visit_arg(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_arg(self, node):
       self.scope.define_name(node.arg, node)
       
       # PEP 484 forward reference type annotations
@@ -165,7 +163,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
           name.add_reference(node.annotation)
       self.generic_visit(node)
 
-    def visit_ClassDef(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_ClassDef(self, node):
       self.visit_in_order(node, 'decorator_list', 'bases')
       self.scope.define_name(node.name, node)
       try:
@@ -174,7 +172,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       finally:
         self.scope = self.scope.parent_scope
 
-    def visit_Attribute(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Attribute(self, node):
       self.generic_visit(node)
       node_value_name = self.root_scope.get_name_for_node(node.value)
       if node_value_name:
@@ -184,12 +182,12 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
 
   class Scope(object):
 
-    def __init__(self, parent_scope, node: Union[ast27.AST, ast3.AST]):
+    def __init__(self, parent_scope, node):
       self.parent_scope = parent_scope
       self.names = {}
       self.node = node
 
-    def define_name(self, name: str, node: Union[ast27.AST, ast3.AST]):
+    def define_name(self, name, node):
       try:
         name_obj = self.names[name]
       except KeyError:
@@ -206,7 +204,7 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       name_obj.add_reference(node)
       return name_obj
 
-    def lookup_name(self, name: str):
+    def lookup_name(self, name):
       try:
         return self.names[name]
       except KeyError:
@@ -219,17 +217,17 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
     def get_root_scope(self):
       return self.parent_scope.get_root_scope()
 
-    def lookup_scope(self, node: Union[ast27.AST, ast3.AST]):
+    def lookup_scope(self, node):
       return self.get_root_scope().lookup_scope(node)
 
-    def create_scope(self, node: Union[ast27.AST, ast3.AST]):
+    def create_scope(self, node):
       subscope = Scope(self, node)
       self.get_root_scope()._set_scope_for_node(node, subscope)
       return subscope
 
   class RootScope(Scope):
 
-    def __init__(self, node: Union[ast27.AST, ast3.AST]):
+    def __init__(self, node):
       super(RootScope, self).__init__(None, node)
       self.external_references = {}
       self._parents = {}
@@ -237,8 +235,8 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       self._node_scopes = {}
 
     def add_external_reference(self,
-                               name: str,
-                               node: Union[ast27.AST, ast3.AST],
+                               name,
+                               node,
                                name_ref=None):
       ref = ExternalReference(name=name, node=node, name_ref=name_ref)
       if name in self.external_references:
@@ -249,22 +247,22 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
     def get_root_scope(self):
       return self
 
-    def parent(self, node: Union[ast27.AST, ast3.AST]):
+    def parent(self, node):
       return self._parents.get(node, None)
 
-    def set_parent(self, node: Union[ast27.AST, ast3.AST],
-                   parent: Union[ast27.AST, ast3.AST]):
+    def set_parent(self, node,
+                   parent):
       self._parents[node] = parent
       if parent is None:
         self._node_scopes[node] = self
 
-    def get_name_for_node(self, node: Union[ast27.AST, ast3.AST]):
+    def get_name_for_node(self, node):
       return self._nodes_to_names.get(node, None)
 
-    def set_name_for_node(self, node: Union[ast27.AST, ast3.AST], name: str):
+    def set_name_for_node(self, node, name):
       self._nodes_to_names[node] = name
 
-    def lookup_scope(self, node: Union[ast27.AST, ast3.AST]):
+    def lookup_scope(self, node):
       while node:
         try:
           return self._node_scopes[node]
@@ -284,16 +282,16 @@ def analyze(tree: Union[ast27.AST, ast3.AST], py_ver: Tuple[int, int]):
       self.reads = []
       self.attrs = {}
 
-    def add_reference(self, node: Union[ast27.AST, ast3.AST]):
+    def add_reference(self, node):
       self.reads.append(node)
 
-    def define(self, node: Union[ast27.AST, ast3.AST]):
+    def define(self, node):
       if self.definition:
         self.reads.append(node)
       else:
         self.definition = node
 
-    def lookup_name(self, name: str):
+    def lookup_name(self, name):
       try:
         return self.attrs[name]
       except KeyError:

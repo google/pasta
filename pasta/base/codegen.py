@@ -35,7 +35,7 @@ class PrintError(Exception):
   """An exception for when we failed to print the tree."""
 
 
-def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
+def to_str(tree, py_ver) -> str:
 
   class Printer(annotate.get_base_visitor(py_ver)):
     """Traverses an AST and generates formatted python source code.
@@ -53,7 +53,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       super(Printer, self).__init__()
       self.code = ''
 
-    def visit(self, node: Union[ast27.AST, ast3.AST]):
+    def visit(self, node):
       node._printer_info = collections.defaultdict(lambda: False)
       try:
         super(Printer, self).visit(node)
@@ -61,7 +61,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
         raise PrintError(e)
       del node._printer_info
 
-    def visit_Module(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Module(self, node):
       self.prefix(node)
       bom = fmt.get(node, 'bom')
       if bom is not None:
@@ -69,13 +69,13 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       self.generic_visit(node)
       self.suffix(node)
 
-    def visit_Num(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Num(self, node):
       self.prefix(node)
       content = fmt.get(node, 'content')
       self.code += content if content is not None else repr(node.n)
       self.suffix(node)
 
-    def visit_Str(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Str(self, node):
       self.prefix(node)
       str_fmt = fmt.get(node, 'fmt')
       if str_fmt:
@@ -84,7 +84,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       self.code += content if content is not None else repr(node.s)
       self.suffix(node)
 
-    def visit_JoinedStr(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_JoinedStr(self, node):
       self.prefix(node)
       content = fmt.get(node, 'content')
 
@@ -103,13 +103,13 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       self.code += fstring_utils.perform_replacements(content, values)
       self.suffix(node)
 
-    def visit_Bytes(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Bytes(self, node):
       self.prefix(node)
       content = fmt.get(node, 'content')
       self.code += content if content is not None else repr(node.s)
       self.suffix(node)
 
-    def visit_Constant(self, node: Union[ast27.AST, ast3.AST]):
+    def visit_Constant(self, node):
       self.prefix(node)
       if node.value is Ellipsis:
         content = '...'
@@ -119,7 +119,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       self.suffix(node)
 
     def token(self, token_val,
-             separate_before: bool = False):
+             separate_before = False):
       """Emits a single token with exactly the given value.
 
       Arguments:
@@ -133,11 +133,11 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       self.code += token_val
 
     def optional_token(self,
-                       node: Union[ast27.AST, ast3.AST],
-                       attr_name: str,
-                       token_val: str,
-                       allow_whitespace_prefix: bool = False,
-                       default: bool = False):
+                       node,
+                       attr_name,
+                       token_val,
+                       allow_whitespace_prefix = False,
+                       default = False):
       del allow_whitespace_prefix
       value = fmt.get(node, attr_name)
       if value is None and default:
@@ -145,12 +145,12 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
       self.code += value or ''
 
     def attr(self,
-             node: Union[ast27.AST, ast3.AST],
-             attr_name: str,
+             node,
+             attr_name,
              attr_vals: List[str],
              deps: Set[str] = None,
-             default: str = None,
-             separate_before: bool = False):
+             default = None,
+             separate_before = False):
       """Add the formatted data stored for a given attribute on this node.
 
       If any of the dependent attributes of the node have changed since it was
@@ -184,17 +184,17 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
           self.code += ' '
       self.code += val
 
-    def check_is_elif(self, node: Union[ast27.AST, ast3.AST]) -> bool:
+    def check_is_elif(self, node) -> bool:
       try:
         return fmt.get(node, 'is_elif')
       except AttributeError:
         return False
 
-    def check_is_continued_try(self, node: Union[ast27.AST, ast3.AST]) -> bool:
+    def check_is_continued_try(self, node) -> bool:
       # TODO: Don't set extra attributes on nodes
       return getattr(node, 'is_continued', False)
 
-    def check_is_continued_with(self, node: Union[ast27.AST, ast3.AST]) -> bool:
+    def check_is_continued_with(self, node) -> bool:
       # TODO: Don't set extra attributes on nodes
       return getattr(node, 'is_continued', False)
 
@@ -218,7 +218,7 @@ def to_str(tree: Union[ast27.AST, ast3.AST], py_ver) -> str:
   return p.code
 
 
-def to_tree_str(node: Union[ast27.AST, ast3.AST], py_ver, indent: str) -> str:
+def to_tree_str(node, py_ver, indent) -> str:
   """Returns a human-readable representation of the sub-tree rooted at node.
 
   This is a depth-first traversal of the tree that emits a string

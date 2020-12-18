@@ -22,9 +22,6 @@ import ast
 import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
-from typing import Iterable
-from typing import Tuple
-from typing import Union
 import re
 
 from pasta.augment import errors
@@ -47,7 +44,7 @@ _AST_OP_NODES = (ast27.And, ast27.Or, ast27.Eq, ast27.NotEq, ast27.Is,
                  ast3.FloorDiv, ast3.Invert, ast3.Not, ast3.UAdd, ast3.USub)
 
 
-def parse(src: str, py_ver: Tuple[int, int]) -> Union[ast27.AST, ast3.AST]:
+def parse(src, py_ver):
   """Replaces typed_ast.parse; ensures additional properties on the parsed tree.
 
   This enforces the assumption that each node in the ast is unique.
@@ -83,15 +80,14 @@ def sanitize_source(src):
 
 
 def find_nodes_by_type(
-    node, accept_types: Iterable[Union[ast27.AST, ast3.AST]],
-    py_ver: Tuple[int, int]) -> Iterable[Union[ast27.AST, ast3.AST]]:
+    node, accept_types, py_ver):
   visitor = get_find_node_visitor((lambda n: isinstance(n, accept_types)),
                                   py_ver)
   visitor.visit(node)
   return visitor.results
 
 
-def get_find_node_visitor(condition, py_ver: Tuple[int, int]):
+def get_find_node_visitor(condition, py_ver):
 
   class FindNodeVisitor(ast27.NodeVisitor if py_ver <
                         (3, 0) else ast3.NodeVisitor):

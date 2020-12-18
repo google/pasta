@@ -33,7 +33,7 @@ from pasta.base import scope
 
 def add_import(tree,
                name_to_import,
-               py_ver: Tuple[int, int],
+               py_ver,
                asname=None,
                from_import=True,
                merge_from_imports=True):

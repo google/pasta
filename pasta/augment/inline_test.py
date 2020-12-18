@@ -29,7 +29,7 @@ from pasta.augment import inline
 from pasta.base import test_utils
 
 
-def suite(py_ver: str):
+def suite(py_ver):
 
   class InlineTest(test_utils.TestCase):
 

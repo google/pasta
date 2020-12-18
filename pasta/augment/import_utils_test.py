@@ -20,7 +20,6 @@ from __future__ import print_function
 
 import ast
 import traceback
-from typing import Tuple
 from typed_ast import ast27
 from typed_ast import ast3
 import unittest
@@ -32,7 +31,7 @@ from pasta.base import test_utils
 from pasta.base import scope
 
 
-def suite(py_ver: str):
+def suite(py_ver):
 
   class SplitImportTest(test_utils.TestCase):
 

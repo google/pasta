@@ -30,7 +30,7 @@ from pasta.base import scope
 from pasta.base import test_utils
 
 
-def suite(py_ver: str):
+def suite(py_ver):
 
   class ScopeTest(test_utils.TestCase):
 

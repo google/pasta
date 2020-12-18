@@ -1589,7 +1589,7 @@ def get_ast_annotator(py_ver):
       fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
     def token(self, token_val,
-             separate_before: bool = False):
+             separate_before = False):
       """Parse a single token with exactly the given value.
 
       Arguments:
@@ -1642,7 +1642,7 @@ def get_ast_annotator(py_ver):
 
       return _one_of_symbols
 
-    def attr(self, node, attr_name, attr_vals, deps=None, default=None, separate_before: bool = False):
+    def attr(self, node, attr_name, attr_vals, deps=None, default=None, separate_before = False):
       """Parses some source and sets an attribute on the given node.
 
       Stores some arbitrary formatting information on the node. This takes a
