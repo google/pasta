@@ -41,7 +41,7 @@ def ast_walk(
     return ast3.walk(tree)
 
 
-def parse(src, py_ver = sys.version_info[:2]):
+def parse(src, py_ver=sys.version_info[:2]):
   t = ast_utils.parse(src, py_ver)
   annotator = annotate.get_ast_annotator(py_ver)(src)
   annotator.visit(t)
