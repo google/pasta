@@ -54,7 +54,7 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
     The name (as a string) that can be used to reference the imported name. This
       can be the fully-qualified name, the basename, or an alias name.
   """
-  sc = scope.analyze(tree, py_ver)
+  sc = scope.analyze(tree, py_ver=py_ver)
 
   # Don't add anything if it's already imported
   if name_to_import in sc.external_references:
