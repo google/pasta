@@ -30,12 +30,8 @@ from pasta.base import ast_utils
 from pasta.base import scope
 
 
-def add_import(tree,
-               name_to_import,
-               py_ver,
-               asname=None,
-               from_import=True,
-               merge_from_imports=True):
+def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_imports=True,
+               py_ver=sys.version_info[:2]):
   """Adds an import to the module.
   
   This function will try to ensure not to create duplicate imports. If name_to_import is
