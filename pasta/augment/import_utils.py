@@ -149,7 +149,7 @@ def split_import(sc, node, alias_to_remove):
   return new_import
 
 
-def get_unused_import_aliases(tree, py_ver, sc=None):
+def get_unused_import_aliases(tree, sc=None, py_ver=sys.version_info[:2]):
   """Get the import aliases that aren't used.
 
   Arguments:
