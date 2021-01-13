@@ -164,7 +164,7 @@ def get_unused_import_aliases(tree, sc=None, py_ver=sys.version_info[:2]):
   if sc is None:
     sc = scope.analyze(tree, py_ver=py_ver)
   unused_aliases = set()
-  for node in pasta.ast_walk(tree, py_ver):
+  for node in pasta.ast_walk(tree, py_ver=py_ver):
     if isinstance(node, (ast27.alias, ast3.alias)):
       str_name = node.asname if node.asname is not None else node.name
       if str_name in sc.names:
