@@ -48,6 +48,5 @@ def parse(src, py_ver=sys.version_info[:2]):
   return t
 
 
-def dump(tree,
-         py_ver = sys.version_info[:2]):
+def dump(tree, py_ver=sys.version_info[:2]):
   return codegen.to_str(tree, py_ver)
