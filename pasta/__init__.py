@@ -32,9 +32,7 @@ def ast_parse(
     return ast3.parse(source)
 
 
-def ast_walk(
-    tree,
-    py_ver = sys.version_info[:2]):
+def ast_walk(tree, py_ver=sys.version_info[:2]):
   if py_ver < (3, 0):
     return ast27.walk(tree)
   else:
