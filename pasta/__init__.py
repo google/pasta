@@ -23,9 +23,7 @@ from typed_ast import ast27
 from typed_ast import ast3
 
 
-def ast_parse(
-    source,
-    py_ver = sys.version_info[:2]):
+def ast_parse(source, py_ver=sys.version_info[:2]):
   if py_ver < (3, 0):
     return ast27.parse(source)
   else:
