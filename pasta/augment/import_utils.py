@@ -76,8 +76,8 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
     counter = 0
     while imported_name in sc.names:
       counter += 1
-      imported_name = new_alias.asname = '%s_%d' % (asname or
-                                                    alias_name, counter)
+      imported_name = new_alias.asname = '%s_%d' % (asname or alias_name, 
+                                                    counter)
     return new_alias
 
   # Add an ImportFrom node if requested and possible
