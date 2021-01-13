@@ -208,7 +208,7 @@ def remove_duplicates(tree, py_ver, sc=None):
     Whether any changes were made.
   """
   if sc is None:
-    sc = scope.analyze(tree, py_ver)
+    sc = scope.analyze(tree, py_ver=py_ver)
 
   modified = False
   seen_names = set()
