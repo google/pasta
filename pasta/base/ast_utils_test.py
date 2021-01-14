@@ -1,4 +1,4 @@
- coding=utf-8
+# coding=utf-8
 """Tests for ast_utils."""
 # Copyright 2017 Google LLC
 #
