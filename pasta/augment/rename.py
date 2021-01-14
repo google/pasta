@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import ast
 import six
+import sys
 from typed_ast import ast27
 from typed_ast import ast3
 
