@@ -59,7 +59,8 @@ def parse(src, py_ver=sys.version_info[:2]):
         return node.__class__()
       return super(_TreeNormalizer, self).visit(node)
 
-  _TreeNormalizer().visit(pasta.ast(py_ver).parse(sanitize_source(src)))
+  tree=pasta.ast(py_ver).parse(sanitize_source(src))
+  _TreeNormalizer().visit(tree)
   return tree
 
 

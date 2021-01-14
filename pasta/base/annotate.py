@@ -150,7 +150,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
       self.attr(
           node, 'prefix', [lambda: self.ws(comment=True)], default=default)
 
-      def suffix(self, node, max_lines=None, semicolon=False, comment=False,
+    def suffix(self, node, max_lines=None, semicolon=False, comment=False,
              default=''):
       """Account for some amount of whitespace as the suffix to a node."""
 

@@ -139,7 +139,8 @@ def to_str(tree, py_ver=sys.version_info[:2]):
         value = token_val
       self.code += value or ''
 
-    def attr(self, node, attr_name, attr_vals, deps=None, default=None):
+    def attr(self, node, attr_name, attr_vals, deps=None, default=None,
+             separate_before: bool = False):
       """Add the formatted data stored for a given attribute on this node.
 
       If any of the dependent attributes of the node have changed since it was

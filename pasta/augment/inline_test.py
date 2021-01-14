@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import sys
 import textwrap
 from typed_ast import ast27
 from typed_ast import ast3

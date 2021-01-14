@@ -21,6 +21,7 @@ from __future__ import print_function
 import ast
 import copy
 import logging
+import sys
 from typed_ast import ast27
 from typed_ast import ast3
 
