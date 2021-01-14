@@ -19,12 +19,13 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import sys
 import unittest
 
 from pasta.base import test_utils
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   class CheckAstEqualityTest(test_utils.TestCase):
 

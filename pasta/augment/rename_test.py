@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import ast
+import sys
 import textwrap
 import unittest
 
@@ -28,7 +29,7 @@ from pasta.base import scope
 from pasta.base import test_utils
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   class RenameTest(test_utils.TestCase):
 

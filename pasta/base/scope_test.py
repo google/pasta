@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import textwrap
 import unittest
+import sys
 from typed_ast import ast27
 from typed_ast import ast3
 
@@ -29,7 +30,7 @@ from pasta.base import scope
 from pasta.base import test_utils
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   class ScopeTest(test_utils.TestCase):
 
@@ -130,7 +131,7 @@ def suite(py_ver):
       nodes = tree.body
 
       node_aaa, node_bbb, node_ccc = ast_utils.find_nodes_by_type(
-          tree, ast27.alias if py_ver < (3, 0) else ast3.alias, py_ver)
+          tree, pasta.ast(py_ver).alias, py_ver)
 
       s = scope.analyze(tree, py_ver)
 
@@ -161,7 +162,7 @@ def suite(py_ver):
       nodes = tree.body
 
       node_aaa, node_bbb, node_ccc = ast_utils.find_nodes_by_type(
-          tree, ast27.alias if py_ver < (3, 0) else ast3.alias, py_ver)
+          tree, pasta.ast(py_ver).alias, py_ver)
 
       s = scope.analyze(tree, py_ver)
 
@@ -185,7 +186,7 @@ def suite(py_ver):
       nodes = tree.body
 
       node_aaa = ast_utils.find_nodes_by_type(
-          tree, ast27.alias if py_ver < (3, 0) else ast3.alias, py_ver)[0]
+          tree, pasta.ast(py_ver).alias, py_ver)[0]
 
       s = scope.analyze(tree, py_ver)
 
@@ -441,10 +442,7 @@ def suite(py_ver):
 
       self.assertIs(class_node_scope.lookup_scope(func_node), func_node_scope)
 
-      if py_ver < (3, 0):
-        self.assertIsNone(sc.lookup_scope(ast27.Name(id='foo')))
-      else:
-        self.assertIsNone(sc.lookup_scope(ast3.Name(id='foo')))
+      self.assertIsNone(sc.lookup_scope(pasta.ast(py_ver).Name(id='foo')))
 
     def test_class_methods(self):
       source = textwrap.dedent("""\

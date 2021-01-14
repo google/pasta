@@ -18,7 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
 import textwrap
 from typed_ast import ast27
 from typed_ast import ast3
@@ -29,7 +28,7 @@ from pasta.augment import inline
 from pasta.base import test_utils
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   class InlineTest(test_utils.TestCase):
 

@@ -21,6 +21,7 @@ from __future__ import print_function
 import os.path
 import unittest
 from six import with_metaclass
+import sys
 from typed_ast import ast27
 from typed_ast import ast3
 
@@ -32,7 +33,7 @@ TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   def _is_syntax_valid(filepath, py_ver):
     with open(filepath, 'r') as f:

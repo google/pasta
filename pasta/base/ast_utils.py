@@ -18,12 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
+import sys
 import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
 import re
 
+import pasta
 from pasta.augment import errors
 from pasta.base import formatting as fmt
 
@@ -50,8 +51,7 @@ def parse(src, py_ver=sys.version_info[:2]):
   This enforces the assumption that each node in the ast is unique.
   """
 
-  class _TreeNormalizer(ast27.NodeTransformer if py_ver < (3, 0)
-                        else ast3.NodeTransformer):
+  class _TreeNormalizer(pasta.ast(py_ver).NodeTransformer):
     """Replaces all op nodes with unique instances."""
 
     def visit(self, node):
@@ -59,11 +59,7 @@ def parse(src, py_ver=sys.version_info[:2]):
         return node.__class__()
       return super(_TreeNormalizer, self).visit(node)
 
-  if py_ver < (3, 0):
-    tree = ast27.parse(sanitize_source(src))
-  else:
-    tree = ast3.parse(sanitize_source(src))
-  _TreeNormalizer().visit(tree)
+  _TreeNormalizer().visit(pasta.ast(py_ver).parse(sanitize_source(src)))
   return tree
 
 
@@ -88,8 +84,7 @@ def find_nodes_by_type(node, accept_types, py_ver=sys.version_info[:2]):
 
 def get_find_node_visitor(condition, py_ver=sys.version_info[:2]):
 
-  class FindNodeVisitor(ast27.NodeVisitor if py_ver <
-                        (3, 0) else ast3.NodeVisitor):
+  class FindNodeVisitor(pasta.ast(py_ver).NodeVisitor):
 
     def __init__(self, condition):
       self._condition = condition
@@ -157,7 +152,7 @@ def get_last_child(node):
 
 def remove_child(parent, child):
 
-  for _, field_value in ast.iter_fields(parent):
+  for _, field_value in pasta.ast(py_ver).iter_fields(parent):
     if isinstance(field_value, list) and child in field_value:
       field_value.remove(child)
       return

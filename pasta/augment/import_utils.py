@@ -68,10 +68,7 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
 
   def make_safe_alias_node(alias_name, asname):
     # Try to avoid name conflicts
-    if py_ver < (3, 0):
-      new_alias = ast27.alias(name=alias_name, asname=asname)
-    else:
-      new_alias = ast3.alias(name=alias_name, asname=asname)
+    new_alias = pasta.ast(py_ver).alias(name=alias_name, asname=asname)
     imported_name = asname or alias_name
     counter = 0
     while imported_name in sc.names:
@@ -97,20 +94,13 @@ def add_import(tree, name_to_import, asname=None, from_import=True, merge_from_i
         return new_alias.asname or new_alias.name
 
     # Create a new node for this import
-    if py_ver < (3, 0):
-      import_node = ast27.ImportFrom(
-          module=from_module, names=[new_alias], level=0)
-    else:
-      import_node = ast3.ImportFrom(
-          module=from_module, names=[new_alias], level=0)
+    import_node = pasta.ast(py_ver).ImportFrom(
+        module=from_module, names=[new_alias], level=0)
 
   # If not already created as an ImportFrom, create a normal Import node
   if not import_node:
     new_alias = make_safe_alias_node(alias_name=name_to_import, asname=asname)
-    if py_ver < (3, 0):
-      import_node = ast27.Import(names=[new_alias])
-    else:
-      import_node = ast3.Import(names=[new_alias])
+    import_node = pasta.ast(py_ver).Import(names=[new_alias])
 
   # Insert the node at the top of the module and return the name in scope
   tree.body.insert(1 if ast_utils.has_docstring(tree) else 0, import_node)

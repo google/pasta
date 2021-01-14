@@ -1,6 +1,5 @@
 """Constants relevant to ast code."""
 
-import ast
 from typed_ast import ast27
 from typed_ast import ast3
 

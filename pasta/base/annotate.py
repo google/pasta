@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
-import ast
 import contextlib
 import functools
 import itertools
@@ -32,6 +31,7 @@ import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
 
+import pasta
 from pasta.base import ast_constants
 from pasta.base import ast_utils
 from pasta.base import formatting as fmt
@@ -118,19 +118,16 @@ def block_statement(f):
 # ==============================================================================
 
 
-def get_base_visitor(py_ver):
+def get_base_visitor(py_ver=sys.version_info[:2]):
 
-  class BaseVisitor(ast27.NodeVisitor if py_ver < (3, 0) else ast3.NodeVisitor):
+  class BaseVisitor(pasta.ast(py_ver).NodeVisitor):
     """Walks a syntax tree in the order it appears in code.
 
-    This class has a dual-purpose. It is implemented (in this file) for
-    annotating
-    an AST with formatting information needed to reconstruct the source code,
-    but
+    This class has a dual-purpose. It is implemented (in this file) for annotating
+    an AST with formatting information needed to reconstruct the source code, but
     it also is implemented in pasta.base.codegen to reconstruct the source code.
 
-    Each visit method in this class specifies the order in which both child
-    nodes
+    Each visit method in this class specifies the order in which both child nodes
     and syntax tokens appear, plus where to account for whitespace, commas,
     parentheses, etc.
     """
@@ -373,8 +370,7 @@ def get_base_visitor(py_ver):
       """Return True if the node continues a previous `with` statement.
 
       In python 2.x, `with` statments with many context expressions get parsed
-      as
-      a tree of With nodes. E.g, the following two syntax forms are
+      as a tree of With nodes. E.g, the following two syntax forms are
       indistinguishable in the ast in python 2.
 
       with a, b, c:
@@ -720,7 +716,7 @@ def get_base_visitor(py_ver):
       for i, alias in enumerate(node.names):
         self.attr(node, 'alias_prefix_%d' % i, [self.ws], default=' ')
         self.visit(alias)
-        if alias != node.names[-1]:
+        if i < len(node.names) - 1:
           self.attr(node, 'alias_sep_%d' % i, [self.ws, ','], default=',')
 
     @statement
@@ -746,7 +742,7 @@ def get_base_visitor(py_ver):
         for i, alias in enumerate(node.names):
           self.attr(node, 'alias_prefix_%d' % i, [self.ws], default=' ')
           self.visit(alias)
-          if alias is not node.names[-1]:
+          if i < len(node.names) - 1:
             self.attr(node, 'alias_sep_%d' % i, [self.ws, ','], default=',')
 
     @expression
@@ -1389,7 +1385,7 @@ class AnnotationError(Exception):
   """An exception for when we failed to annotate the tree."""
 
 
-def get_ast_annotator(py_ver):
+def get_ast_annotator(py_ver=sys.version_info[:2]):
 
   class AstAnnotator(get_base_visitor(py_ver)):
 

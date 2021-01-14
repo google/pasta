@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import ast
 import collections
+import pasta
 import six
 from typed_ast import ast27
 from typed_ast import ast3
@@ -38,8 +39,7 @@ ExternalReference = collections.namedtuple('ExternalReference',
 
 def analyze(tree, py_ver):
 
-  class ScopeVisitor(ast27.NodeVisitor if py_ver <
-                     (3, 0) else ast3.NodeVisitor):
+  class ScopeVisitor(pasta.ast(py_ver).NodeVisitor):
 
     def __init__(self):
       super(ScopeVisitor, self).__init__()

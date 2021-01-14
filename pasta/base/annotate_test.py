@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 import _ast
-import ast
 import difflib
 import inspect
 import io
@@ -44,7 +43,7 @@ TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   class PrefixSuffixTest(test_utils.TestCase):
 
@@ -260,10 +259,7 @@ def suite(py_ver):
           """)
       t = pasta.parse(src, py_ver)
       # Repace the second node and make sure the indent level is corrected
-      if py_ver < (3, 0):
-        t.body[0].body[1] = ast27.Expr(ast27.Name(id='new_node'))
-      else:
-        t.body[0].body[1] = ast3.Expr(ast3.Name(id='new_node'))
+      t.body[0].body[1] = pasta.ast(py_ver).Expr(pasta.ast(py_ver).Name(id='new_node'))
       self.assertMultiLineEqual(expected, codegen.to_str(t, py_ver))
 
     @test_utils.requires_features(['mixed_tabs_spaces'], py_ver)
@@ -428,10 +424,7 @@ def suite(py_ver):
       src = 'f(a)'
       t = pasta.parse(src, py_ver)
       node = ast_utils.find_nodes_by_type(t, (ast27.Call, ast3.Call), py_ver)[0]
-      if py_ver < (3, 0):
-        node.keywords.append(ast27.keyword(arg='b', value=ast27.Num(n=0)))
-      else:
-        node.keywords.append(ast3.keyword(arg='b', value=ast3.Num(n=0)))
+      node.keywords.append(pasta.ast(py_ver).keyword(arg='b', value=pasta.ast(py_ver).Num(n=0)))
       self.assertEqual('f(a, b=0)', pasta.dump(t, py_ver))
 
     def test_call_illegal_pos(self):
@@ -439,10 +432,7 @@ def suite(py_ver):
       src = 'f(a)'
       t = pasta.parse(src, py_ver)
       node = ast_utils.find_nodes_by_type(t, (ast27.Call, ast3.Call), py_ver)[0]
-      if py_ver < (3, 0):
-        node.keywords.append(ast27.keyword(arg='b', value=ast27.Num(n=0)))
-      else:
-        node.keywords.append(ast3.keyword(arg='b', value=ast3.Num(n=0)))
+      node.keywords.append(pasta.ast(py_ver).keyword(arg='b', value=pasta.ast(py_ver).Num(n=0)))
 
       # This position would put b=0 before a, so it should be ignored.
       node.keywords[-1].value.lineno = 0

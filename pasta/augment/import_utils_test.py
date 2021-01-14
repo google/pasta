@@ -18,7 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
+import sys
 import traceback
 from typed_ast import ast27
 from typed_ast import ast3
@@ -31,7 +31,7 @@ from pasta.base import test_utils
 from pasta.base import scope
 
 
-def suite(py_ver):
+def suite(py_ver=sys.version_info[:2]):
 
   class SplitImportTest(test_utils.TestCase):
 
@@ -43,8 +43,7 @@ def suite(py_ver):
       import_utils.split_import(sc, import_node, import_node.names[1])
 
       self.assertEqual(2, len(t.body))
-      self.assertEqual(ast27.Import if py_ver < (3, 0) else ast3.Import,
-                       type(t.body[1]))
+      self.assertEqual(pasta.ast(py_ver).Import, type(t.body[1]))
       self.assertEqual([alias.name for alias in t.body[0].names],
                        ['aaa', 'ccc'])
       self.assertEqual([alias.name for alias in t.body[1].names], ['bbb'])
@@ -57,8 +56,7 @@ def suite(py_ver):
       import_utils.split_import(sc, import_node, import_node.names[1])
 
       self.assertEqual(2, len(t.body))
-      self.assertEqual(ast27.ImportFrom if py_ver < (3, 0) else ast3.ImportFrom,
-                       type(t.body[1]))
+      self.assertEqual(pasta.ast(py_ver).ImportFrom, type(t.body[1]))
       self.assertEqual(t.body[0].module, 'aaa')
       self.assertEqual(t.body[1].module, 'aaa')
       self.assertEqual([alias.name for alias in t.body[0].names],
@@ -136,7 +134,7 @@ def suite(py_ver):
 import a
 import b
 a.foo()
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertItemsEqual(
           import_utils.get_unused_import_aliases(tree, py_ver),
@@ -149,7 +147,7 @@ import b
 from my_module import c
 b.foo()
 c.bar()
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertItemsEqual(
           import_utils.get_unused_import_aliases(tree, py_ver),
@@ -159,7 +157,7 @@ c.bar()
       src = """\
 from my_module import a, b
 b.foo()
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertItemsEqual(
           import_utils.get_unused_import_aliases(tree, py_ver),
@@ -171,7 +169,7 @@ from my_module import a as a_mod, b as unused_b_mod
 import c as c_mod, d as unused_d_mod
 a_mod.foo()
 c_mod.foo()
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertItemsEqual(
           import_utils.get_unused_import_aliases(tree, py_ver),
@@ -184,7 +182,7 @@ c_mod.foo()
       src = """\
 def foo():
   import bar
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertItemsEqual(
           import_utils.get_unused_import_aliases(tree, py_ver), [])
@@ -204,10 +202,7 @@ def foo():
       import_utils.remove_import_alias_node(sc, unused_b_node)
 
       self.assertEqual(len(tree.body), 1)
-      if py_ver < (3, 0):
-        self.assertEqual(type(tree.body[0]), ast27.Import)
-      else:
-        self.assertEqual(type(tree.body[0]), ast3.Import)
+      self.assertEqual(type(tree.body[0]), pasta.ast(py_ver).Import)
       self.assertEqual(len(tree.body[0].names), 1)
       self.assertEqual(tree.body[0].names[0].name, 'a')
 
@@ -221,10 +216,7 @@ def foo():
       import_utils.remove_import_alias_node(sc, unused_b_node)
 
       self.assertEqual(len(tree.body), 1)
-      if py_ver < (3, 0):
-        self.assertEqual(type(tree.body[0]), ast27.ImportFrom)
-      else:
-        self.assertEqual(type(tree.body[0]), ast3.ImportFrom)
+      self.assertEqual(type(tree.body[0]), pasta.ast(py_ver).ImportFrom)
       self.assertEqual(len(tree.body[0].names), 1)
       self.assertEqual(tree.body[0].names[0].name, 'a')
 
@@ -379,7 +371,7 @@ import b
 import c
 import b
 import d
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertTrue(import_utils.remove_duplicates(tree, py_ver))
 
@@ -394,7 +386,7 @@ import d
 import a, b
 import b, c
 import d, a, e, f
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertTrue(import_utils.remove_duplicates(tree, py_ver))
 
@@ -413,7 +405,7 @@ import d, a, e, f
       src = """
 import a, b, c
 import b, c
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertTrue(import_utils.remove_duplicates(tree, py_ver))
 
@@ -427,7 +419,7 @@ import b, c
       src = """
 import a.b
 from a import b
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertFalse(import_utils.remove_duplicates(tree, py_ver))
       self.assertEqual(len(tree.body), 2)
@@ -438,7 +430,7 @@ import a
 import a as ax
 import a as ax2
 import a as ax
-  """
+"""
       tree = pasta.ast_parse(src, py_ver)
       self.assertTrue(import_utils.remove_duplicates(tree, py_ver))
       self.assertEqual(len(tree.body), 3)

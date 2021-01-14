@@ -63,8 +63,7 @@ class TestCase(unittest.TestCase):
             self.assertEqual(a_val, b_val)
     except AssertionError as ae:
       self.fail('ASTs differ:\n%s\n  !=\n%s\n\n%s' %
-                (ast27.dump(a) if py_ver < (3, 0) else ast3.dump(a),
-                 ast27.dump(b) if py_ver < (3, 0) else ast3.dump(b), ae))
+                (pasta.ast_dump(a, py_ver), pasta.ast_dump(b, py_ver)))
 
 
 if not hasattr(TestCase, 'assertItemsEqual'):

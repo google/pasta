@@ -22,19 +22,19 @@ from pasta.base import codegen
 from typed_ast import ast27
 from typed_ast import ast3
 
+def ast(py_ver=sys.version_info[:2]):
+  if py_ver < (3, 0):
+    return ast27
+  else:
+    return ast3
+
 
 def ast_parse(source, py_ver=sys.version_info[:2]):
-  if py_ver < (3, 0):
-    return ast27.parse(source)
-  else:
-    return ast3.parse(source)
+  return ast(py_ver).parse(source)
 
 
 def ast_walk(tree, py_ver=sys.version_info[:2]):
-  if py_ver < (3, 0):
-    return ast27.walk(tree)
-  else:
-    return ast3.walk(tree)
+  return ast(py_ver).walk(tree)
 
 
 def parse(src, py_ver=sys.version_info[:2]):
@@ -43,6 +43,8 @@ def parse(src, py_ver=sys.version_info[:2]):
   annotator.visit(t)
   return t
 
+def ast_dump(tree, py_ver=sys.version_info[:2]):
+  return ast(py_ver).dump(tree)
 
 def dump(tree, py_ver=sys.version_info[:2]):
   return codegen.to_str(tree, py_ver)

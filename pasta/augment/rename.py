@@ -30,7 +30,7 @@ from pasta.base import ast_utils
 from pasta.base import scope
 
 
-def rename_external(t, old_name, new_name, py_ver):
+def rename_external(t, old_name, new_name, py_ver=sys.version_info[:2]):
   """Rename an imported name in a module.
 
   This will rewrite all import statements in `tree` that reference the old
@@ -60,7 +60,7 @@ def rename_external(t, old_name, new_name, py_ver):
   Returns:
     True if any changes were made, False otherwise.
   """
-  sc = scope.analyze(t, py_ver)
+  sc = scope.analyze(t, py_ver=py_ver)
 
   if old_name not in sc.external_references:
     return False

@@ -18,7 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
 import collections
 import six
 import sys
@@ -37,15 +36,14 @@ class PrintError(Exception):
 
 
 def to_str(tree, py_ver=sys.version_info[:2]):
+  """Convenient function to get the python source for an AST."""
 
   class Printer(annotate.get_base_visitor(py_ver)):
     """Traverses an AST and generates formatted python source code.
 
     This uses the same base visitor as annotating the AST, but instead of eating
-    a
-    token it spits one out. For special formatting information which was stored
-    on
-    the node, this is output exactly as it was read in unless one or more of the
+    a token it spits one out. For special formatting information which was stored
+    on the node, this is output exactly as it was read in unless one or more of the
     dependency attributes used to generate it has changed, in which case its
     default formatting is used.
     """
@@ -189,7 +187,6 @@ def to_str(tree, py_ver=sys.version_info[:2]):
       # TODO: Don't set extra attributes on nodes
       return getattr(node, 'is_continued', False)
 
-  """Convenient function to get the python source for an AST."""
   p = Printer()
 
   # Detect the most prevalent indentation style in the file and use it when
@@ -220,7 +217,7 @@ def to_tree_str(node, indent, py_ver=sys.version_info[:2]):
   if hasattr(node, '__dict__'):
     print('%s%s' % (
         indent,
-        ast27.dump(node) if py_ver < (3, 0) else ast3.dump(node),
+        pasta.ast_dump(node, py_ver),
     ))
     if hasattr(node, '__pasta__'):
       for attr in node.__pasta__.keys():
@@ -231,7 +228,7 @@ def to_tree_str(node, indent, py_ver=sys.version_info[:2]):
   else:
     print('%s%s' % (indent, node))
 
-  for field, value in ast.iter_fields(node):
+  for field, value in pasta.ast(py_ver).iter_fields(node):
     print('%s%s' % (indent, field))
     if isinstance(value, list):
       for item in value:
