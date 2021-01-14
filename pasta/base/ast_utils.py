@@ -44,7 +44,7 @@ _AST_OP_NODES = (ast27.And, ast27.Or, ast27.Eq, ast27.NotEq, ast27.Is,
                  ast3.FloorDiv, ast3.Invert, ast3.Not, ast3.UAdd, ast3.USub)
 
 
-def parse(src, py_ver):
+def parse(src, py_ver=sys.version_info[:2]):
   """Replaces typed_ast.parse; ensures additional properties on the parsed tree.
 
   This enforces the assumption that each node in the ast is unique.
