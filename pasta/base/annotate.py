@@ -42,14 +42,8 @@ from pasta.base import token_generator
 # ==============================================================================
 
 
-def _gen_wrapper(f,
-                 scope=True,
-                 prefix=True,
-                 suffix=True,
-                 max_suffix_lines=None,
-                 semicolon=False,
-                 comment=False,
-                 statement=False):
+def _gen_wrapper(f, scope=True, prefix=True, suffix=True, max_suffix_lines=None,
+                 semicolon=False, comment=False, statement=False):
 
   @contextlib.wraps(f)
   def wrapped(self, node, *args, **kwargs):
@@ -58,12 +52,8 @@ def _gen_wrapper(f,
         self.prefix(node, default=self._indent if statement else '')
       f(self, node, *args, **kwargs)
       if suffix:
-        self.suffix(
-            node,
-            max_lines=max_suffix_lines,
-            semicolon=semicolon,
-            comment=comment,
-            default='\n' if statement else '')
+        self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon,
+                    comment=comment, default='\n' if statement else '')
 
   return wrapped
 
@@ -95,13 +85,8 @@ def space_left(f):
 
 def statement(f):
   """Decorates a function where the node is a statement."""
-  return _gen_wrapper(
-      f,
-      scope=False,
-      max_suffix_lines=1,
-      semicolon=True,
-      comment=True,
-      statement=True)
+  return _gen_wrapper(f, scope=False, max_suffix_lines=1, semicolon=True,
+                      comment=True, statement=True)
 
 
 def module(f):
@@ -136,7 +121,6 @@ def block_statement(f):
 def get_base_visitor(py_ver):
 
   class BaseVisitor(ast27.NodeVisitor if py_ver < (3, 0) else ast3.NodeVisitor):
-    # class BaseVisitor(ast.NodeVisitor):
     """Walks a syntax tree in the order it appears in code.
 
     This class has a dual-purpose. It is implemented (in this file) for
@@ -169,12 +153,8 @@ def get_base_visitor(py_ver):
       self.attr(
           node, 'prefix', [lambda: self.ws(comment=True)], default=default)
 
-    def suffix(self,
-               node,
-               max_lines=None,
-               semicolon=False,
-               comment=False,
-               default=''):
+      def suffix(self, node, max_lines=None, semicolon=False, comment=False,
+             default=''):
       """Account for some amount of whitespace as the suffix to a node."""
 
       def _ws():
@@ -202,11 +182,7 @@ def get_base_visitor(py_ver):
       self._default_indent_diff = indent
 
     @contextlib.contextmanager
-    def scope(self,
-              node,
-              attr=None,
-              trailing_comma=False,
-              default_parens=False):
+    def scope(self, node, attr=None, trailing_comma=False, default_parens=False):
       """Context manager to handle a parenthesized scope.
 
       Arguments:
@@ -761,12 +737,8 @@ def get_base_visitor(py_ver):
           module_pattern += [self.ws, part, self.ws, '.']
         module_pattern += [self.ws, parts[-1]]
 
-      self.attr(
-          node,
-          'module',
-          module_pattern,
-          deps=('level', 'module'),
-          default='.' * node.level + (node.module or ''))
+      self.attr(node, 'module', module_pattern, deps=('level', 'module'),
+                default='.' * node.level + (node.module or ''))
       self.attr(node, 'module_suffix', [self.ws], default=' ')
 
       self.token('import')
@@ -1039,11 +1011,8 @@ def get_base_visitor(py_ver):
       self.visit(node.body)
       self.attr(node, 'if', [self.ws, 'if', self.ws], default=' if ')
       self.visit(node.test)
-      self.attr(
-          node,
-          'else', [self.ws, 'else', self.ws],
-          default=' else ',
-          separate_before=True)
+      self.attr(node, 'else', [self.ws, 'else', self.ws], default=' else ',
+                separate_before=True)
       self.visit(node.orelse)
 
     @expression
@@ -1611,12 +1580,8 @@ def get_ast_annotator(py_ver):
 
       return token.src
 
-    def optional_token(self,
-                       node,
-                       attr_name,
-                       token_val,
-                       allow_whitespace_prefix=False,
-                       default=False):
+    def optional_token(self, node, attr_name, token_val,
+                       allow_whitespace_prefix=False, default=False):
       """Try to parse a token and attach it to the node."""
       del default
       fmt.append(node, attr_name, '')

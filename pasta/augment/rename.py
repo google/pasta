@@ -74,9 +74,8 @@ def rename_external(t, old_name, new_name, py_ver):
       # An alias may be the most specific reference to an imported name, but it
       # could if it is a child of an ImportFrom, the ImportFrom node's module
       # may also need to be updated.
-      if isinstance(parent,
-                    (ast27.ImportFrom,
-                     ast3.ImportFrom)) and parent not in already_changed:
+      if (isinstance(parent, (ast27.ImportFrom, ast3.ImportFrom))
+          and parent not in already_changed):
         assert _rename_name_in_importfrom(sc, parent, old_name, new_name)
         renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
         already_changed.append(parent)
@@ -93,7 +92,7 @@ def rename_external(t, old_name, new_name, py_ver):
         has_changed = True
 
   for rename_old, rename_new in six.iteritems(renames):
-    _rename_reads(sc, t, rename_old, rename_new, py_ver)
+    _rename_reads(sc, t, rename_old, rename_new, py_ver=py_ver)
   return has_changed
 
 
@@ -130,7 +129,7 @@ def _rename_name_in_importfrom(sc, node, old_name, new_name):
   return True
 
 
-def _rename_reads(sc, t, old_name, new_name, py_ver):
+def _rename_reads(sc, t, old_name, new_name, py_ver=sys.version_info[:2]):
   """Updates all locations in the module where the given name is read.
 
   Arguments:

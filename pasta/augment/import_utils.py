@@ -194,7 +194,7 @@ def remove_import_alias_node(sc, node):
     ast_utils.remove_child(import_node, node)
 
 
-def remove_duplicates(tree, py_ver, sc=None):
+def remove_duplicates(tree, sc=None, py_ver=py_ver):
   """Remove duplicate imports, where it is safe to do so.
 
   This does NOT remove imports that create new aliases

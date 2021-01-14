@@ -21,6 +21,7 @@ from __future__ import print_function
 import ast
 import collections
 import six
+import sys
 import typed_ast
 from typed_ast import ast27
 from typed_ast import ast3
@@ -35,7 +36,7 @@ class PrintError(Exception):
   """An exception for when we failed to print the tree."""
 
 
-def to_str(tree, py_ver):
+def to_str(tree, py_ver=sys.version_info[:2]):
 
   class Printer(annotate.get_base_visitor(py_ver)):
     """Traverses an AST and generates formatted python source code.
@@ -132,25 +133,15 @@ def to_str(tree, py_ver):
           self.code += ' '
       self.code += token_val
 
-    def optional_token(self,
-                       node,
-                       attr_name,
-                       token_val,
-                       allow_whitespace_prefix = False,
-                       default = False):
+    def optional_token(self, node, attr_name, token_val,
+                       allow_whitespace_prefix=False, default=False):
       del allow_whitespace_prefix
       value = fmt.get(node, attr_name)
       if value is None and default:
         value = token_val
       self.code += value or ''
 
-    def attr(self,
-             node,
-             attr_name,
-             attr_vals,
-             deps = None,
-             default = None,
-             separate_before = False):
+    def attr(self, node, attr_name, attr_vals, deps=None, default=None):
       """Add the formatted data stored for a given attribute on this node.
 
       If any of the dependent attributes of the node have changed since it was
@@ -204,7 +195,7 @@ def to_str(tree, py_ver):
   # Detect the most prevalent indentation style in the file and use it when
   # printing indented nodes which don't have formatting data.
   seen_indent_diffs = collections.defaultdict(lambda: 0)
-  for node in pasta.ast_walk(tree, py_ver):
+  for node in pasta.ast_walk(tree, py_ver=py_ver):
     indent_diff = fmt.get(node, 'indent_diff', '')
     if indent_diff:
       seen_indent_diffs[indent_diff] += 1
@@ -218,7 +209,7 @@ def to_str(tree, py_ver):
   return p.code
 
 
-def to_tree_str(node, py_ver, indent):
+def to_tree_str(node, indent, py_ver=sys.version_info[:2]):
   """Returns a human-readable representation of the sub-tree rooted at node.
 
   This is a depth-first traversal of the tree that emits a string
@@ -235,22 +226,13 @@ def to_tree_str(node, py_ver, indent):
       for attr in node.__pasta__.keys():
         print('%s  %s -> "%s"' % (indent, str(attr), str(node.__pasta__[attr])))
   elif isinstance(node, str) or isinstance(node, int):
-    print('%s%s' % (
-        indent,
-        node,
-    ))
+    print('%s%s' % (indent, node))
     return
   else:
-    print('%s%s' % (
-        indent,
-        node,
-    ))
+    print('%s%s' % (indent, node))
 
   for field, value in ast.iter_fields(node):
-    print('%s  %s:' % (
-        indent,
-        field,
-    ))
+    print('%s%s' % (indent, field))
     if isinstance(value, list):
       for item in value:
         to_tree_str(item, py_ver, indent + '    ')

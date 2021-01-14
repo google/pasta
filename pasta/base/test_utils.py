@@ -18,7 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-#import ast
 import sys
 from typed_ast import ast27
 from typed_ast import ast3
@@ -31,7 +30,7 @@ import pasta
 
 class TestCase(unittest.TestCase):
 
-  def checkAstsEqual(self, a, b, py_ver):
+  def checkAstsEqual(self, a, b, py_ver=sys.version_info[:2]):
     """Compares two ASTs and fails if there are differences.
 
     Ignores `ctx` fields and formatting info.
@@ -64,16 +63,15 @@ class TestCase(unittest.TestCase):
             self.assertEqual(a_val, b_val)
     except AssertionError as ae:
       self.fail('ASTs differ:\n%s\n  !=\n%s\n\n%s' %
-                (ast27.dump(a) if py_ver <
-                 (3, 0) else ast3.dump(a), ast27.dump(b) if py_ver <
-                 (3, 0) else ast3.dump(b), ae))
+                (ast27.dump(a) if py_ver < (3, 0) else ast3.dump(a),
+                 ast27.dump(b) if py_ver < (3, 0) else ast3.dump(b), ae))
 
 
 if not hasattr(TestCase, 'assertItemsEqual'):
   setattr(TestCase, 'assertItemsEqual', TestCase.assertCountEqual)
 
 
-def requires_features(features, py_ver):
+def requires_features(features, py_ver=sys.version_info[:2]):
   return unittest.skipIf(
       any(not supports_feature(feature, py_ver) for feature in features),
       ('Tests features which are not supported by this version of python %s. ' %

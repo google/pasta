@@ -50,8 +50,8 @@ def parse(src, py_ver=sys.version_info[:2]):
   This enforces the assumption that each node in the ast is unique.
   """
 
-  class _TreeNormalizer(ast27.NodeTransformer if py_ver <
-                        (3, 0) else ast3.NodeTransformer):
+  class _TreeNormalizer(ast27.NodeTransformer if py_ver < (3, 0)
+                        else ast3.NodeTransformer):
     """Replaces all op nodes with unique instances."""
 
     def visit(self, node):
@@ -79,15 +79,14 @@ def sanitize_source(src):
   return ''.join(src_lines)
 
 
-def find_nodes_by_type(
-    node, accept_types, py_ver):
+def find_nodes_by_type(node, accept_types, py_ver=sys.version_info[:2]):
   visitor = get_find_node_visitor((lambda n: isinstance(n, accept_types)),
-                                  py_ver)
+                                  py_ver=py_ver)
   visitor.visit(node)
   return visitor.results
 
 
-def get_find_node_visitor(condition, py_ver):
+def get_find_node_visitor(condition, py_ver=sys.version_info[:2]):
 
   class FindNodeVisitor(ast27.NodeVisitor if py_ver <
                         (3, 0) else ast3.NodeVisitor):
