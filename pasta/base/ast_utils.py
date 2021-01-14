@@ -151,7 +151,7 @@ def get_last_child(node):
   return node.body[-1]
 
 
-def remove_child(parent, child):
+def remove_child(parent, child, py_ver=sys.version_info[:2]):
 
   for _, field_value in pasta.ast(py_ver).iter_fields(parent):
     if isinstance(field_value, list) and child in field_value:

@@ -1,4 +1,4 @@
-# coding=utf-8
+ coding=utf-8
 """Tests for ast_utils."""
 # Copyright 2017 Google LLC
 #
@@ -67,7 +67,7 @@ class C():
       class_node = tree.body[0]
       meth1_node = class_node.body[0]
 
-      ast_utils.remove_child(class_node, meth1_node)
+      ast_utils.remove_child(class_node, meth1_node, py_ver=py_ver)
 
       result = pasta.dump(tree, py_ver)
       expected = """\
@@ -82,7 +82,7 @@ class C():
 
       import_node = tree.body[0]
       alias1 = import_node.names[0]
-      ast_utils.remove_child(import_node, alias1)
+      ast_utils.remove_child(import_node, alias1, py_ver=py_ver)
 
       self.assertEqual(pasta.dump(tree, py_ver), "from a import c")
 
@@ -94,7 +94,7 @@ if a:
       tree = pasta.parse(src, py_ver)
       if_block = tree.body[0]
       print_stmt = if_block.body[0]
-      ast_utils.remove_child(if_block, print_stmt)
+      ast_utils.remove_child(if_block, print_stmt, py_ver=py_ver)
 
       expected = """\
 if a:

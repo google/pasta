@@ -199,7 +199,7 @@ def foo():
 
       unused_b_node = tree.body[0].names[1]
 
-      import_utils.remove_import_alias_node(sc, unused_b_node)
+      import_utils.remove_import_alias_node(sc, unused_b_node, py_ver=py_ver)
 
       self.assertEqual(len(tree.body), 1)
       self.assertEqual(type(tree.body[0]), pasta.ast(py_ver).Import)
@@ -213,7 +213,7 @@ def foo():
 
       unused_b_node = tree.body[0].names[1]
 
-      import_utils.remove_import_alias_node(sc, unused_b_node)
+      import_utils.remove_import_alias_node(sc, unused_b_node, py_ver=py_ver)
 
       self.assertEqual(len(tree.body), 1)
       self.assertEqual(type(tree.body[0]), pasta.ast(py_ver).ImportFrom)
@@ -227,7 +227,7 @@ def foo():
 
       a_node = tree.body[0].names[0]
 
-      import_utils.remove_import_alias_node(sc, a_node)
+      import_utils.remove_import_alias_node(sc, a_node, py_ver=py_ver)
 
       self.assertEqual(len(tree.body), 0)
 
@@ -238,7 +238,7 @@ def foo():
 
       a_node = tree.body[0].names[0]
 
-      import_utils.remove_import_alias_node(sc, a_node)
+      import_utils.remove_import_alias_node(sc, a_node, py_ver=py_ver)
 
       self.assertEqual(len(tree.body), 0)
 

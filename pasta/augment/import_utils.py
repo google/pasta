@@ -170,7 +170,7 @@ def get_unused_import_aliases(tree, sc=None, py_ver=sys.version_info[:2]):
   return unused_aliases
 
 
-def remove_import_alias_node(sc, node):
+def remove_import_alias_node(sc, node, py_ver=sys.version_info[:2]):
   """Remove an alias and if applicable remove their entire import.
 
   Arguments:
@@ -180,12 +180,12 @@ def remove_import_alias_node(sc, node):
   import_node = sc.parent(node)
   if len(import_node.names) == 1:
     import_parent = sc.parent(import_node)
-    ast_utils.remove_child(import_parent, import_node)
+    ast_utils.remove_child(import_parent, import_node, py_ver=py_ver)
   else:
-    ast_utils.remove_child(import_node, node)
+    ast_utils.remove_child(import_node, node, py_ver=py_ver)
 
 
-def remove_duplicates(tree, sc=None, py_ver=py_ver):
+def remove_duplicates(tree, sc=None, py_ver=sys.version_info[:2]):
   """Remove duplicate imports, where it is safe to do so.
 
   This does NOT remove imports that create new aliases

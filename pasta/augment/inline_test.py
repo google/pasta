@@ -36,13 +36,13 @@ def suite(py_ver=sys.version_info[:2]):
     def test_inline_simple(self):
       src = 'x = 1\na = x\n'
       t = pasta.ast_parse(src, py_ver)
-      inline.inline_name(t, 'x')
+      inline.inline_name(t, 'x', py_ver=py_ver)
       self.checkAstsEqual(t, pasta.ast_parse('a = 1\n', py_ver), py_ver)
 
     def test_inline_multiple_targets(self):
       src = 'x = y = z = 1\na = x + y\n'
       t = pasta.ast_parse(src, py_ver)
-      inline.inline_name(t, 'y')
+      inline.inline_name(t, 'y', py_ver=py_ver)
       self.checkAstsEqual(t, pasta.ast_parse('x = z = 1\na = x + 1\n', py_ver),
                           py_ver)
 
@@ -57,7 +57,7 @@ def suite(py_ver=sys.version_info[:2]):
             return b == "foo"
           """)
       t = pasta.ast_parse(src, py_ver)
-      inline.inline_name(t, 'CONSTANT')
+      inline.inline_name(t, 'CONSTANT', py_ver=py_ver)
       self.checkAstsEqual(t, pasta.ast_parse(expected, py_ver), py_ver)
 
     def test_inline_non_constant_fails(self):
@@ -68,7 +68,7 @@ def suite(py_ver=sys.version_info[:2]):
       t = pasta.ast_parse(src, py_ver)
       with self.assertRaisesRegexp(inline.InlineError,
                                    '\'NOT_A_CONSTANT\' is not a constant'):
-        inline.inline_name(t, 'NOT_A_CONSTANT')
+        inline.inline_name(t, 'NOT_A_CONSTANT', py_ver=py_ver)
 
     def test_inline_function_fails(self):
       src = 'def func(): pass\nfunc()\n'
@@ -77,21 +77,21 @@ def suite(py_ver=sys.version_info[:2]):
       with self.assertRaisesRegexp(
           inline.InlineError, '\'func\' is not a constant; it has type %r' %
           (ast27.FunctionDef if py_ver == 'PY27' else ast3.FunctionDef,)):
-        inline.inline_name(t, 'func')
+        inline.inline_name(t, 'func', py_ver=py_ver)
 
     def test_inline_conditional_fails(self):
       src = 'if define:\n  x = 1\na = x\n'
       t = pasta.ast_parse(src, py_ver)
       with self.assertRaisesRegexp(inline.InlineError,
                                    '\'x\' is not a top-level name'):
-        inline.inline_name(t, 'x')
+        inline.inline_name(t, 'x', py_ver=py_ver)
 
     def test_inline_non_assign_fails(self):
       src = 'CONSTANT1, CONSTANT2 = values'
       t = pasta.ast_parse(src, py_ver)
       with self.assertRaisesRegexp(
           inline.InlineError, '\'CONSTANT1\' is not declared in an assignment'):
-        inline.inline_name(t, 'CONSTANT1')
+        inline.inline_name(t, 'CONSTANT1', py_ver=py_ver)
 
   result = unittest.TestSuite()
   result.addTests(unittest.makeSuite(InlineTest))
