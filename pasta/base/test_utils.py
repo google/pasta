@@ -18,16 +18,19 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
 import sys
+from typed_ast import ast27
+from typed_ast import ast3
 import unittest
 
 from six.moves import zip
 
+import pasta
+
 
 class TestCase(unittest.TestCase):
 
-  def checkAstsEqual(self, a, b):
+  def checkAstsEqual(self, a, b, py_ver=sys.version_info[:2]):
     """Compares two ASTs and fails if there are differences.
 
     Ignores `ctx` fields and formatting info.
@@ -37,7 +40,8 @@ class TestCase(unittest.TestCase):
     try:
       self.assertIsNotNone(a)
       self.assertIsNotNone(b)
-      for node_a, node_b in zip(ast.walk(a), ast.walk(b)):
+      for node_a, node_b in zip(
+          pasta.ast_walk(a, py_ver), pasta.ast_walk(b, py_ver)):
         self.assertEqual(type(node_a), type(node_b))
         for field in type(node_a)()._fields:
           a_val = getattr(node_a, field, None)
@@ -45,45 +49,48 @@ class TestCase(unittest.TestCase):
 
           if isinstance(a_val, list):
             for item_a, item_b in zip(a_val, b_val):
-              self.checkAstsEqual(item_a, item_b)
-          elif isinstance(a_val, ast.AST) or isinstance(b_val, ast.AST):
-            if (not isinstance(a_val, (ast.Load, ast.Store, ast.Param)) and
-                not isinstance(b_val, (ast.Load, ast.Store, ast.Param))):
+              self.checkAstsEqual(item_a, item_b, py_ver)
+          elif isinstance(a_val, (ast27.AST, ast3.AST)) or isinstance(
+              b_val, (ast27.AST, ast3.AST)):
+            if (not isinstance(a_val, (ast27.Load, ast3.Load, ast27.Store,
+                                       ast3.Store, ast27.Param, ast3.Param)) and
+                not isinstance(b_val, (ast27.Load, ast3.Load, ast27.Store,
+                                       ast3.Store, ast27.Param, ast3.Param))):
               self.assertIsNotNone(a_val)
               self.assertIsNotNone(b_val)
-              self.checkAstsEqual(a_val, b_val)
+              self.checkAstsEqual(a_val, b_val, py_ver)
           else:
             self.assertEqual(a_val, b_val)
     except AssertionError as ae:
-      self.fail('ASTs differ:\n%s\n  !=\n%s\n\n%s' % (
-          ast.dump(a), ast.dump(b), ae))
+      self.fail('ASTs differ:\n%s\n  !=\n%s\n\n%s' %
+                (pasta.ast_dump(a, py_ver), pasta.ast_dump(b, py_ver)))
 
 
 if not hasattr(TestCase, 'assertItemsEqual'):
   setattr(TestCase, 'assertItemsEqual', TestCase.assertCountEqual)
 
 
-def requires_features(*features):
+def requires_features(features, py_ver=sys.version_info[:2]):
   return unittest.skipIf(
-      any(not supports_feature(feature) for feature in features),
-      'Tests features which are not supported by this version of python. '
-      'Missing: %r' % [f for f in features if not supports_feature(f)])
+      any(not supports_feature(feature, py_ver) for feature in features),
+      ('Tests features which are not supported by this version of python %s. ' %
+       (py_ver,)) +
+      ('Missing: %r' %
+       ([f for f in features if not supports_feature(f, py_ver)])))
 
 
-def supports_feature(feature):
+def supports_feature(feature, py_ver):
+  if feature == 'ur_str_literal':
+    return py_ver < (3, 0)
   if feature == 'bytes_node':
-    return hasattr(ast, 'Bytes') and issubclass(ast.Bytes, ast.AST)
+    return py_ver >= (3, 0)
   if feature == 'exec_node':
-    return hasattr(ast, 'Exec') and issubclass(ast.Exec, ast.AST)
+    return py_ver < (3, 0)
   if feature == 'type_annotations':
-    try:
-      ast.parse('def foo(bar: str=123) -> None: pass')
-    except SyntaxError:
-      return False
-    return True
+    return py_ver >= (3, 0)
   if feature == 'fstring':
-    return hasattr(ast, 'JoinedStr') and issubclass(ast.JoinedStr, ast.AST)
+    return py_ver >= (3, 0)
   # Python 2 counts tabs as 8 spaces for indentation
   if feature == 'mixed_tabs_spaces':
-    return sys.version_info[0] < 3
+    return py_ver < (3, 0)
   return False

@@ -18,9 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import ast
+import sys
+import typed_ast
+from typed_ast import ast27
+from typed_ast import ast3
 import re
 
+import pasta
 from pasta.augment import errors
 from pasta.base import formatting as fmt
 
@@ -28,33 +32,35 @@ from pasta.base import formatting as fmt
 _CODING_PATTERN = re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
 
 
-_AST_OP_NODES = (
-    ast.And, ast.Or, ast.Eq, ast.NotEq, ast.Is, ast.IsNot, ast.In, ast.NotIn,
-    ast.Lt, ast.LtE, ast.Gt, ast.GtE, ast.Add, ast.Sub, ast.Mult, ast.Div,
-    ast.Mod, ast.Pow, ast.LShift, ast.RShift, ast.BitAnd, ast.BitOr, ast.BitXor,
-    ast.FloorDiv, ast.Invert, ast.Not, ast.UAdd, ast.USub
-) 
+_AST_OP_NODES = (ast27.And, ast27.Or, ast27.Eq, ast27.NotEq, ast27.Is,
+                 ast27.IsNot, ast27.In, ast27.NotIn, ast27.Lt, ast27.LtE,
+                 ast27.Gt, ast27.GtE, ast27.Add, ast27.Sub, ast27.Mult,
+                 ast27.Div, ast27.Mod, ast27.Pow, ast27.LShift, ast27.RShift,
+                 ast27.BitAnd, ast27.BitOr, ast27.BitXor, ast27.FloorDiv,
+                 ast27.Invert, ast27.Not, ast27.UAdd, ast27.USub, ast3.And,
+                 ast3.Or, ast3.Eq, ast3.NotEq, ast3.Is, ast3.IsNot, ast3.In,
+                 ast3.NotIn, ast3.Lt, ast3.LtE, ast3.Gt, ast3.GtE, ast3.Add,
+                 ast3.Sub, ast3.Mult, ast3.Div, ast3.Mod, ast3.Pow, ast3.LShift,
+                 ast3.RShift, ast3.BitAnd, ast3.BitOr, ast3.BitXor,
+                 ast3.FloorDiv, ast3.Invert, ast3.Not, ast3.UAdd, ast3.USub)
 
 
-class _TreeNormalizer(ast.NodeTransformer):
-  """Replaces all op nodes with unique instances."""
-
-  def visit(self, node):
-    if isinstance(node, _AST_OP_NODES):
-      return node.__class__()
-    return super(_TreeNormalizer, self).visit(node)
-
-
-_tree_normalizer = _TreeNormalizer()
-
-
-def parse(src):
-  """Replaces ast.parse; ensures additional properties on the parsed tree.
+def parse(src, py_ver=sys.version_info[:2]):
+  """Replaces typed_ast.parse; ensures additional properties on the parsed tree.
 
   This enforces the assumption that each node in the ast is unique.
   """
-  tree = ast.parse(sanitize_source(src))
-  _tree_normalizer.visit(tree)
+
+  class _TreeNormalizer(pasta.ast(py_ver).NodeTransformer):
+    """Replaces all op nodes with unique instances."""
+
+    def visit(self, node):
+      if isinstance(node, _AST_OP_NODES):
+        return node.__class__()
+      return super(_TreeNormalizer, self).visit(node)
+
+  tree=pasta.ast(py_ver).parse(sanitize_source(src))
+  _TreeNormalizer().visit(tree)
   return tree
 
 
@@ -70,22 +76,27 @@ def sanitize_source(src):
   return ''.join(src_lines)
 
 
-def find_nodes_by_type(node, accept_types):
-  visitor = FindNodeVisitor(lambda n: isinstance(n, accept_types))
+def find_nodes_by_type(node, accept_types, py_ver=sys.version_info[:2]):
+  visitor = get_find_node_visitor((lambda n: isinstance(n, accept_types)),
+                                  py_ver=py_ver)
   visitor.visit(node)
   return visitor.results
 
 
-class FindNodeVisitor(ast.NodeVisitor):
+def get_find_node_visitor(condition, py_ver=sys.version_info[:2]):
 
-  def __init__(self, condition):
-    self._condition = condition
-    self.results = []
+  class FindNodeVisitor(pasta.ast(py_ver).NodeVisitor):
 
-  def visit(self, node):
-    if self._condition(node):
-      self.results.append(node)
-    super(FindNodeVisitor, self).visit(node)
+    def __init__(self, condition):
+      self._condition = condition
+      self.results = []
+
+    def visit(self, node):
+      if self._condition(node):
+        self.results.append(node)
+      super(FindNodeVisitor, self).visit(node)
+
+  return FindNodeVisitor(condition)
 
 
 def get_last_child(node):
@@ -107,30 +118,32 @@ def get_last_child(node):
 
   In both cases, the last child is the node for `last`.
   """
-  if isinstance(node, ast.Module):
+  if isinstance(node, ast27.Module) or isinstance(node, ast3.Module):
     try:
       return node.body[-1]
     except IndexError:
       return None
-  if isinstance(node, ast.If):
-    if (len(node.orelse) == 1 and isinstance(node.orelse[0], ast.If) and
+  if isinstance(node, ast27.If) or isinstance(node, ast3.If):
+    if (len(node.orelse) == 1 and isinstance(node.orelse[0],
+                                             (ast27.If, ast3.If)) and
         fmt.get(node.orelse[0], 'is_elif')):
       return get_last_child(node.orelse[0])
     if node.orelse:
       return node.orelse[-1]
-  elif isinstance(node, ast.With):
-    if (len(node.body) == 1 and isinstance(node.body[0], ast.With) and
+  elif isinstance(node, ast27.With) or isinstance(node, ast3.With):
+    if (len(node.body) == 1 and isinstance(node.body[0],
+                                           (ast27.With, ast3.With)) and
         fmt.get(node.body[0], 'is_continued')):
       return get_last_child(node.body[0])
-  elif hasattr(ast, 'Try') and isinstance(node, ast.Try):
+  elif isinstance(node, ast3.Try):
     if node.finalbody:
       return node.finalbody[-1]
     if node.orelse:
       return node.orelse[-1]
-  elif hasattr(ast, 'TryFinally') and isinstance(node, ast.TryFinally):
+  elif isinstance(node, ast27.TryFinally):
     if node.finalbody:
       return node.finalbody[-1]
-  elif hasattr(ast, 'TryExcept') and isinstance(node, ast.TryExcept):
+  elif isinstance(node, ast27.TryExcept):
     if node.orelse:
       return node.orelse[-1]
     if node.handlers:
@@ -138,8 +151,9 @@ def get_last_child(node):
   return node.body[-1]
 
 
-def remove_child(parent, child):
-  for _, field_value in ast.iter_fields(parent):
+def remove_child(parent, child, py_ver=sys.version_info[:2]):
+
+  for _, field_value in pasta.ast(py_ver).iter_fields(parent):
     if isinstance(field_value, list) and child in field_value:
       field_value.remove(child)
       return
@@ -175,5 +189,7 @@ def replace_child(parent, node, replace_with):
 
 def has_docstring(node):
   return (hasattr(node, 'body') and node.body and
-          isinstance(node.body[0], ast.Expr) and
-          isinstance(node.body[0].value, ast.Str))
+          (isinstance(node.body[0], ast27.Expr) or
+           isinstance(node.body[0], ast3.Expr)) and
+          (isinstance(node.body[0].value, ast27.Str) or
+           isinstance(node.body[0].value, ast3.Str)))

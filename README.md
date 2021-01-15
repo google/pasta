@@ -28,7 +28,8 @@ Supports python `2.7` and up to `3.8`.
 
 ## Dependencies
 
-`pasta` depends on [`six`](https://pypi.org/project/six/).
+`pasta` depends on [`six`](https://pypi.org/project/six/) and
+[`typed_ast`](https://github.com/python/typed_ast).
 
 ## Basic Usage
 
@@ -69,10 +70,6 @@ rename.rename_external(tree, 'pkg.module.Query', 'pkg.module.ExecuteQuery')
 * Changing the indentation level of a block of code is not supported. This is
   not an issue for renames, but would cause problems for refactors like
   extracting a method.
-
-* `pasta` works under the assumption that the python version that the code is
-  written for and the version used to run pasta are the same. This is because
-  pasta relies on [`ast.parse`](https://docs.python.org/2/library/ast.html#ast.parse)
 
 * Some python features are not fully supported, including `global`.
 
