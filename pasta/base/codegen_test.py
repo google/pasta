@@ -110,7 +110,6 @@ def func():
   offset_multi = lambda *a: foo(*a)
   add_multi = lambda *a, **k: bar(*a, **k)"""
       t = pasta.parse(src, py_ver)
-      print(pasta.dump(t, py_ver))
       self.assertEqual(src, pasta.dump(t, py_ver))
 
     def test_default_indentation(self):

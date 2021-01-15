@@ -22,6 +22,7 @@ import ast
 import collections
 import pasta
 import six
+import sys
 from typed_ast import ast27
 from typed_ast import ast3
 
@@ -37,7 +38,7 @@ ExternalReference = collections.namedtuple('ExternalReference',
                                            ('name', 'node', 'name_ref'))
 
 
-def analyze(tree, py_ver):
+def analyze(tree, py_ver=sys.version_info[:2]):
 
   class ScopeVisitor(pasta.ast(py_ver).NodeVisitor):
 
