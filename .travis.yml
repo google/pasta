@@ -1,4 +1,8 @@
 language: python
+
+stages:
+  - pre-tests
+  - tests
 python:
   - "2.7"
   - "3.4"
@@ -6,7 +10,16 @@ python:
   - "3.6"
   - "3.7"
   - "3.8"
-before_script:
-  - pip install flake8
-  - flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+jobs:
+  include:
+    - stage: pre-tests
+      install: pip install pre-commit==2.9.3
+      script: pre-commit run --all-files --show-diff-on-failure --color always
+      python: "3.9"
+    - stage: pre-tests
+      install: pip install flake8
+      script: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+      python: "3.9"
+
 script: python setup.py test
