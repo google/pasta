@@ -1,6 +1,6 @@
 # coding=utf-8
 """Annotate python syntax trees with formatting from the source file."""
-# Copyright 2017 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
