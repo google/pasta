@@ -1,0 +1,43 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       ClassDef A           	prefix=||	suffix=||	indent=||
+(5, 0)       ClassDef G           	prefix=|\n|	suffix=||	indent=||
+(8, 0)       AnnAssign            	prefix=|\n|	suffix=|\n|	indent=||
+(10, 0)      AnnAssign            	prefix=|\n|	suffix=|\n|	indent=||
+(12, 0)      AnnAssign            	prefix=|\n|	suffix=|\n|	indent=||
+(2, 2)       AnnAssign            	prefix=|  |	suffix=|\n|	indent=|  |
+(3, 2)       AnnAssign            	prefix=|  |	suffix=|\n|	indent=|  |
+(6, 2)       AnnAssign            	prefix=|  |	suffix=|\n|	indent=|  |
+(8, 0)       Name j               	prefix=||	suffix=||	indent=||
+(8, 3)       Name K               	prefix=||	suffix=||	indent=||
+(10, 0)      Name l               	prefix=||	suffix=|  |	indent=||
+(10, 7)      Name M               	prefix=||	suffix=||	indent=||
+(10, 12)     Name n               	prefix=||	suffix=||	indent=||
+(12, 0)      Subscript            	prefix=||	suffix=||	indent=||
+(12, 6)      Name q               	prefix=||	suffix=| |	indent=||
+(12, 10)     Name r               	prefix=||	suffix=||	indent=||
+(2, 2)       Name b               	prefix=||	suffix=||	indent=|  |
+(2, 5)       Name C               	prefix=||	suffix=||	indent=|  |
+(3, 2)       Name d               	prefix=||	suffix=||	indent=|  |
+(3, 5)       Name E               	prefix=||	suffix=| |	indent=|  |
+(3, 9)       Name f               	prefix=||	suffix=||	indent=|  |
+(6, 4)       Name h               	prefix=|( |	suffix=|  )|	indent=|  |
+(6, 12)      Name I               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(12, 0)      Name o               	prefix=||	suffix=||	indent=||
+(12, 2)      Name p               	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

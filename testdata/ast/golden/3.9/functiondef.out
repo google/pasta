@@ -1,0 +1,77 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       FunctionDef a        	prefix=||	suffix=||	indent=||
+(4, 0)       FunctionDef d        	prefix=|\n|	suffix=||	indent=||
+(7, 0)       FunctionDef k        	prefix=|\n|	suffix=||	indent=||
+(15, 0)      FunctionDef v        	prefix=|\n|	suffix=||	indent=||
+(18, 0)      FunctionDef x        	prefix=|\n|	suffix=||	indent=||
+(21, 0)      ClassDef A           	prefix=|\n|	suffix=||	indent=||
+(27, 0)      FunctionDef f        	prefix=|\n|	suffix=||	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(5, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(8, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(9, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(10, 2)      Return               	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(16, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(12, 1)      Call                 	prefix=||	suffix=||	indent=||
+(13, 1)      Name p               	prefix=||	suffix=||	indent=||
+(14, 1)      Call                 	prefix=||	suffix=||	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(19, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(24, 2)      FunctionDef d        	prefix=|  |	suffix=||	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=|\n    |	indent=||
+(30, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(1, 6)       arg b                	prefix=||	suffix=||	indent=||
+(2, 2)       Name c               	prefix=||	suffix=||	indent=|  |
+(4, 13)      arg e                	prefix=||	suffix=|  |	indent=||
+(4, 17)      arg f                	prefix=||	suffix=||	indent=||
+(4, 24)      arg h                	prefix=||	suffix=||	indent=||
+(4, 31)      arg i                	prefix=||	suffix=| |	indent=||
+(4, 20)      Name g               	prefix=||	suffix=||	indent=||
+(5, 2)       Name j               	prefix=||	suffix=||	indent=|  |
+(8, 2)       Name l               	prefix=||	suffix=||	indent=|  |
+(9, 2)       Name m               	prefix=||	suffix=||	indent=|  |
+(10, 9)      Name n               	prefix=||	suffix=||	indent=|  |
+(16, 2)      Name w               	prefix=||	suffix=||	indent=|  |
+(12, 1)      Name o               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(14, 1)      Name q               	prefix=||	suffix=||	indent=||
+(14, 3)      Name r               	prefix=||	suffix=||	indent=||
+(14, 6)      Name s               	prefix=||	suffix=||	indent=||
+(14, 9)      keyword t            	prefix=||	suffix=||	indent=||
+(18, 6)      arg y                	prefix=||	suffix=||	indent=||
+(18, 9)      arg z                	prefix=||	suffix=||	indent=||
+(18, 11)     Name a               	prefix=||	suffix=||	indent=||
+(19, 2)      Name b               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=|  |
+(25, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
+(22, 3)      Name b               	prefix=||	suffix=||	indent=|  |
+(23, 3)      Name c               	prefix=||	suffix=||	indent=|  |
+(28, 4)      arg g                	prefix=||	suffix=||	indent=||
+(28, 7)      arg h                	prefix=||	suffix=||	indent=||
+(28, 9)      Name i               	prefix=||	suffix=||	indent=||
+(30, 2)      Name j               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(14, 11)     Name u               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(25, 4)      Name e               	prefix=||	suffix=||	indent=|    |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

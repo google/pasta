@@ -1,0 +1,23 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       FunctionDef a        	prefix=||	suffix=||	indent=||
+(3, 0)       FunctionDef a        	prefix=|\n|	suffix=||	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(1, 31)      Expr                 	prefix=||	suffix=|\n|	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(3, 31)      Expr                 	prefix=||	suffix=|\n|	indent=||
+(1, 6)       arg b                	prefix=||	suffix=||	indent=||
+(1, 9)       arg c                	prefix=||	suffix=||	indent=||
+(1, 15)      arg d                	prefix=||	suffix=||	indent=||
+(1, 18)      arg e                	prefix=||	suffix=||	indent=||
+(1, 24)      arg f                	prefix=||	suffix=||	indent=||
+(1, 27)      arg g                	prefix=||	suffix=||	indent=||
+(1, 31)      Name h               	prefix=||	suffix=||	indent=||
+(3, 6)       arg b                	prefix=||	suffix=||	indent=||
+(3, 9)       arg c                	prefix=||	suffix=||	indent=||
+(3, 15)      arg d                	prefix=||	suffix=||	indent=||
+(3, 18)      arg e                	prefix=||	suffix=||	indent=||
+(3, 24)      arg f                	prefix=||	suffix=||	indent=||
+(3, 27)      arg g                	prefix=||	suffix=||	indent=||
+(3, 31)      Name h               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
