@@ -63,5 +63,6 @@ def inline_name(t, name, py_ver=sys.version_info[:2]):
     ast_utils.remove_child(sc.parent(assign_node), assign_node, py_ver=py_ver)
   else:
     tgt_list = [tgt for tgt in assign_node.targets
-                if not (isinstance(tgt, ast.Name) and tgt.id == name)]
+                if not (isinstance(tgt, (ast27.Name, ast3.Name))
+                        and tgt.id == name)]
     assign_node.targets = tgt_list

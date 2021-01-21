@@ -60,16 +60,16 @@
 (-1, -1)     Slice                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(9, 4)       Constant             	prefix=||	suffix=||	indent=||
+(9, 4)       NameConstant         	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(11, 5)      Constant             	prefix=|(|	suffix=|)|	indent=||
+(11, 5)      NameConstant         	prefix=|(|	suffix=|)|	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Slice                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Slice                	prefix=||	suffix=||	indent=||
 (-1, -1)     Index                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
-(17, 2)      Constant             	prefix=||	suffix=||	indent=||
+(17, 2)      Ellipsis             	prefix=||	suffix=||	indent=||
 (19, 1)      Name r               	prefix=||	suffix=||	indent=||
 (-1, -1)     Index                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -78,7 +78,7 @@
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (5, 5)       Name g               	prefix=||	suffix=|  |	indent=||
-(5, 10)      Constant             	prefix=||	suffix=||	indent=||
+(5, 10)      Ellipsis             	prefix=||	suffix=||	indent=||
 (5, 17)      Name h               	prefix=||	suffix=| |	indent=||
 (13, 3)      Name n               	prefix=||	suffix=||	indent=||
 (15, 5)      Name p               	prefix=||	suffix=||	indent=||

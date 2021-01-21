@@ -2,9 +2,9 @@
 (1, 0)       Expr                 	prefix=||	suffix=|\n|	indent=||
 (3, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
 (5, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
-(1, 0)       GeneratorExp         	prefix=|(|	suffix=|)|	indent=||
-(3, 0)       GeneratorExp         	prefix=|(  |	suffix=|)|	indent=||
-(5, 0)       GeneratorExp         	prefix=|(|	suffix=|)|	indent=||
+(1, 1)       GeneratorExp         	prefix=|(|	suffix=|)|	indent=||
+(3, 3)       GeneratorExp         	prefix=|(  |	suffix=|)|	indent=||
+(5, 1)       GeneratorExp         	prefix=|(|	suffix=|)|	indent=||
 (1, 1)       Name a               	prefix=||	suffix=| |	indent=||
 (-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
 (3, 3)       Name c               	prefix=||	suffix=|    |	indent=||

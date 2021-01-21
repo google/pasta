@@ -465,14 +465,6 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
       with self.scope(node, 'args', trailing_comma=args_count > 0,
                       default_parens=True):
         self.visit(node.args)
-        # In Python 3, there can be extra args in kwonlyargs
-        kwonlyargs = getattr(node.args, 'kwonlyargs', [])
-        args_count = sum(
-            (len(node.args.args + kwonlyargs), 1 if node.args.vararg else 0,
-             1 if node.args.kwarg else 0))
-        with self.scope(
-            node, 'args', trailing_comma=args_count > 0, default_parens=True):
-          self.visit(node.args)
 
       if getattr(node, 'returns', None):
         self.attr(node, 'returns_prefix', [self.ws, '->', self.ws],
@@ -823,7 +815,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
       self.attr(
           node,
           'op', [self.ws, op_symbol, self.ws],
-          default='<%s>' % op_symbol,
+          default='%s' % op_symbol,
           deps=('op',))
       self.visit(node.right)
 

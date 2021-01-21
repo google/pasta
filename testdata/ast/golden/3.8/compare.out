@@ -45,7 +45,7 @@
 (15, 5)      Name b               	prefix=||	suffix=||	indent=||
 (17, 0)      Name a               	prefix=||	suffix=| |	indent=||
 (-1, -1)     Eq                   	prefix=||	suffix=||	indent=||
-(17, 5)      Constant             	prefix=||	suffix=||	indent=||
+(17, 5)      Bytes                	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

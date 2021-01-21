@@ -62,8 +62,8 @@ class TestCase(unittest.TestCase):
           else:
             self.assertEqual(a_val, b_val)
     except AssertionError as ae:
-      self.fail('ASTs differ:\n%s\n  !=\n%s\n\n%s' %
-                (pasta.ast_dump(a, py_ver), pasta.ast_dump(b, py_ver)))
+      self.fail('ASTs differ:\n%s\n  !=\n%s\n\n' %
+                (pasta.ast_dump(a), pasta.ast_dump(b)))
 
 
 if not hasattr(TestCase, 'assertItemsEqual'):
@@ -79,7 +79,7 @@ def requires_features(features, py_ver=sys.version_info[:2]):
        ([f for f in features if not supports_feature(f, py_ver)])))
 
 
-def supports_feature(feature, py_ver):
+def supports_feature(feature, py_ver=sys.version_info[:2]):
   if feature == 'ur_str_literal':
     return py_ver < (3, 0)
   if feature == 'bytes_node':
