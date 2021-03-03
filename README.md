@@ -28,8 +28,7 @@ Supports python `2.7` and up to `3.8`.
 
 ## Dependencies
 
-`pasta` depends on [`six`](https://pypi.org/project/six/) and
-[`typed_ast`](https://github.com/python/typed_ast).
+`pasta` depends on [`six`](https://pypi.org/project/six/).
 
 ## Basic Usage
 

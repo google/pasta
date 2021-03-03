@@ -18,11 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import textwrap
 import unittest
 import sys
-from typed_ast import ast27
-from typed_ast import ast3
 
 import pasta
 from pasta.base import ast_utils
@@ -41,7 +40,7 @@ class ScopeTest(test_utils.TestCase):
         from eee import fff
         from ggg.hhh import iii, jjj
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_1_aaa = nodes[0].names[0]
@@ -125,11 +124,11 @@ class ScopeTest(test_utils.TestCase):
         else:
           import ccc
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_aaa, node_bbb, node_ccc = ast_utils.find_nodes_by_type(
-        tree, pasta.ast().alias)
+        tree, ast.alias)
 
     s = scope.analyze(tree)
 
@@ -156,11 +155,11 @@ class ScopeTest(test_utils.TestCase):
         finally:
           import ccc
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_aaa, node_bbb, node_ccc = ast_utils.find_nodes_by_type(
-        tree, pasta.ast().alias)
+        tree, ast.alias)
 
     s = scope.analyze(tree)
 
@@ -180,11 +179,11 @@ class ScopeTest(test_utils.TestCase):
         def foo(bar):
           import aaa
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_aaa = ast_utils.find_nodes_by_type(
-        tree, pasta.ast().alias)[0]
+        tree, ast.alias)[0]
 
     s = scope.analyze(tree)
 
@@ -196,7 +195,7 @@ class ScopeTest(test_utils.TestCase):
         class Foo():
           import aaa
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_aaa = nodes[0].body[0].names[0]
@@ -211,7 +210,7 @@ class ScopeTest(test_utils.TestCase):
         import aaa.bbb.ccc
         aaa.bbb.ccc.foo()
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_ref = nodes[1].value.func.value
@@ -233,7 +232,7 @@ class ScopeTest(test_utils.TestCase):
         def foo(bar):
           return aaa
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     return_value = nodes[1].body[0].value
@@ -252,7 +251,7 @@ class ScopeTest(test_utils.TestCase):
         class Foo(aaa.Bar):
           pass
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_aaa = nodes[0].names[0]
@@ -271,7 +270,7 @@ class ScopeTest(test_utils.TestCase):
         def foo(aaa=aaa):
           return aaa
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     argval = nodes[1].args.defaults[0]
@@ -290,7 +289,7 @@ class ScopeTest(test_utils.TestCase):
           return aaa
         aaa
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     node_aaa = nodes[2].value
@@ -308,7 +307,7 @@ class ScopeTest(test_utils.TestCase):
         def foo(aaa=1):
           pass
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     decorator = nodes[1].decorator_list[0].value
@@ -326,7 +325,7 @@ class ScopeTest(test_utils.TestCase):
         def foo(bar: 'aaa.Bar'):
           pass
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     func = nodes[1]
@@ -346,7 +345,7 @@ class ScopeTest(test_utils.TestCase):
         class A():
           def foo(self, a: 'A'): pass
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     classdef = nodes[0]
@@ -365,7 +364,7 @@ class ScopeTest(test_utils.TestCase):
         class B():
           def foo(self, a: 'A'): pass
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     a_classdef = nodes[0]
@@ -386,7 +385,7 @@ class ScopeTest(test_utils.TestCase):
         aaa.bbb.y()
         aaa.bbb.ccc.z()
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     nodes = tree.body
 
     call1 = nodes[1].value.func.value
@@ -413,7 +412,7 @@ class ScopeTest(test_utils.TestCase):
             g = 1
           return c
         """)
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     import_node, func_node = t.body
     class_node, return_node = func_node.body
 
@@ -440,7 +439,7 @@ class ScopeTest(test_utils.TestCase):
 
     self.assertIs(class_node_scope.lookup_scope(func_node), func_node_scope)
 
-    self.assertIsNone(sc.lookup_scope(pasta.ast().Name(id='foo')))
+    self.assertIsNone(sc.lookup_scope(ast.Name(id='foo')))
 
   def test_class_methods(self):
     source = textwrap.dedent("""\
@@ -452,7 +451,7 @@ class ScopeTest(test_utils.TestCase):
           def bbb(self):
             return aaa
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     importstmt, classdef = tree.body
     method_aaa, method_bbb = classdef.body
 
@@ -472,7 +471,7 @@ class ScopeTest(test_utils.TestCase):
           ddd
         eee(ccc, ddd)
         """)
-    tree = pasta.ast_parse(source)
+    tree = ast.parse(source)
     funcdef, call = tree.body
     ccc_expr, ddd_expr = funcdef.body
 

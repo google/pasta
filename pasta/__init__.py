@@ -14,37 +14,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+import ast
 import sys
 
 from pasta.base import annotate
 from pasta.base import ast_utils
 from pasta.base import codegen
-from typed_ast import ast27
-from typed_ast import ast3
-
-def ast(py_ver=sys.version_info[:2]):
-  if py_ver < (3, 0):
-    return ast27
-  else:
-    return ast3
 
 
-def ast_parse(source, py_ver=sys.version_info[:2]):
-  return ast(py_ver).parse(source)
-
-
-def ast_walk(tree, py_ver=sys.version_info[:2]):
-  return ast(py_ver).walk(tree)
-
-
-def parse(src, py_ver=sys.version_info[:2]):
-  t = ast_utils.parse(src, py_ver)
-  annotator = annotate.get_ast_annotator(py_ver)(src)
+def parse(src, astlib=ast):
+  t = ast_utils.parse(src, astlib)
+  annotator = annotate.get_ast_annotator(astlib)(src)
   annotator.visit(t)
   return t
 
-def ast_dump(tree, py_ver=sys.version_info[:2]):
-  return ast(py_ver).dump(tree)
 
-def dump(tree, py_ver=sys.version_info[:2]):
-  return codegen.to_str(tree, py_ver)
+def dump(tree, astlib=ast):
+  return codegen.to_str(tree, astlib)

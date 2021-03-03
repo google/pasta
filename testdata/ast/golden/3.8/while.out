@@ -1,10 +1,10 @@
 (-1, -1)     Module               	prefix=||	suffix=||	indent=||
 (1, 0)       While                	prefix=||	suffix=||	indent=||
 (5, 0)       While                	prefix=|\n|	suffix=||	indent=||
-(1, 6)       NameConstant         	prefix=||	suffix=||	indent=||
+(1, 6)       Constant             	prefix=||	suffix=||	indent=||
 (2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (3, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(5, 6)       NameConstant         	prefix=||	suffix=||	indent=||
+(5, 6)       Constant             	prefix=||	suffix=||	indent=||
 (6, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (8, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (2, 2)       Name a               	prefix=||	suffix=||	indent=|  |

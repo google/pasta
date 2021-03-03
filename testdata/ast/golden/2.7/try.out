@@ -22,7 +22,7 @@
 (2, 2)       Name a               	prefix=||	suffix=||	indent=|  |
 (4, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (7, 2)       Name c               	prefix=||	suffix=||	indent=|  |
-(8, 7)       Name d               	prefix=| |	suffix=| |	indent=||
+(8, 7)       Name d               	prefix=||	suffix=| |	indent=||
 (8, 12)      Name e               	prefix=||	suffix=|  |	indent=||
 (9, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (11, 2)      Name g               	prefix=||	suffix=||	indent=|  |
@@ -50,11 +50,11 @@
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (14, 2)      Name h               	prefix=||	suffix=||	indent=||
 (15, 2)      Name i               	prefix=||	suffix=||	indent=||
-(16, 9)      Name j               	prefix=|   |	suffix=|   |	indent=||
+(16, 9)      Name j               	prefix=||	suffix=|   |	indent=||
 (16, 19)     Name k               	prefix=||	suffix=||	indent=||
 (17, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (18, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(19, 8)      Name n               	prefix=|  |	suffix=||	indent=||
+(19, 8)      Name n               	prefix=||	suffix=||	indent=||
 (20, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

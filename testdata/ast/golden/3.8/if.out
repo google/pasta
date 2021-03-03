@@ -10,10 +10,10 @@
 (7, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
 (9, 3)       Name e               	prefix=||	suffix=||	indent=||
 (10, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(11, 5)      If                   	prefix=||	suffix=||	indent=||
+(11, 0)      If                   	prefix=||	suffix=||	indent=||
 (18, 3)      Name m               	prefix=||	suffix=||	indent=||
 (19, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(20, 5)      If                   	prefix=||	suffix=||	indent=||
+(20, 0)      If                   	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (2, 2)       Name b               	prefix=||	suffix=||	indent=|  |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -23,7 +23,7 @@
 (10, 2)      Name g               	prefix=||	suffix=||	indent=|  |
 (11, 5)      Name h               	prefix=||	suffix=||	indent=||
 (12, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(13, 5)      If                   	prefix=||	suffix=||	indent=||
+(13, 0)      If                   	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (19, 2)      Name n               	prefix=||	suffix=||	indent=|  |
 (20, 5)      Name o               	prefix=||	suffix=||	indent=||

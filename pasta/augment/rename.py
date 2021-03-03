@@ -21,8 +21,6 @@ from __future__ import print_function
 import ast
 import six
 import sys
-from typed_ast import ast27
-from typed_ast import ast3
 
 import pasta
 from pasta.augment import import_utils
@@ -30,7 +28,7 @@ from pasta.base import ast_utils
 from pasta.base import scope
 
 
-def rename_external(t, old_name, new_name, py_ver=sys.version_info[:2]):
+def rename_external(t, old_name, new_name, astlib=ast):
   """Rename an imported name in a module.
 
   This will rewrite all import statements in `tree` that reference the old
@@ -60,7 +58,7 @@ def rename_external(t, old_name, new_name, py_ver=sys.version_info[:2]):
   Returns:
     True if any changes were made, False otherwise.
   """
-  sc = scope.analyze(t, py_ver=py_ver)
+  sc = scope.analyze(t, astlib=astlib)
 
   if old_name not in sc.external_references:
     return False
@@ -69,12 +67,12 @@ def rename_external(t, old_name, new_name, py_ver=sys.version_info[:2]):
   renames = {}
   already_changed = []
   for ref in sc.external_references[old_name]:
-    if isinstance(ref.node, (ast27.alias, ast3.alias)):
+    if isinstance(ref.node, astlib.alias):
       parent = sc.parent(ref.node)
       # An alias may be the most specific reference to an imported name, but it
       # could if it is a child of an ImportFrom, the ImportFrom node's module
       # may also need to be updated.
-      if (isinstance(parent, (ast27.ImportFrom, ast3.ImportFrom))
+      if (isinstance(parent, astlib.ImportFrom)
           and parent not in already_changed):
         assert _rename_name_in_importfrom(sc, parent, old_name, new_name)
         renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
@@ -84,7 +82,7 @@ def rename_external(t, old_name, new_name, py_ver=sys.version_info[:2]):
         if not ref.node.asname:
           renames[old_name] = new_name
       has_changed = True
-    elif isinstance(ref.node, (ast27.ImportFrom, ast3.ImportFrom)):
+    elif isinstance(ref.node, astlib.ImportFrom):
       if ref.node not in already_changed:
         assert _rename_name_in_importfrom(sc, ref.node, old_name, new_name)
         renames[old_name.rsplit('.', 1)[-1]] = new_name.rsplit('.', 1)[-1]
@@ -92,7 +90,7 @@ def rename_external(t, old_name, new_name, py_ver=sys.version_info[:2]):
         has_changed = True
 
   for rename_old, rename_new in six.iteritems(renames):
-    _rename_reads(sc, t, rename_old, rename_new, py_ver=py_ver)
+    _rename_reads(sc, t, rename_old, rename_new, astlib=astlib)
   return has_changed
 
 
@@ -129,7 +127,7 @@ def _rename_name_in_importfrom(sc, node, old_name, new_name):
   return True
 
 
-def _rename_reads(sc, t, old_name, new_name, py_ver=sys.version_info[:2]):
+def _rename_reads(sc, t, old_name, new_name, astlib=ast):
   """Updates all locations in the module where the given name is read.
 
   Arguments:
@@ -151,11 +149,9 @@ def _rename_reads(sc, t, old_name, new_name, py_ver=sys.version_info[:2]):
 
   has_changed = False
   for ref_node in name.reads:
-    if isinstance(ref_node,
-                  (ast27.Name, ast3.Name, ast27.Attribute, ast3.Attribute)):
+    if isinstance(ref_node, (astlib.Name, astlib.Attribute)):
       ast_utils.replace_child(
-          sc.parent(ref_node), ref_node,
-          pasta.ast_parse(new_name, py_ver).body[0].value)
+          sc.parent(ref_node), ref_node, astlib.parse(new_name).body[0].value)
       has_changed = True
     elif isinstance(ref_node, ast.Str) and ref_node.s.startswith(old_name):
       ref_node.s = ref_node.s.replace(old_name, new_name, 1)

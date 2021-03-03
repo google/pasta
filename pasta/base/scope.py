@@ -23,8 +23,6 @@ import collections
 import pasta
 import six
 import sys
-from typed_ast import ast27
-from typed_ast import ast3
 
 # TODO: Support relative imports
 
@@ -38,9 +36,9 @@ ExternalReference = collections.namedtuple('ExternalReference',
                                            ('name', 'node', 'name_ref'))
 
 
-def analyze(tree, py_ver=sys.version_info[:2]):
+def analyze(tree, astlib=ast):
 
-  class ScopeVisitor(pasta.ast(py_ver).NodeVisitor):
+  class ScopeVisitor(astlib.NodeVisitor):
 
     def __init__(self):
       super(ScopeVisitor, self).__init__()
@@ -66,7 +64,7 @@ def analyze(tree, py_ver=sys.version_info[:2]):
         if isinstance(val, list):
           for item in val:
             self.visit(item)
-        elif isinstance(val, (ast27.AST, ast3.AST)):
+        elif isinstance(val, astlib.AST):
           self.visit(val)
 
     def visit_Import(self, node):
@@ -115,10 +113,9 @@ def analyze(tree, py_ver=sys.version_info[:2]):
       self.generic_visit(node)
 
     def visit_Name(self, node):
-      if isinstance(node.ctx,
-                    (ast27.Store, ast3.Store, ast27.Param, ast3.Param)):
+      if isinstance(node.ctx, (astlib.Store, astlib.Param)):
         self.scope.define_name(node.id, node)
-      elif isinstance(node.ctx, (ast27.Load, ast3.Load)):
+      elif isinstance(node.ctx, astlib.Load):
         self.scope.lookup_name(node.id).add_reference(node)
         self.root_scope.set_name_for_node(node, self.scope.lookup_name(node.id))
       self.generic_visit(node)
@@ -127,7 +124,7 @@ def analyze(tree, py_ver=sys.version_info[:2]):
       # Visit decorator list first to avoid declarations in args
       self.visit_in_order(node, 'decorator_list')
       if isinstance(
-          self.root_scope.parent(node), (ast27.ClassDef, ast3.ClassDef)):
+          self.root_scope.parent(node), astlib.ClassDef):
         pass  # TODO: Support referencing methods by "self" where possible
       else:
         self.scope.define_name(node.name, node)
@@ -140,13 +137,12 @@ def analyze(tree, py_ver=sys.version_info[:2]):
 
     def visit_arguments(self, node):
       self.visit_in_order(node, 'defaults', 'args')
-      if py_ver < (3, 0):
-        # In python 2.x, these names are not Name nodes. Define them explicitly
-        # to be able to find references in the function body.
-        for arg_attr_name in ('vararg', 'kwarg'):
-          arg_name = getattr(node, arg_attr_name, None)
-          if arg_name is not None:
-            self.scope.define_name(arg_name, node)
+      # In python 2.x, these names are not Name nodes. Define them explicitly
+      # to be able to find references in the function body.
+      for arg_attr_name in ('vararg', 'kwarg'):
+        arg_name = getattr(node, arg_attr_name, None)
+        if isinstance(arg_name, six.string_types):
+          self.scope.define_name(arg_name, node)
       else:
         # Visit defaults first to avoid declarations in args
         self.visit_in_order(node, 'vararg', 'kwarg')
@@ -155,7 +151,7 @@ def analyze(tree, py_ver=sys.version_info[:2]):
       self.scope.define_name(node.arg, node)
       
       # PEP 484 forward reference type annotations
-      if hasattr(node, 'annotation') and isinstance(node.annotation, (ast27.Str, ast3.Str)):
+      if hasattr(node, 'annotation') and isinstance(node.annotation, astlib.Str):
         name_parts = node.annotation.s.split('.')
         # TODO: Fix this; the name may not be defined in the root scope.
         name = self.root_scope.forward_define_name(name_parts[0], node.annotation)

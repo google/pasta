@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import _ast
+import ast
 import difflib
 import inspect
 import io
@@ -27,8 +28,6 @@ import os.path
 from six import with_metaclass
 import sys
 import textwrap
-from typed_ast import ast27
-from typed_ast import ast3
 import unittest
 
 import pasta
@@ -78,8 +77,7 @@ class PrefixSuffixTest(test_utils.TestCase):
     def is_node_for_suffix(node, children_attr):
       # Return True if this node contains the 'pass' statement
       val = getattr(node, children_attr, None)
-      return isinstance(val, list) and (type(val[0]) == ast27.Pass or
-                                        type(val[0]) == ast3.Pass)
+      return isinstance(val, list) and isinstance(val[0], ast.Pass)
 
     for children_attr, open_block in test_cases:
       src = src_tpl.format(open_block=open_block)
@@ -135,7 +133,7 @@ class IndentationTest(test_utils.TestCase):
         foo('end')
         """)
     t = pasta.parse(src)
-    call_nodes = ast_utils.find_nodes_by_type(t, (ast27.Call, ast3.Call))
+    call_nodes = ast_utils.find_nodes_by_type(t, ast.Call)
     call_nodes.sort(key=lambda node: node.lineno)
     begin, a1, b1, c1, b2, a2, end = call_nodes
 
@@ -257,7 +255,7 @@ class IndentationTest(test_utils.TestCase):
         """)
     t = pasta.parse(src)
     # Repace the second node and make sure the indent level is corrected
-    t.body[0].body[1] = pasta.ast().Expr(pasta.ast().Name(id='new_node'))
+    t.body[0].body[1] = ast.Expr(ast.Name(id='new_node'))
     self.assertMultiLineEqual(expected, codegen.to_str(t))
 
   @test_utils.requires_features(['mixed_tabs_spaces'])
@@ -297,7 +295,7 @@ class IndentationTest(test_utils.TestCase):
 def _is_syntax_valid(filepath):
   with io.open(filepath, 'r', encoding='UTF-8') as f:
     try:
-      pasta.ast_parse(f.read())
+      ast.parse(f.read())
     except (SyntaxError, annotate.AnnotationError):
       return False
   return True
@@ -372,7 +370,7 @@ class PrefixSuffixGoldenTestMeta(type):
                 type(n).__name__ + ' ' +
                 _get_node_identifier(n), escape(fmt.get(n, 'prefix')),
                 escape(fmt.get(n, 'suffix')), escape(fmt.get(n, 'indent')))
-            for n in pasta.ast_walk(t)) + '\n'
+            for n in ast.walk(t)) + '\n'
 
         # If specified, write the golden data instead of checking it
         if getattr(self, 'generate_goldens', False):
@@ -433,18 +431,17 @@ class ManualEditsTest(test_utils.TestCase):
     """Tests that Call node traversal works without position information."""
     src = 'f(a)'
     t = pasta.parse(src)
-    node = ast_utils.find_nodes_by_type(t, (ast27.Call, ast3.Call))[0]
+    node = ast_utils.find_nodes_by_type(t, ast.Call)[0]
     node.keywords.append(
-        pasta.ast().keyword(arg='b', value=pasta.ast().Num(n=0)))
+        ast.keyword(arg='b', value=ast.Num(n=0)))
     self.assertEqual('f(a, b=0)', pasta.dump(t))
 
   def test_call_illegal_pos(self):
     """Tests that Call node traversal works even with illegal positions."""
     src = 'f(a)'
     t = pasta.parse(src)
-    node = ast_utils.find_nodes_by_type(t, (ast27.Call, ast3.Call))[0]
-    node.keywords.append(
-        pasta.ast().keyword(arg='b', value=pasta.ast().Num(n=0)))
+    node = ast_utils.find_nodes_by_type(t, ast.Call)[0]
+    node.keywords.append(ast.keyword(arg='b', value=ast.Num(n=0)))
 
     # This position would put b=0 before a, so it should be ignored.
     node.keywords[-1].value.lineno = 0
@@ -482,11 +479,10 @@ class VersionSupportTest(test_utils.TestCase):
     }
 
     def should_ignore_type(n):
-      if not issubclass(n, ast27.AST) and not issubclass(n, ast3.AST):
+      if not issubclass(n, ast.AST):
         return True
       # Expression contexts are not visited since the have no formatting
-      if hasattr(_ast, 'expr_context') and (issubclass(
-          n, ast27.expr_context) or issubclass(n, ast3.expr_context)):
+      if hasattr(ast, 'expr_context') and issubclass(n, ast.expr_context):
         return True
       return False
 

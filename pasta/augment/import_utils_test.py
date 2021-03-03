@@ -18,10 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import sys
 import traceback
-from typed_ast import ast27
-from typed_ast import ast3
 import unittest
 
 import pasta
@@ -35,26 +34,26 @@ class SplitImportTest(test_utils.TestCase):
 
   def test_split_normal_import(self):
     src = 'import aaa, bbb, ccc\n'
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     import_node = t.body[0]
     sc = scope.analyze(t)
     import_utils.split_import(sc, import_node, import_node.names[1])
 
     self.assertEqual(2, len(t.body))
-    self.assertEqual(pasta.ast().Import, type(t.body[1]))
+    self.assertEqual(ast.Import, type(t.body[1]))
     self.assertEqual([alias.name for alias in t.body[0].names],
                      ['aaa', 'ccc'])
     self.assertEqual([alias.name for alias in t.body[1].names], ['bbb'])
 
   def test_split_from_import(self):
     src = 'from aaa import bbb, ccc, ddd\n'
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     import_node = t.body[0]
     sc = scope.analyze(t)
     import_utils.split_import(sc, import_node, import_node.names[1])
 
     self.assertEqual(2, len(t.body))
-    self.assertEqual(pasta.ast().ImportFrom, type(t.body[1]))
+    self.assertEqual(ast.ImportFrom, type(t.body[1]))
     self.assertEqual(t.body[0].module, 'aaa')
     self.assertEqual(t.body[1].module, 'aaa')
     self.assertEqual([alias.name for alias in t.body[0].names],
@@ -62,7 +61,7 @@ class SplitImportTest(test_utils.TestCase):
 
   def test_split_imports_with_alias(self):
     src = 'import aaa as a, bbb as b, ccc as c\n'
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     import_node = t.body[0]
     sc = scope.analyze(t)
     import_utils.split_import(sc, import_node, import_node.names[1])
@@ -75,7 +74,7 @@ class SplitImportTest(test_utils.TestCase):
 
   def test_split_imports_multiple(self):
     src = 'import aaa, bbb, ccc\n'
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     import_node = t.body[0]
     alias_bbb = import_node.names[1]
     alias_ccc = import_node.names[2]
@@ -106,14 +105,14 @@ class SplitImportTest(test_utils.TestCase):
     for template in test_cases:
       try:
         src = template.format(import_stmt='import aaa, bbb, ccc')
-        t = pasta.ast_parse(src)
+        t = ast.parse(src)
         sc = scope.analyze(t)
         import_node = ast_utils.find_nodes_by_type(
-            t, (ast27.Import, ast3.Import))[0]
+            t, ast.Import)[0]
         import_utils.split_import(sc, import_node, import_node.names[1])
 
         split_import_nodes = ast_utils.find_nodes_by_type(
-            t, (ast27.Import, ast3.Import))
+            t, ast.Import)
         self.assertEqual(1, len(t.body))
         self.assertEqual(2, len(split_import_nodes))
         self.assertEqual(
@@ -133,7 +132,7 @@ import a
 import b
 a.foo()
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertItemsEqual(
         import_utils.get_unused_import_aliases(tree),
         [tree.body[1].names[0]])
@@ -146,7 +145,7 @@ from my_module import c
 b.foo()
 c.bar()
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertItemsEqual(
         import_utils.get_unused_import_aliases(tree),
         [tree.body[0].names[0]])
@@ -156,7 +155,7 @@ c.bar()
 from my_module import a, b
 b.foo()
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertItemsEqual(
         import_utils.get_unused_import_aliases(tree),
         [tree.body[0].names[0]])
@@ -168,7 +167,7 @@ import c as c_mod, d as unused_d_mod
 a_mod.foo()
 c_mod.foo()
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertItemsEqual(
         import_utils.get_unused_import_aliases(tree),
         [tree.body[0].names[1], tree.body[1].names[1]])
@@ -181,7 +180,7 @@ c_mod.foo()
 def foo():
   import bar
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertItemsEqual(
         import_utils.get_unused_import_aliases(tree), [])
 
@@ -192,7 +191,7 @@ class RemoveImportTest(test_utils.TestCase):
   # the alias we're trying to remove.
   def test_remove_just_alias(self):
     src = 'import a, b'
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     sc = scope.analyze(tree)
 
     unused_b_node = tree.body[0].names[1]
@@ -200,13 +199,13 @@ class RemoveImportTest(test_utils.TestCase):
     import_utils.remove_import_alias_node(sc, unused_b_node)
 
     self.assertEqual(len(tree.body), 1)
-    self.assertEqual(type(tree.body[0]), pasta.ast().Import)
+    self.assertEqual(type(tree.body[0]), ast.Import)
     self.assertEqual(len(tree.body[0].names), 1)
     self.assertEqual(tree.body[0].names[0].name, 'a')
 
   def test_remove_just_alias_import_from(self):
     src = 'from m import a, b'
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     sc = scope.analyze(tree)
 
     unused_b_node = tree.body[0].names[1]
@@ -214,13 +213,13 @@ class RemoveImportTest(test_utils.TestCase):
     import_utils.remove_import_alias_node(sc, unused_b_node)
 
     self.assertEqual(len(tree.body), 1)
-    self.assertEqual(type(tree.body[0]), pasta.ast().ImportFrom)
+    self.assertEqual(type(tree.body[0]), ast.ImportFrom)
     self.assertEqual(len(tree.body[0].names), 1)
     self.assertEqual(tree.body[0].names[0].name, 'a')
 
   def test_remove_full_import(self):
     src = 'import a'
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     sc = scope.analyze(tree)
 
     a_node = tree.body[0].names[0]
@@ -231,7 +230,7 @@ class RemoveImportTest(test_utils.TestCase):
 
   def test_remove_full_importfrom(self):
     src = 'from m import a'
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     sc = scope.analyze(tree)
 
     a_node = tree.body[0].names[0]
@@ -243,14 +242,14 @@ class RemoveImportTest(test_utils.TestCase):
 class AddImportTest(test_utils.TestCase):
 
   def test_add_normal_import(self):
-    tree = pasta.ast_parse('')
+    tree = ast.parse('')
     self.assertEqual(
         'a.b.c',
         import_utils.add_import(tree, 'a.b.c', from_import=False))
     self.assertEqual('import a.b.c\n', pasta.dump(tree))
 
   def test_add_normal_import_with_asname(self):
-    tree = pasta.ast_parse('')
+    tree = ast.parse('')
     self.assertEqual(
         'd',
         import_utils.add_import(
@@ -258,13 +257,13 @@ class AddImportTest(test_utils.TestCase):
     self.assertEqual('import a.b.c as d\n', pasta.dump(tree))
 
   def test_add_from_import(self):
-    tree = pasta.ast_parse('')
+    tree = ast.parse('')
     self.assertEqual(
         'c', import_utils.add_import(tree, 'a.b.c', from_import=True))
     self.assertEqual('from a.b import c\n', pasta.dump(tree))
 
   def test_add_from_import_with_asname(self):
-    tree = pasta.ast_parse('')
+    tree = ast.parse('')
     self.assertEqual(
         'd',
         import_utils.add_import(
@@ -272,13 +271,13 @@ class AddImportTest(test_utils.TestCase):
     self.assertEqual('from a.b import c as d\n', pasta.dump(tree))
 
   def test_add_single_name_from_import(self):
-    tree = pasta.ast_parse('')
+    tree = ast.parse('')
     self.assertEqual(
         'foo', import_utils.add_import(tree, 'foo', from_import=True))
     self.assertEqual('import foo\n', pasta.dump(tree))
 
   def test_add_single_name_from_import_with_asname(self):
-    tree = pasta.ast_parse('')
+    tree = ast.parse('')
     self.assertEqual(
         'bar',
         import_utils.add_import(
@@ -286,30 +285,30 @@ class AddImportTest(test_utils.TestCase):
     self.assertEqual('import foo as bar\n', pasta.dump(tree))
 
   def test_add_existing_import(self):
-    tree = pasta.ast_parse('from a.b import c')
+    tree = ast.parse('from a.b import c')
     self.assertEqual('c', import_utils.add_import(tree, 'a.b.c'))
     self.assertEqual('from a.b import c\n', pasta.dump(tree))
 
   def test_add_existing_import_aliased(self):
-    tree = pasta.ast_parse('from a.b import c as d')
+    tree = ast.parse('from a.b import c as d')
     self.assertEqual('d', import_utils.add_import(tree, 'a.b.c'))
     self.assertEqual('from a.b import c as d\n', pasta.dump(tree))
 
   def test_add_existing_import_aliased_with_asname(self):
-    tree = pasta.ast_parse('from a.b import c as d')
+    tree = ast.parse('from a.b import c as d')
     self.assertEqual(
         'd', import_utils.add_import(tree, 'a.b.c', asname='e'))
     self.assertEqual('from a.b import c as d\n', pasta.dump(tree))
 
   def test_add_existing_import_normal_import(self):
-    tree = pasta.ast_parse('import a.b.c')
+    tree = ast.parse('import a.b.c')
     self.assertEqual(
         'a.b',
         import_utils.add_import(tree, 'a.b', from_import=False))
     self.assertEqual('import a.b.c\n', pasta.dump(tree))
 
   def test_add_existing_import_normal_import_aliased(self):
-    tree = pasta.ast_parse('import a.b.c as d')
+    tree = ast.parse('import a.b.c as d')
     self.assertEqual(
         'a.b',
         import_utils.add_import(tree, 'a.b', from_import=False))
@@ -320,7 +319,7 @@ class AddImportTest(test_utils.TestCase):
                      pasta.dump(tree))
 
   def test_add_import_with_conflict(self):
-    tree = pasta.ast_parse('def c(): pass\n')
+    tree = ast.parse('def c(): pass\n')
     self.assertEqual(
         'c_1',
         import_utils.add_import(tree, 'a.b.c', from_import=True))
@@ -328,7 +327,7 @@ class AddImportTest(test_utils.TestCase):
                      pasta.dump(tree))
 
   def test_add_import_with_asname_with_conflict(self):
-    tree = pasta.ast_parse('def c(): pass\n')
+    tree = ast.parse('def c(): pass\n')
     self.assertEqual(
         'c_1',
         import_utils.add_import(
@@ -337,7 +336,7 @@ class AddImportTest(test_utils.TestCase):
                      pasta.dump(tree))
 
   def test_merge_from_import(self):
-    tree = pasta.ast_parse('from a.b import c')
+    tree = ast.parse('from a.b import c')
 
     # x is explicitly not merged
     self.assertEqual(
@@ -370,7 +369,7 @@ import c
 import b
 import d
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertTrue(import_utils.remove_duplicates(tree))
 
     self.assertEqual(len(tree.body), 4)
@@ -385,7 +384,7 @@ import a, b
 import b, c
 import d, a, e, f
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertTrue(import_utils.remove_duplicates(tree))
 
     self.assertEqual(len(tree.body), 3)
@@ -404,7 +403,7 @@ import d, a, e, f
 import a, b, c
 import b, c
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertTrue(import_utils.remove_duplicates(tree))
 
     self.assertEqual(len(tree.body), 1)
@@ -418,7 +417,7 @@ import b, c
 import a.b
 from a import b
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertFalse(import_utils.remove_duplicates(tree))
     self.assertEqual(len(tree.body), 2)
 
@@ -429,7 +428,7 @@ import a as ax
 import a as ax2
 import a as ax
 """
-    tree = pasta.ast_parse(src)
+    tree = ast.parse(src)
     self.assertTrue(import_utils.remove_duplicates(tree))
     self.assertEqual(len(tree.body), 3)
     self.assertEqual(tree.body[0].names[0].asname, None)

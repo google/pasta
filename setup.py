@@ -53,6 +53,5 @@ setup(
     ],
     install_requires=[
         'six',
-        'typed-ast',
     ],
 )

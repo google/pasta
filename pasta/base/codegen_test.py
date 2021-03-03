@@ -18,12 +18,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import os.path
 import unittest
 from six import with_metaclass
 import sys
-from typed_ast import ast27
-from typed_ast import ast3
 
 import pasta
 from pasta.base import codegen
@@ -36,7 +35,7 @@ TESTDATA_DIR = os.path.realpath(
 def _is_syntax_valid(filepath):
   with open(filepath, 'r') as f:
     try:
-      t = pasta.ast_parse(f.read())
+      t = ast.parse(f.read())
     except SyntaxError:
       return False
   return True
@@ -50,7 +49,7 @@ class AutoFormatTestMeta(type):
       def test(self):
         with open(input_file, 'r') as handle:
           src = handle.read()
-        t = pasta.ast_parse(src)
+        t = ast.parse(src)
         auto_formatted = pasta.dump(t)
         self.assertMultiLineEqual(src, auto_formatted)
 
@@ -75,19 +74,19 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
 
   def test_imports(self):
     src = 'from a import b\nimport c, d\nfrom ..e import f, g\n'
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     self.assertEqual(src, pasta.dump(t))
 
   @test_utils.requires_features(['exec_node'])
   def test_exec_node_default(self):
     src = 'exec foo in bar'
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     self.assertEqual('exec(foo, bar)\n', pasta.dump(t))
 
   @test_utils.requires_features(['bytes_node'])
   def test_bytes(self):
     src = "b'foo'"
-    t = pasta.ast_parse(src)
+    t = ast.parse(src)
     self.assertEqual("b'foo'\n", pasta.dump(t))
 
   def test_unicode_str(self):
@@ -114,7 +113,7 @@ def func():
     for indent in ('  ', '    ', '\t'):
       src = 'def a():\n' + indent + 'b\n'
       t = pasta.parse(src)
-      t.body.extend(pasta.ast_parse('def c(): d').body)
+      t.body.extend(ast.parse('def c(): d').body)
       self.assertEqual(pasta.dump(t), src + 'def c():\n' + indent + 'd\n')
 
   def test_globals_where_first_ident_reoccurs(self):

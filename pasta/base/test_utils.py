@@ -18,9 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import sys
-from typed_ast import ast27
-from typed_ast import ast3
 import unittest
 
 from six.moves import zip
@@ -30,7 +29,7 @@ import pasta
 
 class TestCase(unittest.TestCase):
 
-  def checkAstsEqual(self, a, b, py_ver=sys.version_info[:2]):
+  def checkAstsEqual(self, a, b, astlib=ast):
     """Compares two ASTs and fails if there are differences.
 
     Ignores `ctx` fields and formatting info.
@@ -40,8 +39,7 @@ class TestCase(unittest.TestCase):
     try:
       self.assertIsNotNone(a)
       self.assertIsNotNone(b)
-      for node_a, node_b in zip(
-          pasta.ast_walk(a, py_ver), pasta.ast_walk(b, py_ver)):
+      for node_a, node_b in zip(astlib.walk(a), astlib.walk(b)):
         self.assertEqual(type(node_a), type(node_b))
         for field in type(node_a)()._fields:
           a_val = getattr(node_a, field, None)
@@ -49,48 +47,56 @@ class TestCase(unittest.TestCase):
 
           if isinstance(a_val, list):
             for item_a, item_b in zip(a_val, b_val):
-              self.checkAstsEqual(item_a, item_b, py_ver)
-          elif isinstance(a_val, (ast27.AST, ast3.AST)) or isinstance(
-              b_val, (ast27.AST, ast3.AST)):
-            if (not isinstance(a_val, (ast27.Load, ast3.Load, ast27.Store,
-                                       ast3.Store, ast27.Param, ast3.Param)) and
-                not isinstance(b_val, (ast27.Load, ast3.Load, ast27.Store,
-                                       ast3.Store, ast27.Param, ast3.Param))):
+              self.checkAstsEqual(item_a, item_b, astlib)
+          elif isinstance(a_val, astlib.AST) or isinstance(
+              b_val, astlib.AST):
+            if (not isinstance(a_val,
+                               (astlib.Load, astlib.Store, astlib.Param)) and
+                not isinstance(b_val,
+                               (astlib.Load, astlib.Store, astlib.Param))):
               self.assertIsNotNone(a_val)
               self.assertIsNotNone(b_val)
-              self.checkAstsEqual(a_val, b_val, py_ver)
+              self.checkAstsEqual(a_val, b_val, astlib)
           else:
             self.assertEqual(a_val, b_val)
     except AssertionError as ae:
       self.fail('ASTs differ:\n%s\n  !=\n%s\n\n' %
-                (pasta.ast_dump(a), pasta.ast_dump(b)))
+                (astlib.dump(a), astlib.dump(b)))
 
 
 if not hasattr(TestCase, 'assertItemsEqual'):
   setattr(TestCase, 'assertItemsEqual', TestCase.assertCountEqual)
 
 
-def requires_features(features, py_ver=sys.version_info[:2]):
+def requires_features(features, astlib=ast):
   return unittest.skipIf(
-      any(not supports_feature(feature, py_ver) for feature in features),
+      any(not supports_feature(feature, astlib) for feature in features),
       ('Tests features which are not supported by this version of python %s. ' %
-       (py_ver,)) +
+       (astlib,)) +
       ('Missing: %r' %
-       ([f for f in features if not supports_feature(f, py_ver)])))
+       ([f for f in features if not supports_feature(f, astlib)])))
 
 
-def supports_feature(feature, py_ver=sys.version_info[:2]):
-  if feature == 'ur_str_literal':
-    return py_ver < (3, 0)
+def supports_feature(feature, astlib=ast):
   if feature == 'bytes_node':
-    return py_ver >= (3, 0)
+    return hasattr(astlib, 'Bytes') and issubclass(astlib.Bytes, astlib.AST)
   if feature == 'exec_node':
-    return py_ver < (3, 0)
+    return hasattr(astlib, 'Exec') and issubclass(astlib.Exec, astlib.AST)
   if feature == 'type_annotations':
-    return py_ver >= (3, 0)
+    return _try_to_parse('def foo(bar: str=123) -> None: pass', astlib)
   if feature == 'fstring':
-    return py_ver >= (3, 0)
+    return hasattr(astlib, 'JoinedStr') and issubclass(astlib.JoinedStr, astlib.AST)
   # Python 2 counts tabs as 8 spaces for indentation
   if feature == 'mixed_tabs_spaces':
-    return py_ver < (3, 0)
+    return _try_to_parse('def a():	b\n       c', astlib)
+  if feature == 'ur_str_literal':
+    return _try_to_parse('ur""', astlib)
   return False
+
+
+def _try_to_parse(src, astlib):
+  try:
+    astlib.parse(src)
+  except SyntaxError:
+    return False
+  return True

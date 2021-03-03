@@ -18,10 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import sys
-import typed_ast
-from typed_ast import ast27
-from typed_ast import ast3
 import re
 
 import pasta
@@ -32,34 +30,30 @@ from pasta.base import formatting as fmt
 _CODING_PATTERN = re.compile('^[ \t\v]*#.*?coding[:=][ \t]*([-_.a-zA-Z0-9]+)')
 
 
-_AST_OP_NODES = (ast27.And, ast27.Or, ast27.Eq, ast27.NotEq, ast27.Is,
-                 ast27.IsNot, ast27.In, ast27.NotIn, ast27.Lt, ast27.LtE,
-                 ast27.Gt, ast27.GtE, ast27.Add, ast27.Sub, ast27.Mult,
-                 ast27.Div, ast27.Mod, ast27.Pow, ast27.LShift, ast27.RShift,
-                 ast27.BitAnd, ast27.BitOr, ast27.BitXor, ast27.FloorDiv,
-                 ast27.Invert, ast27.Not, ast27.UAdd, ast27.USub, ast3.And,
-                 ast3.Or, ast3.Eq, ast3.NotEq, ast3.Is, ast3.IsNot, ast3.In,
-                 ast3.NotIn, ast3.Lt, ast3.LtE, ast3.Gt, ast3.GtE, ast3.Add,
-                 ast3.Sub, ast3.Mult, ast3.Div, ast3.Mod, ast3.Pow, ast3.LShift,
-                 ast3.RShift, ast3.BitAnd, ast3.BitOr, ast3.BitXor,
-                 ast3.FloorDiv, ast3.Invert, ast3.Not, ast3.UAdd, ast3.USub)
+def _ast_op_nodes(astlib):
+  return (astlib.And, astlib.Or, astlib.Eq, astlib.NotEq, astlib.Is,
+          astlib.IsNot, astlib.In, astlib.NotIn, astlib.Lt, astlib.LtE,
+          astlib.Gt, astlib.GtE, astlib.Add, astlib.Sub, astlib.Mult,
+          astlib.Div, astlib.Mod, astlib.Pow, astlib.LShift, astlib.RShift,
+          astlib.BitAnd, astlib.BitOr, astlib.BitXor, astlib.FloorDiv,
+          astlib.Invert, astlib.Not, astlib.UAdd, astlib.USub)
 
 
-def parse(src, py_ver=sys.version_info[:2]):
-  """Replaces typed_ast.parse; ensures additional properties on the parsed tree.
+def parse(src, astlib=ast):
+  """Replaces ast.parse; ensures additional properties on the parsed tree.
 
   This enforces the assumption that each node in the ast is unique.
   """
 
-  class _TreeNormalizer(pasta.ast(py_ver).NodeTransformer):
+  class _TreeNormalizer(astlib.NodeTransformer):
     """Replaces all op nodes with unique instances."""
 
     def visit(self, node):
-      if isinstance(node, _AST_OP_NODES):
+      if isinstance(node, _ast_op_nodes(astlib)):
         return node.__class__()
       return super(_TreeNormalizer, self).visit(node)
 
-  tree=pasta.ast(py_ver).parse(sanitize_source(src))
+  tree=astlib.parse(sanitize_source(src))
   _TreeNormalizer().visit(tree)
   return tree
 
@@ -76,16 +70,16 @@ def sanitize_source(src):
   return ''.join(src_lines)
 
 
-def find_nodes_by_type(node, accept_types, py_ver=sys.version_info[:2]):
+def find_nodes_by_type(node, accept_types, astlib=ast):
   visitor = get_find_node_visitor((lambda n: isinstance(n, accept_types)),
-                                  py_ver=py_ver)
+                                  astlib=astlib)
   visitor.visit(node)
   return visitor.results
 
 
-def get_find_node_visitor(condition, py_ver=sys.version_info[:2]):
+def get_find_node_visitor(condition, astlib=ast):
 
-  class FindNodeVisitor(pasta.ast(py_ver).NodeVisitor):
+  class FindNodeVisitor(astlib.NodeVisitor):
 
     def __init__(self, condition):
       self._condition = condition
@@ -99,7 +93,7 @@ def get_find_node_visitor(condition, py_ver=sys.version_info[:2]):
   return FindNodeVisitor(condition)
 
 
-def get_last_child(node):
+def get_last_child(node, astlib=ast):
   """Get the last child node of a block statement.
 
   The input must be a block statement (e.g. ast.For, ast.With, etc).
@@ -107,53 +101,51 @@ def get_last_child(node):
   Examples:
     1. with first():
          second()
-         last()
+         last
 
     2. try:
          first()
        except:
          second()
        finally:
-         last()
+         last
 
   In both cases, the last child is the node for `last`.
   """
-  if isinstance(node, ast27.Module) or isinstance(node, ast3.Module):
+  if isinstance(node, astlib.Module):
     try:
       return node.body[-1]
     except IndexError:
       return None
-  if isinstance(node, ast27.If) or isinstance(node, ast3.If):
-    if (len(node.orelse) == 1 and isinstance(node.orelse[0],
-                                             (ast27.If, ast3.If)) and
+  if isinstance(node, astlib.If):
+    if (len(node.orelse) == 1 and isinstance(node.orelse[0], astlib.If) and
         fmt.get(node.orelse[0], 'is_elif')):
-      return get_last_child(node.orelse[0])
+      return get_last_child(node.orelse[0], astlib)
     if node.orelse:
       return node.orelse[-1]
-  elif isinstance(node, ast27.With) or isinstance(node, ast3.With):
-    if (len(node.body) == 1 and isinstance(node.body[0],
-                                           (ast27.With, ast3.With)) and
+  elif isinstance(node, astlib.With):
+    if (len(node.body) == 1 and isinstance(node.body[0], astlib.With) and
         fmt.get(node.body[0], 'is_continued')):
-      return get_last_child(node.body[0])
-  elif isinstance(node, ast3.Try):
+      return get_last_child(node.body[0], astlib)
+  elif hasattr(astlib, 'Try') and isinstance(node, astlib.Try):
     if node.finalbody:
       return node.finalbody[-1]
     if node.orelse:
       return node.orelse[-1]
-  elif isinstance(node, ast27.TryFinally):
+  elif hasattr(astlib, 'TryFinally') and isinstance(node, astlib.TryFinally):
     if node.finalbody:
       return node.finalbody[-1]
-  elif isinstance(node, ast27.TryExcept):
+  elif hasattr(astlib, 'TryExcept') and isinstance(node, astlib.TryExcept):
     if node.orelse:
       return node.orelse[-1]
     if node.handlers:
-      return get_last_child(node.handlers[-1])
+      return get_last_child(node.handlers[-1], astlib)
   return node.body[-1]
 
 
-def remove_child(parent, child, py_ver=sys.version_info[:2]):
+def remove_child(parent, child, astlib=ast):
 
-  for _, field_value in pasta.ast(py_ver).iter_fields(parent):
+  for _, field_value in astlib.iter_fields(parent):
     if isinstance(field_value, list) and child in field_value:
       field_value.remove(child)
       return
@@ -187,9 +179,8 @@ def replace_child(parent, node, replace_with):
   raise errors.InvalidAstError('Node %r is not a child of %r' % (node, parent))
 
 
-def has_docstring(node):
+def has_docstring(node, astlib=ast):
   return (hasattr(node, 'body') and node.body and
-          (isinstance(node.body[0], ast27.Expr) or
-           isinstance(node.body[0], ast3.Expr)) and
-          (isinstance(node.body[0].value, ast27.Str) or
-           isinstance(node.body[0].value, ast3.Str)))
+          (isinstance(node.body[0], astlib.Expr) or (
+           hasattr(node.body[0], 'value') and
+           isinstance(node.body[0].value, astlib.Str))))

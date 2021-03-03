@@ -15,7 +15,7 @@
 (1, 6)       arg b                	prefix=||	suffix=||	indent=||
 (1, 9)       arg c                	prefix=||	suffix=||	indent=||
 (1, 17)      arg d                	prefix=||	suffix=||	indent=||
-(1, 24)      Num                  	prefix=||	suffix=||	indent=||
+(1, 24)      Constant             	prefix=||	suffix=||	indent=||
 (4, 7)       arg f                	prefix=||	suffix=||	indent=||
 (4, 23)      arg j                	prefix=||	suffix=||	indent=||
 (4, 33)      arg k                	prefix=||	suffix=||	indent=||
@@ -60,7 +60,7 @@
 (7, 34)      Name q               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (10, 15)     Name t               	prefix=||	suffix=||	indent=||
-(10, 18)     Ellipsis             	prefix=||	suffix=||	indent=||
+(10, 18)     Constant             	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

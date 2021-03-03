@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
+import ast
 import contextlib
 import functools
 import itertools
@@ -27,9 +28,6 @@ import six
 from six.moves import zip
 import sys
 import token
-import typed_ast
-from typed_ast import ast27
-from typed_ast import ast3
 
 import pasta
 from pasta.base import ast_constants
@@ -94,33 +92,36 @@ def module(f):
   return _gen_wrapper(f, scope=False, comment=True)
 
 
-def block_statement(f):
-  """Decorates a function where the node is a statement with children."""
-
-  @contextlib.wraps(f)
-  def wrapped(self, node, *args, **kwargs):
-    self.prefix(node, default=self._indent)
-    f(self, node, *args, **kwargs)
-    if hasattr(self, 'block_suffix'):
-      last_child = ast_utils.get_last_child(node)
-      # Workaround for ast.Module which does not have a lineno
-      if last_child and last_child.lineno != getattr(node, 'lineno', 0):
-        indent = (fmt.get(last_child, 'prefix') or '\n').splitlines()[-1]
-        self.block_suffix(node, indent)
-    else:
-      self.suffix(node, comment=True)
-
-  return wrapped
-
-
 # ==============================================================================
 # == NodeVisitors for annotating an AST                                       ==
 # ==============================================================================
 
 
-def get_base_visitor(py_ver=sys.version_info[:2]):
+def get_base_visitor(astlib=ast):
 
-  class BaseVisitor(pasta.ast(py_ver).NodeVisitor):
+  node_type_to_tokens = ast_constants.get_node_type_to_tokens(astlib)
+
+
+  def block_statement(f):
+    """Decorates a function where the node is a statement with children."""
+
+    @contextlib.wraps(f)
+    def wrapped(self, node, *args, **kwargs):
+      self.prefix(node, default=self._indent)
+      f(self, node, *args, **kwargs)
+      if hasattr(self, 'block_suffix'):
+        last_child = ast_utils.get_last_child(node, astlib=astlib)
+        # Workaround for ast.Module which does not have a lineno
+        if last_child and last_child.lineno != getattr(node, 'lineno', 0):
+          indent = (fmt.get(last_child, 'prefix') or '\n').splitlines()[-1]
+          self.block_suffix(node, indent)
+      else:
+        self.suffix(node, comment=True)
+
+    return wrapped
+
+
+  class BaseVisitor(astlib.NodeVisitor):
     """Walks a syntax tree in the order it appears in code.
 
     This class has a dual-purpose. It is implemented (in this file) for annotating
@@ -257,8 +258,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
         self.visit(stmt)
 
       if node.orelse:
-        if (len(node.orelse) == 1 and isinstance(node.orelse[0],
-                                                 (ast27.If, ast3.If)) and
+        if (len(node.orelse) == 1 and isinstance(node.orelse[0], astlib.If) and
             self.check_is_elif(node.orelse[0])):
           fmt.set(node.orelse[0], 'is_elif', True)
           self.visit(node.orelse[0])
@@ -349,14 +349,14 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
         self.attr(node, 'with_as', [self.ws, 'as', self.ws], default=' as ')
         self.visit(node.optional_vars)
 
-        if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
-          node.body[0].is_continued = True
-          self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
-        else:
-          self.attr(
-              node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
-        for stmt in self.indented(node, 'body'):
-          self.visit(stmt)
+      if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
+        node.body[0].is_continued = True
+        self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
+      else:
+        self.attr(
+            node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
+      for stmt in self.indented(node, 'body'):
+        self.visit(stmt)
 
     def visit_AsyncWith(self, node):
       return self.visit_With(node, is_async=True)
@@ -481,8 +481,8 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
     @block_statement
     def visit_TryFinally(self, node):
-      # Try with except and finally is a TryFinally with the first statement as a
-      # TryExcept in Python2
+      # Try with except and finally is a TryFinally with the first statement as
+      # a TryExcept in Python2
       self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
                 default='try:\n')
       # TODO(soupytwist): Find a cleaner solution for differentiating this.
@@ -495,8 +495,8 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
     @block_statement
     def visit_TryFinally(self, node):
-      # Try with except and finally is a TryFinally with the first statement as a
-      # TryExcept in Python2
+      # Try with except and finally is a TryFinally with the first statement as
+      # a TryExcept in Python2
       self.attr(
           node,
           'open_try', ['try', self.ws, ':', self.ws_oneline],
@@ -573,7 +573,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
             default=' as ',
             separate_before=True)
       if node.name:
-        if isinstance(node.name, (ast27.AST, ast3.AST)):
+        if isinstance(node.name, astlib.AST):
           self.visit(node.name)
         else:
           self.token(node.name)
@@ -633,7 +633,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
     @statement
     def visit_AugAssign(self, node):
       self.visit(node.target)
-      op_token = '%s=' % ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+      op_token = '%s=' % node_type_to_tokens[type(node.op)][0]
       self.attr(
           node,
           'operator', [self.ws, op_token, self.ws],
@@ -810,7 +810,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
     @expression
     def visit_BinOp(self, node):
-      op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+      op_symbol = node_type_to_tokens[type(node.op)][0]
       self.visit(node.left)
       self.attr(
           node,
@@ -821,7 +821,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
     @expression
     def visit_BoolOp(self, node):
-      op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+      op_symbol = node_type_to_tokens[type(node.op)][0]
       for i, value in enumerate(node.values):
         self.visit(value)
         if value is not node.values[-1]:
@@ -839,7 +839,8 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
         # python <3.5: starargs and kwargs are in separate fields
         # python 3.5+: starargs args included as a Starred nodes in the arguments
         #              and kwargs are included as keywords with no argument name.
-        if py_ver >= (3, 5):
+        if hasattr(astlib, 'Starred') and not (
+            hasattr(node, 'starargs') or hasattr(node, 'kwargs')):
           any_args = self.visit_Call_arguments35(node)
         else:
           any_args = self.visit_Call_arguments(node)
@@ -850,7 +851,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
       def arg_location(tup):
         arg = tup[1]
-        if isinstance(arg, (ast27.keyword, ast3.keyword)):
+        if isinstance(arg, astlib.keyword):
           arg = arg.value
         return (getattr(arg, 'lineno', 0), getattr(arg, 'col_offset', 0))
 
@@ -879,19 +880,20 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
         """Old-style comparator for sorting args."""
 
         def is_arg(a):
-          return not isinstance(a, (ast27.keyword, ast3.keyword, ast3.Starred))
+          return (not isinstance(a, astlib.keyword) and
+                  not (hasattr(astlib, 'Starred') and isinstance(a, astlib.Starred)))
 
         # No kwarg can come before a regular arg (but Starred can be wherever)
-        if is_arg(a1) and isinstance(a2, (ast27.keyword, ast3.keyword)):
+        if is_arg(a1) and isinstance(a2, astlib.keyword):
           return -1
-        elif is_arg(a2) and isinstance(a1, (ast27.keyword, ast3.keyword)):
+        elif is_arg(a2) and isinstance(a1, astlib.keyword):
           return 1
 
         # If no lineno or col_offset on one of the args, they compare as equal
         # (since sorting is stable, this should leave them mostly where they
         # were in the initial list).
         def get_pos(a):
-          if isinstance(a, (ast27.keyword, ast3.keyword)):
+          if isinstance(a, astlib.keyword):
             a = a.value
           return (getattr(a, 'lineno', None), getattr(a, 'col_offset', None))
 
@@ -1096,7 +1098,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
     @expression
     def visit_UnaryOp(self, node):
-      op_symbol = ast_constants.NODE_TYPE_TO_TOKENS[type(node.op)][0]
+      op_symbol = node_type_to_tokens[type(node.op)][0]
       self.attr(
           node, 'op', [op_symbol, self.ws], default=op_symbol, deps=('op',))
       self.visit(node.operand)
@@ -1110,88 +1112,88 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
       self.token('...')
 
     def visit_And(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
+      self.token(node_type_to_tokens[type(node)][0], separate_before=True)
 
     def visit_Or(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
+      self.token(node_type_to_tokens[type(node)][0], separate_before=True)
 
     def visit_Add(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Sub(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Mult(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Div(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_MatMult(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Mod(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Pow(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_LShift(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_RShift(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_BitAnd(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_BitOr(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_BitXor(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_FloorDiv(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Invert(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Not(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_UAdd(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_USub(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Eq(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_NotEq(self, node):
       self.attr(node, 'operator', [self.one_of_symbols('!=', '<>')])
 
     def visit_Lt(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_LtE(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Gt(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_GtE(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0])
+      self.token(node_type_to_tokens[type(node)][0])
 
     def visit_Is(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
+      self.token(node_type_to_tokens[type(node)][0], separate_before=True)
 
     def visit_IsNot(self, node):
       self.attr(node, 'content', ['is', self.ws, 'not'], default='is not', separate_before=True)
 
     def visit_In(self, node):
-      self.token(ast_constants.NODE_TYPE_TO_TOKENS[type(node)][0], separate_before=True)
+      self.token(node_type_to_tokens[type(node)][0], separate_before=True)
 
     def visit_NotIn(self, node):
       self.attr(node, 'content', ['not', self.ws, 'in'], default='not in', separate_before=True)
@@ -1258,7 +1260,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
       if node.vararg:
         self.attr(node, 'vararg_prefix', [self.ws, '*', self.ws], default='*')
-        if isinstance(node.vararg, (ast27.AST, ast3.AST)):
+        if isinstance(node.vararg, astlib.AST):
           self.visit(node.vararg)
         else:
           self.token(node.vararg)
@@ -1284,7 +1286,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
 
       if node.kwarg:
         self.attr(node, 'kwarg_prefix', [self.ws, '**', self.ws], default='**')
-        if isinstance(node.kwarg, (ast27.AST, ast3.AST)):
+        if isinstance(node.kwarg, astlib.AST):
           self.visit(node.kwarg)
         else:
           self.token(node.kwarg)
@@ -1353,8 +1355,7 @@ def get_base_visitor(py_ver=sys.version_info[:2]):
         return False
       if getattr(node.step, 'is_explicit_step', False):
         return True
-      return not (isinstance(node.step, (ast27.Name, ast3.Name)) and
-                  node.step.id == 'None')
+      return not (isinstance(node.step, astlib.Name) and node.step.id == 'None')
 
     @fstring_expression
     def visit_FormattedValue(self, node):
@@ -1377,9 +1378,9 @@ class AnnotationError(Exception):
   """An exception for when we failed to annotate the tree."""
 
 
-def get_ast_annotator(py_ver=sys.version_info[:2]):
+def get_ast_annotator(astlib=ast):
 
-  class AstAnnotator(get_base_visitor(py_ver)):
+  class AstAnnotator(get_base_visitor(astlib)):
 
     def __init__(self, source):
       super(AstAnnotator, self).__init__()
@@ -1456,7 +1457,7 @@ def get_ast_annotator(py_ver=sys.version_info[:2]):
       """Annotate a Str node with the exact string format."""
       # Python 2 string literals may have a ur prefix, which is parsed as a
       # separate token, so consume it directly for the fmt field.
-      if isinstance(node, ast27.Str) and self.tokens.peek().src.upper() == 'UR':
+      if isinstance(node, astlib.Str) and self.tokens.peek().src.upper() == 'UR':
         self.attr(
             node, 'fmt', [self.tokens.peek().src], deps=('s',), default=node.s)
       self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
@@ -1472,7 +1473,9 @@ def get_ast_annotator(py_ver=sys.version_info[:2]):
       """Annotate a JoinedStr node with the fstr formatting metadata."""
       fstr_iter = self.tokens.fstr()()
       res = ''
-      values = (v for v in node.values if isinstance(v, (ast3.FormattedValue)))
+      values = (v for v in node.values
+                if (hasattr(astlib, 'FormattedValue') and
+                    isinstance(v, (astlib.FormattedValue))))
       while True:
         res_part, tg = next(fstr_iter)
         res += res_part
@@ -1503,17 +1506,16 @@ def get_ast_annotator(py_ver=sys.version_info[:2]):
     def check_is_elif(self, node):
       """Return True iff the If node is an `elif` in the source."""
       next_tok = self.tokens.next_name()
-      return isinstance(node, (ast27.If, ast3.If)) and next_tok.src == 'elif'
+      return isinstance(node, astlib.If) and next_tok.src == 'elif'
 
     def check_is_continued_try(self, node):
       """Return True iff the TryExcept node is a continued `try` in the source."""
-      return (isinstance(node, (ast27.TryExcept)) and
+      return (isinstance(node, (astlib.TryExcept)) and
               self.tokens.peek_non_whitespace().src != 'try')
 
     def check_is_continued_with(self, node):
       """Return True iff the With node is a continued `with` in the source."""
-      return isinstance(
-          node, (ast27.With, ast3.With)) and self.tokens.peek().src == ','
+      return isinstance(node, astlib.With) and self.tokens.peek().src == ','
 
     def check_slice_includes_step(self, node):
       """Helper function for Slice node to determine whether to visit its step."""

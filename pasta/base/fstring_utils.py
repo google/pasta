@@ -18,15 +18,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from typed_ast import ast27
-from typed_ast import ast3
+import ast
 
 _FSTRING_VAL_PLACEHOLDER = '__pasta_fstring_val_{index}__'
 
 
-def get_formatted_values(joined_str):
+def get_formatted_values(joined_str, astlib=ast):
   """Get all FormattedValues from a JoinedStr, in order."""
-  return [v for v in joined_str.values if isinstance(v, ast3.FormattedValue)]
+  return [v for v in joined_str.values
+          if hasattr(astlib, 'FormattedValue')
+          and isinstance(v, astlib.FormattedValue)]
 
 
 def placeholder(val_index):
