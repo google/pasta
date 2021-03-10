@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import ast
 import sys
 import unittest
 
@@ -26,6 +27,8 @@ from pasta.augment import errors
 from pasta.base import ast_utils
 from pasta.base import codegen
 from pasta.base import test_utils
+
+astlib = getattr(pasta, 'TEST_ASTLIB', ast)
 
 
 class UtilsTest(test_utils.TestCase):
@@ -64,13 +67,13 @@ class C():
   def g(x):
     return x + 3
 """
-    tree = pasta.parse(src)
+    tree = pasta.parse(src, astlib=astlib)
     class_node = tree.body[0]
     meth1_node = class_node.body[0]
 
-    ast_utils.remove_child(class_node, meth1_node)
+    ast_utils.remove_child(class_node, meth1_node, astlib=astlib)
 
-    result = pasta.dump(tree)
+    result = pasta.dump(tree, astlib=astlib)
     expected = """\
 class C():
   def g(x):
@@ -80,13 +83,13 @@ class C():
 
   def testRemoveAlias(self):
     src = "from a import b, c"
-    tree = pasta.parse(src)
+    tree = pasta.parse(src, astlib=astlib)
 
     import_node = tree.body[0]
     alias1 = import_node.names[0]
-    ast_utils.remove_child(import_node, alias1)
+    ast_utils.remove_child(import_node, alias1, astlib=astlib)
 
-    self.assertEqual(pasta.dump(tree), "from a import c")
+    self.assertEqual(pasta.dump(tree, astlib=astlib), "from a import c")
 
   def testRemoveFromBlock(self):
     src = """\
@@ -94,33 +97,34 @@ if a:
   print("foo!")
   x = 1
 """
-    tree = pasta.parse(src)
+    tree = pasta.parse(src, astlib=astlib)
     if_block = tree.body[0]
     print_stmt = if_block.body[0]
-    ast_utils.remove_child(if_block, print_stmt)
+    ast_utils.remove_child(if_block, print_stmt, astlib=astlib)
 
     expected = """\
 if a:
   x = 1
 """
-    self.assertEqual(pasta.dump(tree), expected)
+    self.assertEqual(pasta.dump(tree, astlib=astlib), expected)
 
   def testReplaceChildInBody(self):
     src = 'def foo():\n  a = 0\n  a += 1 # replace this\n  return a\n'
-    replace_with = pasta.parse('foo(a + 1)  # trailing comment\n').body[0]
+    replace_with = pasta.parse('foo(a + 1)  # trailing comment\n',
+                               astlib=astlib).body[0]
     expected = 'def foo():\n  a = 0\n  foo(a + 1) # replace this\n  return a\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
 
     parent = t.body[0]
     node_to_replace = parent.body[1]
     ast_utils.replace_child(parent, node_to_replace, replace_with)
 
-    self.assertEqual(expected, pasta.dump(t))
+    self.assertEqual(expected, pasta.dump(t, astlib=astlib))
 
   def testReplaceChildInvalid(self):
     src = 'def foo():\n  return 1\nx = 1\n'
     replace_with = pasta.parse('bar()').body[0]
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
 
     parent = t.body[0]
     node_to_replace = t.body[1]

@@ -1,5 +1,5 @@
 # coding=utf-8
-"""Tests for generating code from a non-annotated ast."""
+"""Tests for generating code from a non-annotated astlib."""
 # Copyright 2017 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -31,11 +31,13 @@ from pasta.base import test_utils
 TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
 
+astlib = getattr(pasta, 'TEST_ASTLIB', ast)
+
 
 def _is_syntax_valid(filepath):
   with open(filepath, 'r') as f:
     try:
-      t = ast.parse(f.read())
+      t = astlib.parse(f.read())
     except SyntaxError:
       return False
   return True
@@ -49,8 +51,8 @@ class AutoFormatTestMeta(type):
       def test(self):
         with open(input_file, 'r') as handle:
           src = handle.read()
-        t = ast.parse(src)
-        auto_formatted = pasta.dump(t)
+        t = astlib.parse(src)
+        auto_formatted = pasta.dump(t, astlib=astlib)
         self.assertMultiLineEqual(src, auto_formatted)
 
       return test
@@ -74,31 +76,31 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
 
   def test_imports(self):
     src = 'from a import b\nimport c, d\nfrom ..e import f, g\n'
-    t = ast.parse(src)
-    self.assertEqual(src, pasta.dump(t))
+    t = astlib.parse(src)
+    self.assertEqual(src, pasta.dump(t, astlib=astlib))
 
   @test_utils.requires_features(['exec_node'])
   def test_exec_node_default(self):
     src = 'exec foo in bar'
-    t = ast.parse(src)
-    self.assertEqual('exec(foo, bar)\n', pasta.dump(t))
+    t = astlib.parse(src)
+    self.assertEqual('exec(foo, bar)\n', pasta.dump(t, astlib=astlib))
 
   @test_utils.requires_features(['bytes_node'])
   def test_bytes(self):
     src = "b'foo'"
-    t = ast.parse(src)
-    self.assertEqual("b'foo'\n", pasta.dump(t))
+    t = astlib.parse(src)
+    self.assertEqual("b'foo'\n", pasta.dump(t, astlib=astlib))
 
   def test_unicode_str(self):
     src = "u'foo'"
-    t = pasta.parse(src)
-    self.assertEqual("u'foo'", pasta.dump(t))
+    t = pasta.parse(src, astlib=astlib)
+    self.assertEqual("u'foo'", pasta.dump(t, astlib=astlib))
 
   @test_utils.requires_features(['ur_str_literal'])
   def test_unicode_raw_str(self):
     src = "ur'foo'"
-    t = pasta.parse(src)
-    self.assertEqual("ur'foo'", pasta.dump(t))
+    t = pasta.parse(src, astlib=astlib)
+    self.assertEqual("ur'foo'", pasta.dump(t, astlib=astlib))
 
   @test_utils.requires_features(['bytes_node'])
   def test_args(self):
@@ -106,33 +108,33 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
 def func():
   offset_multi = lambda *a: foo(*a)
   add_multi = lambda *a, **k: bar(*a, **k)"""
-    t = pasta.parse(src)
-    self.assertEqual(src, pasta.dump(t))
+    t = pasta.parse(src, astlib=astlib)
+    self.assertEqual(src, pasta.dump(t, astlib=astlib))
 
   def test_default_indentation(self):
     for indent in ('  ', '    ', '\t'):
       src = 'def a():\n' + indent + 'b\n'
-      t = pasta.parse(src)
-      t.body.extend(ast.parse('def c(): d').body)
-      self.assertEqual(pasta.dump(t), src + 'def c():\n' + indent + 'd\n')
+      t = pasta.parse(src, astlib=astlib)
+      t.body.extend(astlib.parse('def c(): d').body)
+      self.assertEqual(pasta.dump(t, astlib=astlib), src + 'def c():\n' + indent + 'd\n')
 
   def test_globals_where_first_ident_reoccurs(self):
     src = 'global a, b, a'
-    t = pasta.parse(src)
-    self.assertEqual('global a, b, a', pasta.dump(t))
+    t = pasta.parse(src, astlib=astlib)
+    self.assertEqual('global a, b, a', pasta.dump(t, astlib=astlib))
 
   def test_compare_where_separator_whitespace_deleted(self):
     src = "if a     in      b:\n  pass"
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     t.body[0].test.left.__pasta__['suffix'] = ''
     t.body[0].test.__pasta__['op_suffix_0'] = ''
-    self.assertEqual("if a in b:\n  pass", pasta.dump(t))
+    self.assertEqual("if a in b:\n  pass", pasta.dump(t, astlib=astlib))
 
   def test_except_where_separator_whitespace_deleted(self):
     src = "try:\n  pass\nexcept Type      as    var:\n  pass"
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     t.body[0].handlers[0].type.__pasta__['suffix'] = ''
-    self.assertEqual("try:\n  pass\nexcept Type as    var:\n  pass", pasta.dump(t))
+    self.assertEqual("try:\n  pass\nexcept Type as    var:\n  pass", pasta.dump(t, astlib=astlib))
 
 
 if __name__ == '__main__':

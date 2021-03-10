@@ -31,7 +31,7 @@ class InlineError(Exception):
 
 def inline_name(t, name, astlib=ast):
   """Inline a constant name into a module."""
-  sc = scope.analyze(t)
+  sc = scope.analyze(t, astlib=astlib)
   name_node = sc.names[name]
 
   # The name must be a Name node (not a FunctionDef, etc.)

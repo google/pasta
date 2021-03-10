@@ -198,8 +198,9 @@ class TokenGenerator(object):
       prev_loc = self._loc
     return result
 
-  def open_scope(self, node, single_paren=False):
+  def open_scope(self, node, single_paren=False, astlib=None):
     """Open a parenthesized scope on the given node."""
+    assert astlib is not None
     result = ''
     parens = []
     start_i = self._i
@@ -233,7 +234,7 @@ class TokenGenerator(object):
       # Add each paren onto the stack
       for paren in parens:
         self._parens.append(paren)
-        self._scope_stack.append(_scope_helper(node))
+        self._scope_stack.append(_scope_helper(node, astlib))
     else:
       # No parens were encountered, then reset like this method did nothing
       self._i = start_i
@@ -300,9 +301,10 @@ class TokenGenerator(object):
       raise ValueError('Hint value negative')
 
   @contextlib.contextmanager
-  def scope(self, node, attr=None, trailing_comma=False):
+  def scope(self, node, attr=None, trailing_comma=False, astlib=None):
     """Context manager to handle a parenthesized scope."""
-    self.open_scope(node, single_paren=(attr is not None))
+    assert astlib is not None
+    self.open_scope(node, single_paren=(attr is not None), astlib=astlib)
     yield
     if attr:
       self.close_scope(node, prefix_attr=attr + '_prefix',
@@ -504,7 +506,7 @@ class TokenGenerator(object):
     self._loc = prev_loc
 
 
-def _scope_helper(node):
+def _scope_helper(node, astlib):
   """Get the closure of nodes that could begin a scope at this point.
 
   For instance, when encountering a `(` when parsing a BinOp node, this could
@@ -515,36 +517,35 @@ def _scope_helper(node):
         ^                  ^                  ^
 
   Arguments:
-    node: (ast.AST) Node encountered when opening a scope.
+    node: (astlib.AST) Node encountered when opening a scope.
 
   Returns:
     A closure of nodes which that scope might apply to.
   """
-  classname = type(node).__name__
-  if classname == 'Attribute':
-    return (node,) + _scope_helper(node.value)
-  if classname == 'Subscript':
-    return (node,) + _scope_helper(node.value)
-  if classname == 'Assign':
-    return (node,) + _scope_helper(node.targets[0])
-  if classname == 'AugAssign':
-    return (node,) + _scope_helper(node.target)
-  if classname == 'Expr':
-    return (node,) + _scope_helper(node.value)
-  if classname == 'Compare':
-    return (node,) + _scope_helper(node.left)
-  if classname == 'BoolOp':
-    return (node,) + _scope_helper(node.values[0])
-  if classname == 'BinOp':
-    return (node,) + _scope_helper(node.left)
-  if classname == 'Tuple' and node.elts:
-    return (node,) + _scope_helper(node.elts[0])
-  if classname == 'Call':
-    return (node,) + _scope_helper(node.func)
-  if classname == 'GeneratorExp':
-    return (node,) + _scope_helper(node.elt)
-  if classname == 'IfExp':
-    return (node,) + _scope_helper(node.body)
+  if isinstance(node, astlib.Attribute):
+    return (node,) + _scope_helper(node.value, astlib)
+  if isinstance(node, astlib.Subscript):
+    return (node,) + _scope_helper(node.value, astlib)
+  if isinstance(node, astlib.Assign):
+    return (node,) + _scope_helper(node.targets[0], astlib)
+  if isinstance(node, astlib.AugAssign):
+    return (node,) + _scope_helper(node.target, astlib)
+  if isinstance(node, astlib.Expr):
+    return (node,) + _scope_helper(node.value, astlib)
+  if isinstance(node, astlib.Compare):
+    return (node,) + _scope_helper(node.left, astlib)
+  if isinstance(node, astlib.BoolOp):
+    return (node,) + _scope_helper(node.values[0], astlib)
+  if isinstance(node, astlib.BinOp):
+    return (node,) + _scope_helper(node.left, astlib)
+  if isinstance(node, astlib.Tuple) and node.elts:
+    return (node,) + _scope_helper(node.elts[0], astlib)
+  if isinstance(node, astlib.Call):
+    return (node,) + _scope_helper(node.func, astlib)
+  if isinstance(node, astlib.GeneratorExp):
+    return (node,) + _scope_helper(node.elt, astlib)
+  if isinstance(node, astlib.IfExp):
+    return (node,) + _scope_helper(node.body, astlib)
   return (node,)
 
 

@@ -1547,8 +1547,7 @@ def get_ast_annotator(astlib=ast):
     def block_suffix(self, node, indent_level):
       fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
-    def token(self, token_val,
-             separate_before = False):
+    def token(self, token_val, separate_before = False):
       """Parse a single token with exactly the given value.
 
       Arguments:
@@ -1557,7 +1556,6 @@ def get_ast_annotator(astlib=ast):
       """
       token = self.tokens.next()
       if token.src != token_val:
-        print(type(token.src), type(token_val))
         raise AnnotationError(
             'Expected %r but found %r\nline %d: %s' %
             (token_val, token.src, token.start[0], token.line))
@@ -1656,7 +1654,8 @@ def get_ast_annotator(astlib=ast):
           present, the scope would be assumed to be parenthesized.
       """
       del default_parens
-      return self.tokens.scope(node, attr=attr, trailing_comma=trailing_comma)
+      return self.tokens.scope(node, attr=attr, trailing_comma=trailing_comma,
+                               astlib=astlib)
 
     def _optional_token(self, token_type, token_val):
       token = self.tokens.peek()

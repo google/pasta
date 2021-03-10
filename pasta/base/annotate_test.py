@@ -18,7 +18,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import _ast
 import ast
 import difflib
 import inspect
@@ -40,6 +39,10 @@ from pasta.base import test_utils
 
 TESTDATA_DIR = os.path.realpath(
     os.path.join(os.path.dirname(pasta.__file__), '../testdata'))
+
+astlib = getattr(pasta, 'TEST_ASTLIB', ast)
+astlib_version = getattr(pasta, 'TEST_ASTLIB_VERSION',
+                         '%d.%d' % sys.version_info[:2])
 
 
 class PrefixSuffixTest(test_utils.TestCase):
@@ -77,13 +80,13 @@ class PrefixSuffixTest(test_utils.TestCase):
     def is_node_for_suffix(node, children_attr):
       # Return True if this node contains the 'pass' statement
       val = getattr(node, children_attr, None)
-      return isinstance(val, list) and isinstance(val[0], ast.Pass)
+      return isinstance(val, list) and isinstance(val[0], astlib.Pass)
 
     for children_attr, open_block in test_cases:
       src = src_tpl.format(open_block=open_block)
-      t = pasta.parse(src)
+      t = pasta.parse(src, astlib=astlib)
       node_finder = ast_utils.get_find_node_visitor(
-          lambda node: is_node_for_suffix(node, children_attr))
+          lambda node: is_node_for_suffix(node, children_attr), astlib=astlib)
       node_finder.visit(t)
       node = node_finder.results[0]
       expected = '  #b\n    #c\n\n  #d\n'
@@ -92,27 +95,27 @@ class PrefixSuffixTest(test_utils.TestCase):
           expected, actual,
           'Incorrect suffix for code:\n%s\nNode: %s (line %d)\nDiff:\n%s' %
           (src, node, node.lineno, '\n'.join(_get_diff(actual, expected))))
-      self.assertMultiLineEqual(src, pasta.dump(t))
+      self.assertMultiLineEqual(src, pasta.dump(t, astlib=astlib))
 
   def test_module_suffix(self):
     src = 'foo\n#bar\n\n#baz\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     self.assertEqual(src[src.index('#bar'):], fmt.get(t, 'suffix'))
 
   def test_no_block_suffix_for_single_line_statement(self):
     src = 'if x:  return y\n  #a\n#b\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     self.assertIsNone(fmt.get(t.body[0], 'block_suffix_body'))
 
   def test_expression_prefix_suffix(self):
     src = 'a\n\nfoo\n\n\nb\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     self.assertEqual('\n', fmt.get(t.body[1], 'prefix'))
     self.assertEqual('\n', fmt.get(t.body[1], 'suffix'))
 
   def test_statement_prefix_suffix(self):
     src = 'a\n\ndef foo():\n  return bar\n\n\nb\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     self.assertEqual('\n', fmt.get(t.body[1], 'prefix'))
     self.assertEqual('', fmt.get(t.body[1], 'suffix'))
 
@@ -132,8 +135,8 @@ class IndentationTest(test_utils.TestCase):
           foo('a2')
         foo('end')
         """)
-    t = pasta.parse(src)
-    call_nodes = ast_utils.find_nodes_by_type(t, ast.Call)
+    t = pasta.parse(src, astlib=astlib)
+    call_nodes = ast_utils.find_nodes_by_type(t, astlib.Call, astlib=astlib)
     call_nodes.sort(key=lambda node: node.lineno)
     begin, a1, b1, c1, b2, a2, end = call_nodes
 
@@ -147,7 +150,7 @@ class IndentationTest(test_utils.TestCase):
 
   def test_indent_levels_same_line(self):
     src = 'if a: b; c\n'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     if_node = t.body[0]
     b, c = if_node.body
     self.assertIsNone(fmt.get(b, 'indent_diff'))
@@ -159,7 +162,7 @@ class IndentationTest(test_utils.TestCase):
 
     for first, second in itertools.product(indents, indents):
       src = template.format(first=first, second=second)
-      t = pasta.parse(src)
+      t = pasta.parse(src, astlib=astlib)
       outer_if_node = t.body[0]
       inner_if_node = outer_if_node.body[0]
       call_node = inner_if_node.body[0]
@@ -178,7 +181,7 @@ class IndentationTest(test_utils.TestCase):
              string."""
           pass
         ''')
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     docstring, pass_stmt = t.body[0].body
     self.assertEqual('  ', fmt.get(docstring, 'indent'))
     self.assertEqual('  ', fmt.get(pass_stmt, 'indent'))
@@ -190,7 +193,7 @@ class IndentationTest(test_utils.TestCase):
              string."""
           pass
         ''')
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     docstring, pass_stmt = t.body[0].body
     self.assertEqual('  ', fmt.get(docstring, 'indent'))
     self.assertEqual('  ', fmt.get(pass_stmt, 'indent'))
@@ -225,7 +228,7 @@ class IndentationTest(test_utils.TestCase):
 
           b
         """)
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     if_node = t.body[0]
     b = if_node.body[0]
     self.assertEqual('  ', fmt.get(b, 'indent_diff'))
@@ -237,7 +240,7 @@ class IndentationTest(test_utils.TestCase):
 
           b
         """)
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     if_node = t.body[0]
     b = if_node.body[0]
     self.assertEqual('  ', fmt.get(b, 'indent_diff'))
@@ -253,10 +256,10 @@ class IndentationTest(test_utils.TestCase):
             b
             new_node
         """)
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     # Repace the second node and make sure the indent level is corrected
-    t.body[0].body[1] = ast.Expr(ast.Name(id='new_node'))
-    self.assertMultiLineEqual(expected, codegen.to_str(t))
+    t.body[0].body[1] = astlib.Expr(astlib.Name(id='new_node'))
+    self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
 
   @test_utils.requires_features(['mixed_tabs_spaces'])
   def test_mixed_tabs_spaces_indentation(self):
@@ -295,8 +298,9 @@ class IndentationTest(test_utils.TestCase):
 def _is_syntax_valid(filepath):
   with io.open(filepath, 'r', encoding='UTF-8') as f:
     try:
-      ast.parse(f.read())
-    except (SyntaxError, annotate.AnnotationError):
+      astlib.parse(f.read())
+      print(astlib, 'supports', filepath)
+    except SyntaxError:
       return False
   return True
 
@@ -310,10 +314,10 @@ class SymmetricTestMeta(type):
       def test(self):
         with open(filepath, 'r') as handle:
           src = handle.read()
-        t = ast_utils.parse(src)
-        annotator = annotate.get_ast_annotator()(src)
+        t = astlib.parse(src)
+        annotator = annotate.get_ast_annotator(astlib=astlib)(src)
         annotator.visit(t)
-        self.assertMultiLineEqual(codegen.to_str(t), src)
+        self.assertMultiLineEqual(codegen.to_str(t, astlib=astlib), src)
         self.assertEqual([], annotator.tokens._parens, 'Unmatched parens')
 
       return test
@@ -328,8 +332,7 @@ class SymmetricTestMeta(type):
           inst_dict[test_method_prefix + filename[:-3]] = unittest.skipIf(
               not _is_syntax_valid(full_path),
               'Test contains syntax not supported by this version.',
-          )(
-              symmetric_test_generator(full_path))
+          )(symmetric_test_generator(full_path))
     return type.__new__(mcs, name, bases, inst_dict)
 
 
@@ -357,8 +360,8 @@ class PrefixSuffixGoldenTestMeta(type):
       def test(self):
         with open(input_file, 'r') as handle:
           src = handle.read()
-        t = ast_utils.parse(src)
-        annotator = annotate.get_ast_annotator()(src)
+        t = pasta.parse(src, astlib=astlib)
+        annotator = annotate.get_ast_annotator(astlib=astlib)(src)
         annotator.visit(t)
 
         def escape(s):
@@ -370,7 +373,7 @@ class PrefixSuffixGoldenTestMeta(type):
                 type(n).__name__ + ' ' +
                 _get_node_identifier(n), escape(fmt.get(n, 'prefix')),
                 escape(fmt.get(n, 'suffix')), escape(fmt.get(n, 'indent')))
-            for n in ast.walk(t)) + '\n'
+            for n in astlib.walk(t)) + '\n'
 
         # If specified, write the golden data instead of checking it
         if getattr(self, 'generate_goldens', False):
@@ -394,12 +397,11 @@ class PrefixSuffixGoldenTestMeta(type):
     # Add a test method for each input file
     test_method_prefix = 'test_golden_prefix_suffix_'
     data_dir = os.path.join(TESTDATA_DIR, 'ast')
-    python_version = '%d.%d' % sys.version_info[:2]
     for dirpath, dirs, files in os.walk(data_dir):
       for filename in files:
         if filename.endswith('.in'):
           full_path = os.path.join(dirpath, filename)
-          golden_path = os.path.join(dirpath, 'golden', python_version,
+          golden_path = os.path.join(dirpath, 'golden', astlib_version,
                                      filename[:-3] + '.out')
           inst_dict[test_method_prefix + filename[:-3]] = unittest.skipIf(
               not _is_syntax_valid(full_path),
@@ -430,24 +432,24 @@ class ManualEditsTest(test_utils.TestCase):
   def test_call_no_pos(self):
     """Tests that Call node traversal works without position information."""
     src = 'f(a)'
-    t = pasta.parse(src)
-    node = ast_utils.find_nodes_by_type(t, ast.Call)[0]
+    t = pasta.parse(src, astlib=astlib)
+    node = ast_utils.find_nodes_by_type(t, astlib.Call, astlib=astlib)[0]
     node.keywords.append(
-        ast.keyword(arg='b', value=ast.Num(n=0)))
-    self.assertEqual('f(a, b=0)', pasta.dump(t))
+        astlib.keyword(arg='b', value=astlib.Num(n=0)))
+    self.assertEqual('f(a, b=0)', pasta.dump(t, astlib=astlib))
 
   def test_call_illegal_pos(self):
     """Tests that Call node traversal works even with illegal positions."""
     src = 'f(a)'
-    t = pasta.parse(src)
-    node = ast_utils.find_nodes_by_type(t, ast.Call)[0]
-    node.keywords.append(ast.keyword(arg='b', value=ast.Num(n=0)))
+    t = pasta.parse(src, astlib=astlib)
+    node = ast_utils.find_nodes_by_type(t, astlib.Call, astlib=astlib)[0]
+    node.keywords.append(astlib.keyword(arg='b', value=astlib.Num(n=0)))
 
     # This position would put b=0 before a, so it should be ignored.
     node.keywords[-1].value.lineno = 0
     node.keywords[-1].value.col_offset = 0
 
-    self.assertEqual('f(a, b=0)', pasta.dump(t))
+    self.assertEqual('f(a, b=0)', pasta.dump(t, astlib=astlib))
 
 class FstringTest(test_utils.TestCase):
   """Tests fstring support more in-depth."""
@@ -455,7 +457,7 @@ class FstringTest(test_utils.TestCase):
   @test_utils.requires_features(['fstring'])
   def test_fstring(self):
     src = 'f"a {b} c d {e}"'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     node = t.body[0].value
     self.assertEqual(
         fmt.get(node, 'content'),
@@ -464,7 +466,7 @@ class FstringTest(test_utils.TestCase):
   @test_utils.requires_features(['fstring'])
   def test_fstring_escaping(self):
     src = 'f"a {{{b} {{c}}"'
-    t = pasta.parse(src)
+    t = pasta.parse(src, astlib=astlib)
     node = t.body[0].value
     self.assertEqual(
         fmt.get(node, 'content'), 'f"a {{{__pasta_fstring_val_0__} {{c}}"')
@@ -473,21 +475,21 @@ class FstringTest(test_utils.TestCase):
 class VersionSupportTest(test_utils.TestCase):
 
   def test_all_ast_nodes_supported(self):
-    functions = inspect.getmembers(annotate.get_ast_annotator())
+    functions = inspect.getmembers(annotate.get_ast_annotator(astlib=astlib))
     handled_nodes = {
         name[6:] for name, _ in functions if name.startswith('visit_')
     }
 
     def should_ignore_type(n):
-      if not issubclass(n, ast.AST):
+      if not issubclass(n, astlib.AST):
         return True
       # Expression contexts are not visited since the have no formatting
-      if hasattr(ast, 'expr_context') and issubclass(n, ast.expr_context):
+      if hasattr(astlib, 'expr_context') and issubclass(n, astlib.expr_context):
         return True
       return False
 
     ast_nodes = {
-        name for name, member in inspect.getmembers(_ast, inspect.isclass)
+        name for name, member in inspect.getmembers(astlib, inspect.isclass)
         if not should_ignore_type(member)
     }
     ignored_nodes = {

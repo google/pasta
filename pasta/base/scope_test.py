@@ -28,6 +28,8 @@ from pasta.base import ast_utils
 from pasta.base import scope
 from pasta.base import test_utils
 
+astlib = getattr(pasta, 'TEST_ASTLIB', ast)
+
 
 class ScopeTest(test_utils.TestCase):
 
@@ -40,7 +42,7 @@ class ScopeTest(test_utils.TestCase):
         from eee import fff
         from ggg.hhh import iii, jjj
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_1_aaa = nodes[0].names[0]
@@ -53,7 +55,7 @@ class ScopeTest(test_utils.TestCase):
     node_5_iii = nodes[4].names[0]
     node_5_jjj = nodes[4].names[1]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(),
                           {'aaa', 'bbb', 'ccc', 'fff', 'iii', 'jjj'})
@@ -124,13 +126,13 @@ class ScopeTest(test_utils.TestCase):
         else:
           import ccc
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_aaa, node_bbb, node_ccc = ast_utils.find_nodes_by_type(
-        tree, ast.alias)
+        tree, astlib.alias, astlib=astlib)
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'bbb', 'ccc', 'a', 'b'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa', 'bbb', 'ccc'})
@@ -155,13 +157,13 @@ class ScopeTest(test_utils.TestCase):
         finally:
           import ccc
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_aaa, node_bbb, node_ccc = ast_utils.find_nodes_by_type(
-        tree, ast.alias)
+        tree, astlib.alias, astlib=astlib)
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'bbb', 'ccc'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa', 'bbb', 'ccc'})
@@ -179,13 +181,13 @@ class ScopeTest(test_utils.TestCase):
         def foo(bar):
           import aaa
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_aaa = ast_utils.find_nodes_by_type(
-        tree, ast.alias)[0]
+        tree, astlib.alias, astlib=astlib)[0]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -195,12 +197,12 @@ class ScopeTest(test_utils.TestCase):
         class Foo():
           import aaa
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_aaa = nodes[0].body[0].names[0]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'Foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -210,12 +212,12 @@ class ScopeTest(test_utils.TestCase):
         import aaa.bbb.ccc
         aaa.bbb.ccc.foo()
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_ref = nodes[1].value.func.value
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa'})
     self.assertItemsEqual(s.external_references.keys(),
@@ -232,13 +234,13 @@ class ScopeTest(test_utils.TestCase):
         def foo(bar):
           return aaa
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     return_value = nodes[1].body[0].value
     decorator = nodes[1].decorator_list[0].value
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -251,14 +253,14 @@ class ScopeTest(test_utils.TestCase):
         class Foo(aaa.Bar):
           pass
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_aaa = nodes[0].names[0]
     decorator = nodes[1].decorator_list[0].value
     base = nodes[1].bases[0].value
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'Foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -270,12 +272,12 @@ class ScopeTest(test_utils.TestCase):
         def foo(aaa=aaa):
           return aaa
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     argval = nodes[1].args.defaults[0]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -289,12 +291,12 @@ class ScopeTest(test_utils.TestCase):
           return aaa
         aaa
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     node_aaa = nodes[2].value
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -307,12 +309,12 @@ class ScopeTest(test_utils.TestCase):
         def foo(aaa=1):
           pass
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     decorator = nodes[1].decorator_list[0].value
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -325,12 +327,12 @@ class ScopeTest(test_utils.TestCase):
         def foo(bar: 'aaa.Bar'):
           pass
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     func = nodes[1]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'foo'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -345,12 +347,12 @@ class ScopeTest(test_utils.TestCase):
         class A():
           def foo(self, a: 'A'): pass
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     classdef = nodes[0]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'A'})
     self.assertItemsEqual(s.names['A'].reads,
@@ -364,13 +366,13 @@ class ScopeTest(test_utils.TestCase):
         class B():
           def foo(self, a: 'A'): pass
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     a_classdef = nodes[0]
     b_classdef = nodes[1]
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'A', 'B'})
     self.assertItemsEqual(s.names['A'].reads,
@@ -385,14 +387,14 @@ class ScopeTest(test_utils.TestCase):
         aaa.bbb.y()
         aaa.bbb.ccc.z()
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     nodes = tree.body
 
     call1 = nodes[1].value.func.value
     call2 = nodes[2].value.func.value
     call3 = nodes[3].value.func.value
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'ddd'})
     self.assertItemsEqual(s.external_references.keys(),
@@ -412,11 +414,11 @@ class ScopeTest(test_utils.TestCase):
             g = 1
           return c
         """)
-    t = ast.parse(src)
+    t = astlib.parse(src)
     import_node, func_node = t.body
     class_node, return_node = func_node.body
 
-    sc = scope.analyze(t)
+    sc = scope.analyze(t, astlib=astlib)
     import_node_scope = sc.lookup_scope(import_node)
     self.assertIs(import_node_scope.node, t)
     self.assertIs(import_node_scope, sc)
@@ -439,7 +441,7 @@ class ScopeTest(test_utils.TestCase):
 
     self.assertIs(class_node_scope.lookup_scope(func_node), func_node_scope)
 
-    self.assertIsNone(sc.lookup_scope(ast.Name(id='foo')))
+    self.assertIsNone(sc.lookup_scope(astlib.Name(id='foo')))
 
   def test_class_methods(self):
     source = textwrap.dedent("""\
@@ -451,11 +453,11 @@ class ScopeTest(test_utils.TestCase):
           def bbb(self):
             return aaa
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     importstmt, classdef = tree.body
     method_aaa, method_bbb = classdef.body
 
-    s = scope.analyze(tree)
+    s = scope.analyze(tree, astlib=astlib)
 
     self.assertItemsEqual(s.names.keys(), {'aaa', 'C'})
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
@@ -471,11 +473,11 @@ class ScopeTest(test_utils.TestCase):
           ddd
         eee(ccc, ddd)
         """)
-    tree = ast.parse(source)
+    tree = astlib.parse(source)
     funcdef, call = tree.body
     ccc_expr, ddd_expr = funcdef.body
 
-    sc = scope.analyze(tree)
+    sc = scope.analyze(tree, astlib=astlib)
 
     func_scope = sc.lookup_scope(funcdef)
     self.assertIn('ccc', func_scope.names)

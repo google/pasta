@@ -26,6 +26,46 @@ def all_tests():
     test_suite = test_loader.discover('.', pattern='*_test.py')
     return test_suite
 
+
+def _use_typed_ast27():
+    from typed_ast import ast27
+    import pasta
+    pasta.TEST_ASTLIB = ast27
+    pasta.TEST_ASTLIB_VERSION = 'typed_ast27'
+
+
+def _use_typed_ast3():
+    from typed_ast import ast3
+    import pasta
+    pasta.TEST_ASTLIB = ast3
+    pasta.TEST_ASTLIB_VERSION = 'typed_ast3'
+
+
+def typed_ast27_tests():
+    _use_typed_ast27()
+    return all_tests()
+
+
+def typed_ast3_tests():
+    _use_typed_ast3()
+    return all_tests()
+
+
+def generate_goldens():
+    from pasta.base import annotate_test
+    return annotate_test.generate_goldens()
+
+
+def generate_goldens_typed_ast27():
+    _use_typed_ast27()
+    return generate_goldens()
+
+
+def generate_goldens_typed_ast3():
+    _use_typed_ast3()
+    return generate_goldens()
+
+
 setup(
     name="google-pasta",
     version="0.3.0",

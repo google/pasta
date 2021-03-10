@@ -213,10 +213,7 @@ def to_tree_str(node, indent, astlib=ast):
   """
 
   if hasattr(node, '__dict__'):
-    print('%s%s' % (
-        indent,
-        astlib_dump(node, astlib),
-    ))
+    print('%s%s' % (indent, astlib.dump(node)))
     if hasattr(node, '__pasta__'):
       for attr in node.__pasta__.keys():
         print('%s  %s -> "%s"' % (indent, str(attr), str(node.__pasta__[attr])))
