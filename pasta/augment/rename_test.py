@@ -130,7 +130,7 @@ class RenameTest(test_utils.TestCase):
     rename._rename_reads(sc, t, 'bbb.aaa', 'xxx.yyy', astlib=astlib)
     self.checkAstsEqual(t, astlib.parse(src), astlib=astlib)
 
-  @test_utils.requires_features(['type_annotations'])
+  @test_utils.requires_features(['type_annotations'], astlib=astlib)
   def test_rename_reads_type_annotation(self):
     src = textwrap.dedent("""\
         def foo(bar: 'aaa.bbb.ccc.Bar'):

@@ -74,11 +74,17 @@ def to_str(tree, astlib=ast):
 
     def visit_Str(self, node):
       self.prefix(node)
+      content = fmt.get(node, 'content')
       str_fmt = fmt.get(node, 'fmt')
       if str_fmt:
         self.code += str_fmt
-      content = fmt.get(node, 'content')
-      self.code += content if content is not None else repr(node.s)
+        self.code += content if content is not None else repr(node.s)
+      elif hasattr(node, 'kind'):
+        # Hack: print typed_ast27 strings correctly when running in python3
+        self.code += node.kind + (content if content is not None
+                                  else repr(node.s)).lstrip('BbRrUu')
+      else:
+        self.code += content if content is not None else repr(node.s)
       self.suffix(node)
 
     def visit_JoinedStr(self, node):

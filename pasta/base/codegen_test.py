@@ -79,13 +79,13 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
     t = astlib.parse(src)
     self.assertEqual(src, pasta.dump(t, astlib=astlib))
 
-  @test_utils.requires_features(['exec_node'])
+  @test_utils.requires_features(['exec_node'], astlib=astlib)
   def test_exec_node_default(self):
     src = 'exec foo in bar'
     t = astlib.parse(src)
     self.assertEqual('exec(foo, bar)\n', pasta.dump(t, astlib=astlib))
 
-  @test_utils.requires_features(['bytes_node'])
+  @test_utils.requires_features(['bytes_node'], astlib=astlib)
   def test_bytes(self):
     src = "b'foo'"
     t = astlib.parse(src)
@@ -96,13 +96,13 @@ class AutoFormatTest(with_metaclass(AutoFormatTestMeta, test_utils.TestCase)):
     t = pasta.parse(src, astlib=astlib)
     self.assertEqual("u'foo'", pasta.dump(t, astlib=astlib))
 
-  @test_utils.requires_features(['ur_str_literal'])
+  @test_utils.requires_features(['ur_str_literal'], astlib=astlib)
   def test_unicode_raw_str(self):
     src = "ur'foo'"
     t = pasta.parse(src, astlib=astlib)
     self.assertEqual("ur'foo'", pasta.dump(t, astlib=astlib))
 
-  @test_utils.requires_features(['bytes_node'])
+  @test_utils.requires_features(['bytes_node'], astlib=astlib)
   def test_args(self):
     src = """
 def func():

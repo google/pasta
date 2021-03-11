@@ -320,7 +320,7 @@ class ScopeTest(test_utils.TestCase):
     self.assertItemsEqual(s.external_references.keys(), {'aaa'})
     self.assertItemsEqual(s.names['aaa'].reads, [decorator])
 
-  @test_utils.requires_features(['type_annotations'])
+  @test_utils.requires_features(['type_annotations'], astlib=astlib)
   def test_import_in_argument_type_string(self):
     source = textwrap.dedent("""\
         import aaa
@@ -341,7 +341,7 @@ class ScopeTest(test_utils.TestCase):
     self.assertItemsEqual(s.names['aaa'].lookup_name('Bar').reads,
                           [func.args.args[0].annotation])
 
-  @test_utils.requires_features(['type_annotations'])
+  @test_utils.requires_features(['type_annotations'], astlib=astlib)
   def test_forward_type_reference(self):
     source = textwrap.dedent("""\
         class A():
@@ -358,7 +358,7 @@ class ScopeTest(test_utils.TestCase):
     self.assertItemsEqual(s.names['A'].reads,
                           [classdef.body[0].args.args[1].annotation])
 
-  @test_utils.requires_features(['type_annotations'])
+  @test_utils.requires_features(['type_annotations'], astlib=astlib)
   def test_forward_type_reference2(self):
     source = textwrap.dedent("""\
         class A():

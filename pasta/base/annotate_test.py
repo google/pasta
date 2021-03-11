@@ -1,4 +1,4 @@
-# coding=utf-8
+#8 coding=utf-8
 """Tests for annotate."""
 # Copyright 2017 Google LLC
 #
@@ -261,7 +261,7 @@ class IndentationTest(test_utils.TestCase):
     t.body[0].body[1] = astlib.Expr(astlib.Name(id='new_node'))
     self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
 
-  @test_utils.requires_features(['mixed_tabs_spaces'])
+  @test_utils.requires_features(['mixed_tabs_spaces'], astlib=astlib)
   def test_mixed_tabs_spaces_indentation(self):
     pasta.parse(
         textwrap.dedent("""\
@@ -270,7 +270,7 @@ class IndentationTest(test_utils.TestCase):
         {ONETAB}c
         """).format(ONETAB='\t'))
 
-  @test_utils.requires_features(['mixed_tabs_spaces'])
+  @test_utils.requires_features(['mixed_tabs_spaces'], astlib=astlib)
   def test_tab_below_spaces(self):
     for num_spaces in range(1, 8):
       t = pasta.parse(
@@ -282,7 +282,7 @@ class IndentationTest(test_utils.TestCase):
       node_c = t.body[0].body[0].body[0]
       self.assertEqual(fmt.get(node_c, 'indent_diff'), ' ' * (8 - num_spaces))
 
-  @test_utils.requires_features(['mixed_tabs_spaces'])
+  @test_utils.requires_features(['mixed_tabs_spaces'], astlib=astlib)
   def test_tabs_below_spaces_and_tab(self):
     for num_spaces in range(1, 8):
       t = pasta.parse(
@@ -299,7 +299,6 @@ def _is_syntax_valid(filepath):
   with io.open(filepath, 'r', encoding='UTF-8') as f:
     try:
       astlib.parse(f.read())
-      print(astlib, 'supports', filepath)
     except SyntaxError:
       return False
   return True
@@ -454,7 +453,7 @@ class ManualEditsTest(test_utils.TestCase):
 class FstringTest(test_utils.TestCase):
   """Tests fstring support more in-depth."""
 
-  @test_utils.requires_features(['fstring'])
+  @test_utils.requires_features(['fstring'], astlib=astlib)
   def test_fstring(self):
     src = 'f"a {b} c d {e}"'
     t = pasta.parse(src, astlib=astlib)
@@ -463,7 +462,7 @@ class FstringTest(test_utils.TestCase):
         fmt.get(node, 'content'),
         'f"a {__pasta_fstring_val_0__} c d {__pasta_fstring_val_1__}"')
 
-  @test_utils.requires_features(['fstring'])
+  @test_utils.requires_features(['fstring'], astlib=astlib)
   def test_fstring_escaping(self):
     src = 'f"a {{{b} {{c}}"'
     t = pasta.parse(src, astlib=astlib)

@@ -1462,9 +1462,9 @@ def get_ast_annotator(astlib=ast):
             node, 'fmt', [self.tokens.peek().src], deps=('s',), default=node.s)
       self.attr(node, 'content', [self.tokens.str], deps=('s',), default=node.s)
 
-      # If the string has a formatting prefix, pull it out into the type field.
+      # If the string has a formatting prefix, pull it out into the fmt field.
       content = fmt.get(node, 'content')
-      if len(content) > 0 and (content[0] == 'u' or content[0] == 'r'):
+      if len(content) > 0 and content[0] in 'BbRrUu':
         fmt.set(node, 'fmt', content[0])
         fmt.set(node, 'content', content[1:])
 
@@ -1588,6 +1588,17 @@ def get_ast_annotator(astlib=ast):
       def _one_of_symbols():
         next_token = self.tokens.next()
         found = next((s for s in symbols if s == next_token.src), None)
+
+        # Hack: Recognize '<>' token in python3
+        # Useful when parsing with typed_ast.ast27 while running under python3
+        if not found and next_token.src == '<' and '<>' in symbols:
+          maybe_noteq = self.tokens.peek()
+          if (maybe_noteq and maybe_noteq.src == '>' and
+              maybe_noteq.start[0] == next_token.start[0] and
+              maybe_noteq.start[1] == next_token.start[1] + 1):
+            self.tokens.next()
+            return '<>'
+
         if found is None:
           raise AnnotationError('Expected one of: %r, but found: %r' %
                                 (symbols, next_token.src))
