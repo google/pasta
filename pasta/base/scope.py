@@ -177,124 +177,125 @@ def analyze(tree, astlib=ast):
         self.root_scope.set_name_for_node(node, node_name)
         node_name.add_reference(node)
 
-  class Scope(object):
-
-    def __init__(self, parent_scope, node):
-      self.parent_scope = parent_scope
-      self.names = {}
-      self.node = node
-
-    def define_name(self, name, node):
-      try:
-        name_obj = self.names[name]
-      except KeyError:
-        name_obj = self.names[name] = Name(name)
-      name_obj.define(node)
-      return name_obj
-
-    def forward_define_name(self, name, node):
-      """Define this name as a forward-reference (does not set definition)."""
-      try:
-        name_obj = self.names[name]
-      except KeyError:
-        name_obj = self.names[name] = Name(name)
-      name_obj.add_reference(node)
-      return name_obj
-
-    def lookup_name(self, name):
-      try:
-        return self.names[name]
-      except KeyError:
-        pass
-      if self.parent_scope is None:
-        name_obj = self.names[name] = Name(name)
-        return name_obj
-      return self.parent_scope.lookup_name(name)
-
-    def get_root_scope(self):
-      return self.parent_scope.get_root_scope()
-
-    def lookup_scope(self, node):
-      return self.get_root_scope().lookup_scope(node)
-
-    def create_scope(self, node):
-      subscope = Scope(self, node)
-      self.get_root_scope()._set_scope_for_node(node, subscope)
-      return subscope
-
-  class RootScope(Scope):
-
-    def __init__(self, node):
-      super(RootScope, self).__init__(None, node)
-      self.external_references = {}
-      self._parents = {}
-      self._nodes_to_names = {}
-      self._node_scopes = {}
-
-    def add_external_reference(self,
-                               name,
-                               node,
-                               name_ref=None):
-      ref = ExternalReference(name=name, node=node, name_ref=name_ref)
-      if name in self.external_references:
-        self.external_references[name].append(ref)
-      else:
-        self.external_references[name] = [ref]
-
-    def get_root_scope(self):
-      return self
-
-    def parent(self, node):
-      return self._parents.get(node, None)
-
-    def set_parent(self, node,
-                   parent):
-      self._parents[node] = parent
-      if parent is None:
-        self._node_scopes[node] = self
-
-    def get_name_for_node(self, node):
-      return self._nodes_to_names.get(node, None)
-
-    def set_name_for_node(self, node, name):
-      self._nodes_to_names[node] = name
-
-    def lookup_scope(self, node):
-      while node:
-        try:
-          return self._node_scopes[node]
-        except KeyError:
-          node = self.parent(node)
-      return None
-
-    def _set_scope_for_node(self, node, node_scope):
-      self._node_scopes[node] = node_scope
-
-  # Should probably also have a scope?
-  class Name(object):
-
-    def __init__(self, id):
-      self.id = id
-      self.definition = None
-      self.reads = []
-      self.attrs = {}
-
-    def add_reference(self, node):
-      self.reads.append(node)
-
-    def define(self, node):
-      if self.definition:
-        self.reads.append(node)
-      else:
-        self.definition = node
-
-    def lookup_name(self, name):
-      try:
-        return self.attrs[name]
-      except KeyError:
-        name_obj = self.attrs[name] = Name('.'.join((self.id, name)))
-        return name_obj
-
   v = ScopeVisitor()
   v.visit(tree)
   return v.scope
+
+
+class Scope(object):
+
+  def __init__(self, parent_scope, node):
+    self.parent_scope = parent_scope
+    self.names = {}
+    self.node = node
+
+  def define_name(self, name, node):
+    try:
+      name_obj = self.names[name]
+    except KeyError:
+      name_obj = self.names[name] = Name(name)
+    name_obj.define(node)
+    return name_obj
+
+  def forward_define_name(self, name, node):
+    """Define this name as a forward-reference (does not set definition)."""
+    try:
+      name_obj = self.names[name]
+    except KeyError:
+      name_obj = self.names[name] = Name(name)
+    name_obj.add_reference(node)
+    return name_obj
+
+  def lookup_name(self, name):
+    try:
+      return self.names[name]
+    except KeyError:
+      pass
+    if self.parent_scope is None:
+      name_obj = self.names[name] = Name(name)
+      return name_obj
+    return self.parent_scope.lookup_name(name)
+
+  def get_root_scope(self):
+    return self.parent_scope.get_root_scope()
+
+  def lookup_scope(self, node):
+    return self.get_root_scope().lookup_scope(node)
+
+  def create_scope(self, node):
+    subscope = Scope(self, node)
+    self.get_root_scope()._set_scope_for_node(node, subscope)
+    return subscope
+
+class RootScope(Scope):
+
+  def __init__(self, node):
+    super(RootScope, self).__init__(None, node)
+    self.external_references = {}
+    self._parents = {}
+    self._nodes_to_names = {}
+    self._node_scopes = {}
+
+  def add_external_reference(self,
+                             name,
+                             node,
+                             name_ref=None):
+    ref = ExternalReference(name=name, node=node, name_ref=name_ref)
+    if name in self.external_references:
+      self.external_references[name].append(ref)
+    else:
+      self.external_references[name] = [ref]
+
+  def get_root_scope(self):
+    return self
+
+  def parent(self, node):
+    return self._parents.get(node, None)
+
+  def set_parent(self, node,
+                 parent):
+    self._parents[node] = parent
+    if parent is None:
+      self._node_scopes[node] = self
+
+  def get_name_for_node(self, node):
+    return self._nodes_to_names.get(node, None)
+
+  def set_name_for_node(self, node, name):
+    self._nodes_to_names[node] = name
+
+  def lookup_scope(self, node):
+    while node:
+      try:
+        return self._node_scopes[node]
+      except KeyError:
+        node = self.parent(node)
+    return None
+
+  def _set_scope_for_node(self, node, node_scope):
+    self._node_scopes[node] = node_scope
+
+# Should probably also have a scope?
+class Name(object):
+
+  def __init__(self, id):
+    self.id = id
+    self.definition = None
+    self.reads = []
+    self.attrs = {}
+
+  def add_reference(self, node):
+    self.reads.append(node)
+
+  def define(self, node):
+    if self.definition:
+      self.reads.append(node)
+    else:
+      self.definition = node
+
+  def lookup_name(self, name):
+    try:
+      return self.attrs[name]
+    except KeyError:
+      name_obj = self.attrs[name] = Name('.'.join((self.id, name)))
+      return name_obj
