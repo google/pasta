@@ -815,7 +815,7 @@ def get_base_visitor(astlib=ast):
       self.attr(
           node,
           'op', [self.ws, op_symbol, self.ws],
-          default='%s' % op_symbol,
+          default=' %s ' % op_symbol,
           deps=('op',))
       self.visit(node.right)
 
