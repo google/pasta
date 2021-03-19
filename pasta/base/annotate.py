@@ -1640,6 +1640,9 @@ def get_ast_annotator(astlib=ast):
         separate_before: (bool) Unused here.
       """
       del default  # unused
+      if deps:
+        for dep in deps:
+          fmt.set(node, dep + '__src', getattr(node, dep, None))
       attr_parts = []
       for attr_val in attr_vals:
         if isinstance(attr_val, six.string_types):

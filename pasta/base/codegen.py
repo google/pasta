@@ -166,7 +166,7 @@ def to_str(tree, astlib=ast):
       node._printer_info[attr_name] = True
       val = fmt.get(node, attr_name)
       if (val is None or deps and any(
-          hasattr(node, dep + '__src') and
+          fmt.has(node, dep + '__src') and
           (getattr(node, dep, None) != fmt.get(node, dep + '__src'))
           for dep in deps)):
         val = default
