@@ -132,7 +132,13 @@ class BaseVisitor(ast.NodeVisitor):
 
   def visit(self, node):
     self._stack.append(node)
+    if hasattr(self, 'tokens'):
+      fmt.set(node, 'start_line', self.tokens.peek().start[0])
+      fmt.set(node, 'start_col', self.tokens.peek().start[1])
     super(BaseVisitor, self).visit(node)
+    if hasattr(self, 'tokens'):
+      fmt.set(node, 'end_line', self.tokens.peek().end[0])
+      fmt.set(node, 'end_col', self.tokens.peek().end[1])
     assert node is self._stack.pop()
 
   def prefix(self, node, default=''):
