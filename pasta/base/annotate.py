@@ -132,13 +132,7 @@ class BaseVisitor(ast.NodeVisitor):
 
   def visit(self, node):
     self._stack.append(node)
-    if hasattr(self, 'tokens'):
-      fmt.set(node, 'start_line', self.tokens.peek().start[0])
-      fmt.set(node, 'start_col', self.tokens.peek().start[1])
     super(BaseVisitor, self).visit(node)
-    if hasattr(self, 'tokens'):
-      fmt.set(node, 'end_line', self.tokens.peek().end[0])
-      fmt.set(node, 'end_col', self.tokens.peek().end[1])
     assert node is self._stack.pop()
 
   def prefix(self, node, default=''):
@@ -1295,7 +1289,11 @@ class AstAnnotator(BaseVisitor):
     try:
       fmt.set(node, 'indent', self._indent)
       fmt.set(node, 'indent_diff', self._indent_diff)
+      fmt.set(node, 'start_line', self.tokens.peek().start[0])
+      fmt.set(node, 'start_col', self.tokens.peek().start[1])
       super(AstAnnotator, self).visit(node)
+      fmt.set(node, 'end_line', self.tokens.peek().end[0])
+      fmt.set(node, 'end_col', self.tokens.peek().end[1])
     except (TypeError, ValueError, IndexError, KeyError) as e:
       raise AnnotationError(e)
 
