@@ -1,0 +1,31 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Expr                 	prefix=||	suffix=|  # a\n|	indent=||
+(3, 0)       Expr                 	prefix=|\n|	suffix=|   #   b\n|	indent=||
+(7, 0)       FunctionDef e        	prefix=|\n|	suffix=||	indent=||
+(12, 0)      ClassDef i           	prefix=|\n|	suffix=||	indent=||
+(15, 0)      Assign               	prefix=|\n|	suffix=|  # k\n|	indent=||
+(1, 0)       Name a               	prefix=||	suffix=||	indent=||
+(3, 2)       Name b               	prefix=|( |	suffix=| )|	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(8, 2)       Expr                 	prefix=|  |	suffix=|   # f\n|	indent=|  |
+(5, 1)       Call                 	prefix=||	suffix=||	indent=||
+(6, 1)       Name d               	prefix=||	suffix=||	indent=||
+(13, 2)      Return               	prefix=|  |	suffix=|# j\n|	indent=|  |
+(10, 1)      Name g               	prefix=||	suffix=||	indent=||
+(11, 1)      Call                 	prefix=||	suffix=||	indent=||
+(15, 0)      Name k               	prefix=||	suffix=| |	indent=||
+(16, 2)      Name l               	prefix=|( # l prefix\n  |	suffix=|   #  l\n)|	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(8, 2)       Name f               	prefix=||	suffix=||	indent=|  |
+(5, 1)       Name c               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(13, 9)      Name j               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(11, 1)      Name h               	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

@@ -1,0 +1,16 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       ClassDef a           	prefix=||	suffix=||	indent=||
+(4, 0)       ClassDef d           	prefix=|\n|	suffix=||	indent=||
+(1, 8)       Name object          	prefix=||	suffix=||	indent=||
+(1, 16)      keyword b            	prefix=||	suffix=||	indent=||
+(2, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(4, 10)      keyword e            	prefix=||	suffix=||	indent=||
+(4, 17)      keyword g            	prefix=||	suffix=||	indent=||
+(5, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(1, 18)      Name c               	prefix=||	suffix=||	indent=||
+(4, 14)      Name f               	prefix=|  |	suffix=| |	indent=||
+(4, 20)      Name h               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

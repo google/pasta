@@ -1,6 +1,6 @@
 # coding=utf-8
 """Annotate python syntax trees with formatting from the source file."""
-# Copyright 2017 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -764,8 +764,7 @@ def get_base_visitor(astlib=ast):
         self.attr(node, 'redirection', ['>>', self.ws], default='>>')
         self.visit(node.dest)
         if node.values:
-          self.attr(
-              node, 'values_prefix', [self.ws, ',', self.ws], default=', ')
+          self.attr(node, 'values_prefix', [self.ws, ',', self.ws], default=', ')
         elif not node.nl:
           self.attr(node, 'trailing_comma', [self.ws, ','], default=',')
 
@@ -1390,7 +1389,11 @@ def get_ast_annotator(astlib=ast):
       try:
         fmt.set(node, 'indent', self._indent)
         fmt.set(node, 'indent_diff', self._indent_diff)
+        fmt.set(node, 'start_line', self.tokens.peek().start[0])
+        fmt.set(node, 'start_col', self.tokens.peek().start[1])
         super(AstAnnotator, self).visit(node)
+        fmt.set(node, 'end_line', self.tokens.peek().end[0])
+        fmt.set(node, 'end_col', self.tokens.peek().end[1])
       except (TypeError, ValueError, IndexError, KeyError) as e:
         raise AnnotationError(e)
 
@@ -1427,6 +1430,7 @@ def get_ast_annotator(astlib=ast):
       # Set the indent level to the child's indent and iterate over the children
       self._indent = new_indent
       self._indent_diff = new_diff
+
       for child in children:
         yield child
       # Store the suffix at this indentation level, which could be many lines

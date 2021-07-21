@@ -1,0 +1,28 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Expr                 	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(1, 0)       DictComp             	prefix=||	suffix=||	indent=||
+(3, 0)       DictComp             	prefix=||	suffix=||	indent=||
+(1, 1)       Name a               	prefix=||	suffix=||	indent=||
+(1, 4)       Name b               	prefix=||	suffix=| |	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(3, 3)       Name e               	prefix=||	suffix=||	indent=||
+(3, 5)       Name f               	prefix=||	suffix=|   |	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(1, 10)      Name c               	prefix=||	suffix=| |	indent=||
+(1, 15)      Name d               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(4, 2)       Name h               	prefix=||	suffix=| |	indent=||
+(4, 9)       Name i               	prefix=||	suffix=|   |	indent=||
+(4, 19)      Name j               	prefix=||	suffix=| |	indent=||
+(4, 26)      Name k               	prefix=||	suffix=| |	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

@@ -1,0 +1,23 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       AsyncFunctionDef a   	prefix=||	suffix=||	indent=||
+(4, 0)       AsyncWith            	prefix=|\n|	suffix=||	indent=||
+(7, 0)       AsyncFor             	prefix=|\n|	suffix=||	indent=||
+(-1, -1)     arguments            	prefix=||	suffix=||	indent=||
+(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     withitem             	prefix=||	suffix=||	indent=||
+(5, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(7, 10)      Name f               	prefix=||	suffix=| |	indent=||
+(7, 15)      Name g               	prefix=||	suffix=||	indent=||
+(8, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(1, 12)      arg b                	prefix=||	suffix=||	indent=||
+(2, 2)       Name c               	prefix=||	suffix=||	indent=|  |
+(4, 11)      Name d               	prefix=||	suffix=||	indent=||
+(5, 2)       Name e               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(8, 2)       Await                	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(8, 8)       Name i               	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

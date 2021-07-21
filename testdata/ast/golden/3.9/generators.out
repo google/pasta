@@ -1,0 +1,46 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Expr                 	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(5, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(1, 0)       GeneratorExp         	prefix=|(|	suffix=|)|	indent=||
+(3, 0)       GeneratorExp         	prefix=|(  |	suffix=|)|	indent=||
+(5, 0)       GeneratorExp         	prefix=|(|	suffix=|)|	indent=||
+(1, 1)       Name a               	prefix=||	suffix=| |	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(3, 3)       Name c               	prefix=||	suffix=|    |	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(5, 1)       Name g               	prefix=||	suffix=| |	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(-1, -1)     comprehension        	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(1, 7)       Name a               	prefix=||	suffix=| |	indent=||
+(1, 12)      Name b               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(3, 17)      Name c               	prefix=||	suffix=|    |	indent=||
+(3, 26)      Name d               	prefix=||	suffix=|    |	indent=||
+(3, 40)      Name e               	prefix=||	suffix=|  |	indent=||
+(3, 46)      Name f               	prefix=||	suffix=|  |	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(5, 7)       Name g               	prefix=||	suffix=| |	indent=||
+(5, 12)      Name h               	prefix=||	suffix=| |	indent=||
+(5, 17)      Name i               	prefix=||	suffix=| |	indent=||
+(5, 22)      Name j               	prefix=||	suffix=| |	indent=||
+(5, 28)      Name k               	prefix=||	suffix=| |	indent=||
+(5, 33)      Name l               	prefix=||	suffix=| |	indent=||
+(5, 39)      Name m               	prefix=||	suffix=| |	indent=||
+(5, 44)      Name o               	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Store                	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

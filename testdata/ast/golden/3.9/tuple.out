@@ -1,0 +1,68 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       Expr                 	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(5, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(7, 0)       Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(9, 0)       Expr                 	prefix=|\n|	suffix=||	indent=||
+(11, 0)      Expr                 	prefix=||	suffix=|\n|	indent=||
+(13, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(15, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(18, 0)      Expr                 	prefix=|\n|	suffix=|\n|	indent=||
+(1, 0)       Tuple                	prefix=||	suffix=||	indent=||
+(3, 0)       Tuple                	prefix=||	suffix=||	indent=||
+(5, 0)       Tuple                	prefix=||	suffix=||	indent=||
+(7, 0)       Tuple                	prefix=||	suffix=||	indent=||
+(9, 0)       Tuple                	prefix=||	suffix=||	indent=||
+(11, 0)      Tuple                	prefix=||	suffix=||	indent=||
+(13, 0)      Tuple                	prefix=||	suffix=||	indent=||
+(15, 0)      Tuple                	prefix=||	suffix=||	indent=||
+(18, 2)      Tuple                	prefix=|((|	suffix=|))|	indent=||
+(1, 1)       Name a               	prefix=||	suffix=||	indent=||
+(1, 4)       Name b               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(3, 0)       Name c               	prefix=||	suffix=||	indent=||
+(3, 3)       Name d               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(5, 0)       Name e               	prefix=||	suffix=| |	indent=||
+(5, 6)       Name f               	prefix=||	suffix=||	indent=||
+(5, 8)       Name g               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(7, 2)       Name h               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(9, 0)       Name i               	prefix=||	suffix=|  |	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(11, 1)      Name j               	prefix=||	suffix=||	indent=||
+(11, 4)      Tuple                	prefix=||	suffix=| |	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(13, 1)      Tuple                	prefix=||	suffix=||	indent=||
+(13, 9)      Name o               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(15, 1)      Name p               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(18, 3)      Name q               	prefix=||	suffix=||	indent=||
+(18, 6)      Name r               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(11, 7)      Name k               	prefix=||	suffix=||	indent=||
+(11, 10)     Name l               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(13, 2)      Name m               	prefix=||	suffix=||	indent=||
+(13, 5)      Name n               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

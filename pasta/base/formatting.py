@@ -1,6 +1,6 @@
 # coding=utf-8
 """Operations for storing and retrieving formatting info on ast nodes."""
-# Copyright 2017 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.

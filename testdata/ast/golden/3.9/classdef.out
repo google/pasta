@@ -1,0 +1,26 @@
+(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(1, 0)       ClassDef a           	prefix=||	suffix=||	indent=||
+(6, 0)       ClassDef d           	prefix=|\n|	suffix=||	indent=||
+(9, 0)       ClassDef g           	prefix=|\n|	suffix=||	indent=||
+(12, 0)      ClassDef h           	prefix=|\n|	suffix=||	indent=||
+(15, 0)      ClassDef i           	prefix=|\n|	suffix=||	indent=||
+(1, 8)       Name object          	prefix=||	suffix=||	indent=||
+(2, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(6, 15)      Name e               	prefix=||	suffix=| |	indent=||
+(6, 20)      Name f               	prefix=||	suffix=||	indent=||
+(7, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(4, 1)       Name b               	prefix=||	suffix=||	indent=||
+(5, 1)       Call                 	prefix=||	suffix=||	indent=||
+(10, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(13, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(15, 8)      Name j               	prefix=||	suffix=||	indent=||
+(15, 11)     Name k               	prefix=||	suffix=||	indent=||
+(16, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(5, 1)       Name c               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
