@@ -497,6 +497,33 @@ class VersionSupportTest(test_utils.TestCase):
     self.assertEqual(set(), ast_nodes - handled_nodes - ignored_nodes)
 
 
+class OffsetTest(test_utils.TestCase):
+
+  def test_indent_levels(self):
+    src = textwrap.dedent("""\
+foo('begin',
+  bar('a1'))
+bar('x')
+        """)
+    t = pasta.parse(src, astlib=astlib)
+    call_nodes = ast_utils.find_nodes_by_type(t, astlib.Call, astlib=astlib)
+    call_nodes.sort(key=lambda node: node.lineno)
+    foo, bar_arg, bar = call_nodes
+
+    self.assertEqual(1, fmt.get(foo, 'start_line'))
+    self.assertEqual(0, fmt.get(foo, 'start_col'))
+    self.assertEqual(2, fmt.get(foo, 'end_line'))
+    self.assertEqual(13, fmt.get(foo, 'end_col'))
+    self.assertEqual(2, fmt.get(bar_arg, 'start_line'))
+    self.assertEqual(2, fmt.get(bar_arg, 'start_col'))
+    self.assertEqual(2, fmt.get(bar_arg, 'end_line'))
+    self.assertEqual(12, fmt.get(bar_arg, 'end_col'))
+    self.assertEqual(3, fmt.get(bar, 'start_line'))
+    self.assertEqual(0, fmt.get(bar, 'start_col'))
+    self.assertEqual(3, fmt.get(bar, 'end_line'))
+    self.assertEqual(9, fmt.get(bar, 'end_col'))
+
+
 def _get_diff(before, after):
   return difflib.ndiff(after.splitlines(), before.splitlines())
 
