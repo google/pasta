@@ -261,7 +261,7 @@ class BaseVisitor(ast.NodeVisitor):
   def check_is_elif(self, node):
     """Return True if the node continues a previous `if` statement as `elif`.
 
-    In python 2.x, `elif` statments get parsed as If nodes. E.g, the following
+    In python 2.x, `elif` statements get parsed as If nodes. E.g, the following
     two syntax forms are indistinguishable in the ast in python 2.
 
     if a:
@@ -349,7 +349,7 @@ class BaseVisitor(ast.NodeVisitor):
   def check_is_continued_with(self, node):
     """Return True if the node continues a previous `with` statement.
 
-    In python 2.x, `with` statments with many context expressions get parsed as
+    In python 2.x, `with` statements with many context expressions get parsed as
     a tree of With nodes. E.g, the following two syntax forms are
     indistinguishable in the ast in python 2.
 

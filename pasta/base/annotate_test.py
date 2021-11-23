@@ -247,7 +247,7 @@ class IndentationTest(test_utils.TestCase):
             new_node
         ''')
     t = pasta.parse(src)
-    # Repace the second node and make sure the indent level is corrected
+    # Replace the second node and make sure the indent level is corrected
     t.body[0].body[1] = ast.Expr(ast.Name(id='new_node'))
     self.assertMultiLineEqual(expected, codegen.to_str(t))
 
