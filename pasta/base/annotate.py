@@ -1529,7 +1529,16 @@ def get_ast_annotator(astlib=ast):
       return self.tokens.peek_non_whitespace().src not in '],'
 
     def ws(self, max_lines=None, semicolon=False, comment=True):
-      """Parse some whitespace from the source tokens and return it."""
+      """Parse some whitespace from the source tokens and return it.
+
+      This function will strip the node's current indent after each newline, and
+      replace it with @@indent@@. Whenever whitespace it printed, @@indent@@
+      is replaced with the appropriate amount of indentation, such that this
+      operation is cleanly reversed.
+
+      This relies on the token_generator generating @@NL@@ *after* each newline
+      when asked for whitespace.
+      """
       next_token = self.tokens.peek()
       if semicolon and next_token and next_token.src == ';':
         result = self.tokens.whitespace() + self.token(';')
@@ -1537,8 +1546,21 @@ def get_ast_annotator(astlib=ast):
         if next_token.type in (token_generator.TOKENS.NL,
                                token_generator.TOKENS.NEWLINE):
           result += self.tokens.whitespace(max_lines=1)
-        return result
-      return self.tokens.whitespace(max_lines=max_lines, comment=comment)
+      else:
+        result = self.tokens.whitespace(max_lines=max_lines, comment=comment,
+                                        line_start_marker=True)
+
+      # Replace @@NL@@<indent> with @@indent@@. Note this string munging is safe
+      # because inside whitespace, @@indent@@ is never legal after a newline
+      # (only after a comment, which needs a '#' after a newline).
+      # This might not work in the presence of '\' line continuations.
+      result = result.replace('@@NL@@' + self._indent, '@@indent@@')
+      # Remove non-indent-carrying newlines
+      result = result.replace('@@NL@@', '')
+      # Do not create whitespace in empty lines
+      if self._indent == '':
+        result = result.replace('@@indent@@\n', '\n')
+      return result
 
     def dots(self, num_dots):
       """Parse a number of dots."""
@@ -1687,20 +1709,24 @@ def get_ast_annotator(astlib=ast):
 
 
 def _get_indent_width(indent):
+  """Computes the width of the indent (leading WS) in the given string."""
   width = 0
   for c in indent:
     if c == ' ':
       width += 1
     elif c == '\t':
       width += 8 - (width % 8)
+    else:
+      break
   return width
 
 
 def _ltrim_indent(indent, remove_width):
+  """Removes leading WS from indent, or nothing if not enough is available."""
   width = 0
   for i, c in enumerate(indent):
     if width == remove_width:
-      break
+      return indent[i:]
     if c == ' ':
       width += 1
     elif c == '\t':
@@ -1708,7 +1734,7 @@ def _ltrim_indent(indent, remove_width):
         width += 8 - (width % 8)
       else:
         return ' ' * (width + 8 - remove_width) + indent[i + 1:]
-  return indent[i:]
+  return indent
 
 
 def _get_indent_diff(outer, inner):

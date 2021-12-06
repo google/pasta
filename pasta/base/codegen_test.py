@@ -26,6 +26,7 @@ import sys
 
 import pasta
 from pasta.base import codegen
+from pasta.base import formatting as fmt
 from pasta.base import test_utils
 
 TESTDATA_DIR = os.path.realpath(
@@ -116,7 +117,38 @@ def func():
       src = 'def a():\n' + indent + 'b\n'
       t = pasta.parse(src, astlib=astlib)
       t.body.extend(astlib.parse('def c(): d').body)
-      self.assertEqual(pasta.dump(t, astlib=astlib), src + 'def c():\n' + indent + 'd\n')
+      self.assertEqual(pasta.dump(t, astlib=astlib),
+                       src + 'def c():\n' + indent + 'd\n')
+
+  def test_default_indentation_prefix(self):
+    for indent in ('  ', '    ', '\t'):
+      src = 'def a():\n' + indent + 'b\n'
+      t = pasta.parse(src, astlib=astlib)
+      t.body.extend(astlib.parse('def c(): d').body)
+      fmt.set(t.body[-1].body[-1], 'prefix', '@@indent@@#comment\n@@indent@@')
+      self.assertEqual(
+          pasta.dump(t, astlib=astlib),
+          src + 'def c():\n' + indent + '#comment\n' + indent + 'd\n')
+
+  def test_default_indentation_prefix_from_pasta(self):
+    for indent in ('  ', '    ', '\t'):
+      src = 'def a():\n' + indent + 'b\n'
+      t = pasta.parse(src, astlib=astlib)
+      t.body[-1].body.append(pasta.parse('#comment\nd\n'))
+      fmt.clear(t.body[-1].body[-1], 'indent')
+      self.assertEqual(
+          pasta.dump(t, astlib=astlib),
+          src + indent + '#comment\n' + indent + 'd\n')
+
+  def test_change_indentation(self):
+    for indent in ('  ', '    ', '\t'):
+      src = 'def a():\n' + indent + 'b\n'
+      t = pasta.parse(src, astlib=astlib)
+      t.body[-1].body.append(pasta.parse('#comment\nd\n'))
+      fmt.set(t.body[-1].body[-1], 'indent', indent)
+      self.assertEqual(
+          pasta.dump(t, astlib=astlib),
+          src + indent + '#comment\n' + indent + 'd\n')
 
   def test_globals_where_first_ident_reoccurs(self):
     src = 'global a, b, a'

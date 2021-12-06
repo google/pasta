@@ -124,7 +124,7 @@ class TokenGenerator(object):
     """Rewind the token iterator."""
     self._i -= amount
 
-  def whitespace(self, max_lines=None, comment=False):
+  def whitespace(self, max_lines=None, comment=False, line_start_marker=False):
     """Parses whitespace from the current _loc to the next non-whitespace.
 
     Arguments:
@@ -132,6 +132,8 @@ class TokenGenerator(object):
         the whitespace. Valid values are None, 0 and 1.
       comment: (boolean) If True, look for a trailing comment even when not in
         a parenthesized scope.
+      line_start_marker: (boolean) If True, emit @@NL@@ at the beginning of
+        each line.
 
     Pre-condition:
       `_loc' represents the point before which everything has been parsed and
@@ -153,6 +155,14 @@ class TokenGenerator(object):
     result = ''
     for tok in itertools.chain(whitespace,
                                ((next_token,) if next_token else ())):
+      # We can never start a newline between tokens, because the newline itself
+      # is a token. So if the next token is on another line than the preciding
+      # one, we know the last one was a newline.
+      # Also insert a @@NL@@ at the very start of the source, but do not insert
+      # one after the last newline if the last newline is the last token.
+      if line_start_marker and tok.type != TOKENS.ENDMARKER and (
+          self._loc[0] < tok.start[0] or self._loc == (1, 0)):
+        result += '@@NL@@'
       result += self._space_between(self._loc, tok.start)
       if tok != next_token:
         result += tok.src
@@ -196,7 +206,7 @@ class TokenGenerator(object):
 
   def dots(self, num_dots):
     """Parse a number of dots.
-    
+
     This is to work around an oddity in python3's tokenizer, which treats three
     `.` tokens next to each other in a FromImport's level as an ellipsis. This
     parses until the expected number of dots have been seen.

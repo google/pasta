@@ -261,6 +261,46 @@ class IndentationTest(test_utils.TestCase):
     t.body[0].body[1] = astlib.Expr(astlib.Name(id='new_node'))
     self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
 
+  def test_autoindent_with_prefix(self):
+    src = textwrap.dedent("""\
+        def a():
+            b
+            c
+        """)
+    expected = textwrap.dedent("""\
+        def a():
+            b
+            # comment before new node
+            new_node
+        """)
+    t = pasta.parse(src, astlib=astlib)
+    # Repace the second node and make sure the indent level is corrected
+    new_node = astlib.Expr(astlib.Name(id='new_node'))
+    fmt.set(new_node, 'prefix',
+            '@@indent@@# comment before new node\n@@indent@@')
+    t.body[0].body[1] = new_node
+    self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
+
+  def test_autoindent_with_first_prefix(self):
+    src = textwrap.dedent("""\
+        def a():
+            b
+            c
+        """)
+    expected = textwrap.dedent("""\
+        def a():
+            # comment before new node
+            new_node
+            c
+        """)
+    t = pasta.parse(src, astlib=astlib)
+    # Repace the second node and make sure the indent level is corrected
+    new_node = astlib.Expr(astlib.Name(id='new_node'))
+    fmt.set(new_node, 'prefix',
+            '@@indent@@# comment before new node\n@@indent@@')
+    t.body[0].body[0] = new_node
+    self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
+
   @test_utils.requires_features(['mixed_tabs_spaces'], astlib=astlib)
   def test_mixed_tabs_spaces_indentation(self):
     pasta.parse(
