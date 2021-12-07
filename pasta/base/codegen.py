@@ -241,6 +241,6 @@ def to_tree_str(node, indent, astlib=ast):
     print('%s%s' % (indent, field))
     if isinstance(value, list):
       for item in value:
-        to_tree_str(item, astlib, indent + '    ')
+        to_tree_str(item, indent + '    ', astlib)
     elif value is not None:
-      to_tree_str(value, astlib, indent + '    ')
+      to_tree_str(value, indent + '    ', astlib)
