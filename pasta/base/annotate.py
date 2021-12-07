@@ -109,12 +109,13 @@ def get_base_visitor(astlib=ast):
     def wrapped(self, node, *args, **kwargs):
       self.prefix(node, default=self._indent)
       f(self, node, *args, **kwargs)
-      if hasattr(self, 'block_suffix'):
+      if self.is_annotator:
         last_child = ast_utils.get_last_child(node, astlib=astlib)
         # Workaround for ast.Module which does not have a lineno
         if last_child and last_child.lineno != getattr(node, 'lineno', 0):
-          indent = (fmt.get(last_child, 'prefix') or '\n').splitlines()[-1]
-          self.block_suffix(node, indent)
+          indent = fmt.get(last_child, 'indent') or ''
+          fmt.set(node, 'suffix', self.create_indent_markers(
+              self.tokens.block_whitespace(indent), indent))
       else:
         self.suffix(node, comment=True)
 
@@ -140,6 +141,11 @@ def get_base_visitor(astlib=ast):
       self._indent = ''
       self._indent_diff = ''
       self._default_indent_diff = '  '
+
+    # Annotating subclasses will override this.
+    @property
+    def is_annotator(self):
+      return False
 
     def visit(self, node):
       self._stack.append(node)
@@ -1385,6 +1391,10 @@ def get_ast_annotator(astlib=ast):
       super(AstAnnotator, self).__init__()
       self.tokens = token_generator.TokenGenerator(source)
 
+    @property
+    def is_annotator(self):
+      return True
+
     def visit(self, node):
       try:
         fmt.set(node, 'indent', self._indent)
@@ -1435,7 +1445,8 @@ def get_ast_annotator(astlib=ast):
         yield child
       # Store the suffix at this indentation level, which could be many lines
       fmt.set(node, 'block_suffix_%s' % children_attr,
-              self.tokens.block_whitespace(self._indent))
+              self.create_indent_markers(
+                  self.tokens.block_whitespace(self._indent)))
 
       # Dedent back to the previous level
       self._indent = prev_indent
@@ -1528,6 +1539,21 @@ def get_ast_annotator(astlib=ast):
       # but also treats a[::None] exactly the same.
       return self.tokens.peek_non_whitespace().src not in '],'
 
+    def create_indent_markers(self, ws, indent=None):
+      if indent is None:
+        indent = self._indent
+      # Replace @@NL@@<indent> with @@indent@@. Note this string munging is safe
+      # because inside whitespace, @@indent@@ is never legal after a newline
+      # (only after a comment, which needs a '#' after a newline).
+      # This might not work in the presence of '\' line continuations.
+      ws = ws.replace('@@NL@@' + indent, '@@indent@@')
+      # Remove non-indent-carrying newline markers
+      ws = ws.replace('@@NL@@', '')
+      # Do not create whitespace in empty lines
+      if not indent:
+        ws = ws.replace('@@indent@@\n', '\n')
+      return ws
+
     def ws(self, max_lines=None, semicolon=False, comment=True):
       """Parse some whitespace from the source tokens and return it.
 
@@ -1538,6 +1564,14 @@ def get_ast_annotator(astlib=ast):
 
       This relies on the token_generator generating @@NL@@ *after* each newline
       when asked for whitespace.
+
+      Args:
+        max_lines: Eat at most this many newline tokens.
+        semicolon: Absorb a semicolon and the space after it.
+        comment: Absorb comments.
+
+      Returns:
+        The whitespace string.
       """
       next_token = self.tokens.peek()
       if semicolon and next_token and next_token.src == ';':
@@ -1550,17 +1584,7 @@ def get_ast_annotator(astlib=ast):
         result = self.tokens.whitespace(max_lines=max_lines, comment=comment,
                                         line_start_marker=True)
 
-      # Replace @@NL@@<indent> with @@indent@@. Note this string munging is safe
-      # because inside whitespace, @@indent@@ is never legal after a newline
-      # (only after a comment, which needs a '#' after a newline).
-      # This might not work in the presence of '\' line continuations.
-      result = result.replace('@@NL@@' + self._indent, '@@indent@@')
-      # Remove non-indent-carrying newlines
-      result = result.replace('@@NL@@', '')
-      # Do not create whitespace in empty lines
-      if self._indent == '':
-        result = result.replace('@@indent@@\n', '\n')
-      return result
+      return self.create_indent_markers(result)
 
     def dots(self, num_dots):
       """Parse a number of dots."""
@@ -1569,9 +1593,6 @@ def get_ast_annotator(astlib=ast):
         return self.tokens.dots(num_dots)
 
       return _parse_dots
-
-    def block_suffix(self, node, indent_level):
-      fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
     def token(self, token_val, separate_before = False):
       """Parse a single token with exactly the given value.

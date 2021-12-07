@@ -182,7 +182,7 @@ class TokenGenerator(object):
     # Get the normal suffix lines, but don't advance the token index unless
     # there is no indentation to account for
     start_i = self._i
-    full_whitespace = self.whitespace(comment=True)
+    full_whitespace = self.whitespace(comment=True, line_start_marker=True)
     if not indent_level:
       return full_whitespace
     self._i = start_i
@@ -191,7 +191,7 @@ class TokenGenerator(object):
     lines = full_whitespace.splitlines(True)
     try:
       last_line_idx = next(i for i, line in reversed(list(enumerate(lines)))
-                           if line.startswith(indent_level + '#'))
+                           if line.startswith('@@NL@@' + indent_level + '#'))
     except StopIteration:
       # No comment lines at the end of this block
       self._loc = self._tokens[self._i].end
