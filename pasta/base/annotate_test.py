@@ -505,8 +505,8 @@ foo('begin',
   bar('a1'))
 bar('x')
         """)
-    t = pasta.parse(src, astlib=astlib)
-    call_nodes = ast_utils.find_nodes_by_type(t, astlib.Call, astlib=astlib)
+    t = pasta.parse(src)
+    call_nodes = ast_utils.find_nodes_by_type(t, _ast.Call)
     call_nodes.sort(key=lambda node: node.lineno)
     foo, bar_arg, bar = call_nodes
 
