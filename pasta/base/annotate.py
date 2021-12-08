@@ -358,11 +358,12 @@ def get_base_visitor(astlib=ast):
       if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
         node.body[0].is_continued = True
         self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
+        self.visit(node.body[0])
       else:
         self.attr(
             node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
-      for stmt in self.indented(node, 'body'):
-        self.visit(stmt)
+        for stmt in self.indented(node, 'body'):
+            self.visit(stmt)
 
     def visit_AsyncWith(self, node):
       return self.visit_With(node, is_async=True)
