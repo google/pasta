@@ -47,7 +47,7 @@ def _gen_wrapper(f, scope=True, prefix=True, suffix=True, max_suffix_lines=None,
   def wrapped(self, node, *args, **kwargs):
     with (self.scope(node, trailing_comma=False) if scope else _noop_context()):
       if prefix:
-        self.prefix(node, default=self._indent if statement else '')
+        self.prefix(node, default='@@indent@@' if statement else '')
       f(self, node, *args, **kwargs)
       if suffix:
         self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon,

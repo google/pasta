@@ -81,6 +81,7 @@ class TokenGenerator(object):
     self._len = len(self._tokens)
     self._i = -1
     self._loc = self.loc_begin()
+    self._start_nl_emitted = False
 
   def chars_consumed(self):
     return len(self._space_between((1, 0), self._tokens[self._i].end))
@@ -161,8 +162,11 @@ class TokenGenerator(object):
       # Also insert a @@NL@@ at the very start of the source, but do not insert
       # one after the last newline if the last newline is the last token.
       if line_start_marker and tok.type != TOKENS.ENDMARKER and (
-          self._loc[0] < tok.start[0] or self._loc == (1, 0)):
+          self._loc[0] < tok.start[0] or 
+          (self._loc == (1, 0) and not self._start_nl_emitted)):
         result += '@@NL@@'
+        if self._loc == (1, 0):
+          self._start_nl_emitted = True
       result += self._space_between(self._loc, tok.start)
       if tok != next_token:
         result += tok.src
