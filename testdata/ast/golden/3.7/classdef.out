@@ -10,7 +10,7 @@
 (6, 20)      Name f               	prefix=||	suffix=||	indent=||
 (7, 2)       Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (4, 1)       Name b               	prefix=||	suffix=||	indent=||
-(5, 0)       Call                 	prefix=||	suffix=||	indent=||
+(5, 1)       Call                 	prefix=||	suffix=||	indent=||
 (10, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (13, 2)      Pass                 	prefix=|  |	suffix=|\n|	indent=|  |
 (15, 8)      Name j               	prefix=||	suffix=||	indent=||
