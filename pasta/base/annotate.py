@@ -107,7 +107,7 @@ def get_base_visitor(astlib=ast):
 
     @contextlib.wraps(f)
     def wrapped(self, node, *args, **kwargs):
-      self.prefix(node, default=self._indent)
+      self.prefix(node, default='@@indent@@')
       f(self, node, *args, **kwargs)
       if self.is_annotator:
         last_child = ast_utils.get_last_child(node, astlib=astlib)
@@ -490,20 +490,6 @@ def get_base_visitor(astlib=ast):
     def visit_TryFinally(self, node):
       # Try with except and finally is a TryFinally with the first statement as
       # a TryExcept in Python2
-      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
-                default='try:\n')
-      # TODO(soupytwist): Find a cleaner solution for differentiating this.
-      if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
-        node.body[0].is_continued = True
-        self.visit(node.body[0])
-      else:
-        for stmt in self.indented(node, 'body'):
-          self.visit(stmt)
-
-    @block_statement
-    def visit_TryFinally(self, node):
-      # Try with except and finally is a TryFinally with the first statement as
-      # a TryExcept in Python2
       self.attr(
           node,
           'open_try', ['try', self.ws, ':', self.ws_oneline],
@@ -522,9 +508,11 @@ def get_base_visitor(astlib=ast):
       for stmt in self.indented(node, 'finalbody'):
         self.visit(stmt)
 
-    @block_statement
+    # Cannot use @block_statement because a continued TryExcept isn't one, and because it
+    # absorbs no tokens at all, it messes up the whitespace handling.
     def visit_TryExcept(self, node):
       if not getattr(node, 'is_continued', False):
+        self.prefix(node, default='@@indent@@')
         self.attr(
             node,
             'open_try', ['try', self.ws, ':', self.ws_oneline],
@@ -540,6 +528,16 @@ def get_base_visitor(astlib=ast):
             default='else:\n')
         for stmt in self.indented(node, 'orelse'):
           self.visit(stmt)
+          
+      if self.is_annotator:
+        last_child = ast_utils.get_last_child(node, astlib=astlib)
+        # Workaround for ast.Module which does not have a lineno
+        if last_child and last_child.lineno != getattr(node, 'lineno', 0):
+          indent = fmt.get(last_child, 'indent') or ''
+          fmt.set(node, 'suffix', self.create_indent_markers(
+              self.tokens.block_whitespace(indent), indent))
+      else:
+        self.suffix(node, comment=True)
 
     @block_statement
     def visit_Try(self, node):
