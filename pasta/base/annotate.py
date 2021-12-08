@@ -348,7 +348,7 @@ def get_base_visitor(astlib=ast):
     def visit_With(self, node, is_async=False):
       if hasattr(node, 'items'):
         return self.visit_With_3(node, is_async)
-      if not getattr(node, 'is_continued', False):
+      if not fmt.get(node, 'is_continued', False):
         self.attr(node, 'with', ['with', self.ws], default='with ')
       self.visit(node.context_expr)
       if node.optional_vars:
@@ -356,7 +356,7 @@ def get_base_visitor(astlib=ast):
         self.visit(node.optional_vars)
 
       if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
-        node.body[0].is_continued = True
+        fmt.set(node.body[0], 'is_continued', True)
         self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
         self.visit(node.body[0])
       else:
@@ -496,7 +496,7 @@ def get_base_visitor(astlib=ast):
           default='try:\n')
       # TODO(soupytwist): Find a cleaner solution for differentiating this.
       if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
-        node.body[0].is_continued = True
+        fmt.set(node.body[0], 'is_continued', True)
         self.visit(node.body[0])
       else:
         for stmt in self.indented(node, 'body'):
@@ -511,7 +511,7 @@ def get_base_visitor(astlib=ast):
     # Cannot use @block_statement because a continued TryExcept isn't one, and because it
     # absorbs no tokens at all, it messes up the whitespace handling.
     def visit_TryExcept(self, node):
-      if not getattr(node, 'is_continued', False):
+      if not fmt.get(node, 'is_continued', False):
         self.prefix(node, default='@@indent@@')
         self.attr(
             node,

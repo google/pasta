@@ -192,12 +192,10 @@ def to_str(tree, astlib=ast):
         return False
 
     def check_is_continued_try(self, node):
-      # TODO: Don't set extra attributes on nodes
-      return getattr(node, 'is_continued', False)
+      return fmt.get(node, 'is_continued', False)
 
     def check_is_continued_with(self, node):
-      # TODO: Don't set extra attributes on nodes
-      return getattr(node, 'is_continued', False)
+      return fmt.get(node, 'is_continued', False)
 
   p = Printer()
 
