@@ -79,15 +79,15 @@
 (13, 6)      BinOp                	prefix=||	suffix=||	indent=||
 (15, 5)      Constant             	prefix=||	suffix=||	indent=||
 (18, 2)      BinOp                	prefix=||	suffix=||	indent=||
-(21, 1)      Name a               	prefix=||	suffix=||	indent=||
-(23, 1)      Name b               	prefix=||	suffix=||	indent=||
-(25, 1)      Name c               	prefix=||	suffix=||	indent=||
+(21, 3)      Name a               	prefix=||	suffix=||	indent=||
+(23, 3)      Name b               	prefix=||	suffix=||	indent=||
+(25, 3)      Name c               	prefix=||	suffix=||	indent=||
 (25, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
-(27, 1)      Name c               	prefix=||	suffix=|  |	indent=||
+(27, 3)      Name c               	prefix=||	suffix=|  |	indent=||
 (27, 0)      JoinedStr            	prefix=||	suffix=| |	indent=||
-(29, 1)      Name f               	prefix=||	suffix=||	indent=||
+(29, 3)      Name f               	prefix=||	suffix=||	indent=||
 (29, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
-(31, 1)      Name h               	prefix=||	suffix=| |	indent=||
+(31, 3)      Name h               	prefix=||	suffix=| |	indent=||
 (31, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
 (34, 2)      Name l               	prefix=||	suffix=||	indent=||
 (33, 0)      JoinedStr            	prefix=||	suffix=| |	indent=||
