@@ -37,8 +37,12 @@ def set(node, name, value):
   _formatting_dict(node)[name] = value
 
 
+def clear(node, name):
+  del _formatting_dict(node)[name]
+
+
 def has(node, name):
-  return get(node, name) is not None
+  return name in _formatting_dict(node)
 
 
 def append(node, name, value):

@@ -47,7 +47,7 @@ def _gen_wrapper(f, scope=True, prefix=True, suffix=True, max_suffix_lines=None,
   def wrapped(self, node, *args, **kwargs):
     with (self.scope(node, trailing_comma=False) if scope else _noop_context()):
       if prefix:
-        self.prefix(node, default=self._indent if statement else '')
+        self.prefix(node, default='@@indent@@' if statement else '')
       f(self, node, *args, **kwargs)
       if suffix:
         self.suffix(node, max_lines=max_suffix_lines, semicolon=semicolon,
@@ -107,14 +107,15 @@ def get_base_visitor(astlib=ast):
 
     @contextlib.wraps(f)
     def wrapped(self, node, *args, **kwargs):
-      self.prefix(node, default=self._indent)
+      self.prefix(node, default='@@indent@@')
       f(self, node, *args, **kwargs)
-      if hasattr(self, 'block_suffix'):
+      if self.is_annotator:
         last_child = ast_utils.get_last_child(node, astlib=astlib)
         # Workaround for ast.Module which does not have a lineno
         if last_child and last_child.lineno != getattr(node, 'lineno', 0):
-          indent = (fmt.get(last_child, 'prefix') or '\n').splitlines()[-1]
-          self.block_suffix(node, indent)
+          indent = fmt.get(last_child, 'indent') or ''
+          fmt.set(node, 'suffix', self.create_indent_markers(
+              self.tokens.block_whitespace(indent), indent))
       else:
         self.suffix(node, comment=True)
 
@@ -140,6 +141,11 @@ def get_base_visitor(astlib=ast):
       self._indent = ''
       self._indent_diff = ''
       self._default_indent_diff = '  '
+
+    # Annotating subclasses will override this.
+    @property
+    def is_annotator(self):
+      return False
 
     def visit(self, node):
       self._stack.append(node)
@@ -342,7 +348,7 @@ def get_base_visitor(astlib=ast):
     def visit_With(self, node, is_async=False):
       if hasattr(node, 'items'):
         return self.visit_With_3(node, is_async)
-      if not getattr(node, 'is_continued', False):
+      if not fmt.get(node, 'is_continued', False):
         self.attr(node, 'with', ['with', self.ws], default='with ')
       self.visit(node.context_expr)
       if node.optional_vars:
@@ -350,13 +356,14 @@ def get_base_visitor(astlib=ast):
         self.visit(node.optional_vars)
 
       if len(node.body) == 1 and self.check_is_continued_with(node.body[0]):
-        node.body[0].is_continued = True
+        fmt.set(node.body[0], 'is_continued', True)
         self.attr(node, 'with_comma', [self.ws, ',', self.ws], default=', ')
+        self.visit(node.body[0])
       else:
         self.attr(
             node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
-      for stmt in self.indented(node, 'body'):
-        self.visit(stmt)
+        for stmt in self.indented(node, 'body'):
+            self.visit(stmt)
 
     def visit_AsyncWith(self, node):
       return self.visit_With(node, is_async=True)
@@ -483,27 +490,13 @@ def get_base_visitor(astlib=ast):
     def visit_TryFinally(self, node):
       # Try with except and finally is a TryFinally with the first statement as
       # a TryExcept in Python2
-      self.attr(node, 'open_try', ['try', self.ws, ':', self.ws_oneline],
-                default='try:\n')
-      # TODO(soupytwist): Find a cleaner solution for differentiating this.
-      if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
-        node.body[0].is_continued = True
-        self.visit(node.body[0])
-      else:
-        for stmt in self.indented(node, 'body'):
-          self.visit(stmt)
-
-    @block_statement
-    def visit_TryFinally(self, node):
-      # Try with except and finally is a TryFinally with the first statement as
-      # a TryExcept in Python2
       self.attr(
           node,
           'open_try', ['try', self.ws, ':', self.ws_oneline],
           default='try:\n')
       # TODO(soupytwist): Find a cleaner solution for differentiating this.
       if len(node.body) == 1 and self.check_is_continued_try(node.body[0]):
-        node.body[0].is_continued = True
+        fmt.set(node.body[0], 'is_continued', True)
         self.visit(node.body[0])
       else:
         for stmt in self.indented(node, 'body'):
@@ -515,9 +508,11 @@ def get_base_visitor(astlib=ast):
       for stmt in self.indented(node, 'finalbody'):
         self.visit(stmt)
 
-    @block_statement
+    # Cannot use @block_statement because a continued TryExcept isn't one, and because it
+    # absorbs no tokens at all, it messes up the whitespace handling.
     def visit_TryExcept(self, node):
-      if not getattr(node, 'is_continued', False):
+      if not fmt.get(node, 'is_continued', False):
+        self.prefix(node, default='@@indent@@')
         self.attr(
             node,
             'open_try', ['try', self.ws, ':', self.ws_oneline],
@@ -533,6 +528,16 @@ def get_base_visitor(astlib=ast):
             default='else:\n')
         for stmt in self.indented(node, 'orelse'):
           self.visit(stmt)
+          
+      if self.is_annotator:
+        last_child = ast_utils.get_last_child(node, astlib=astlib)
+        # Workaround for ast.Module which does not have a lineno
+        if last_child and last_child.lineno != getattr(node, 'lineno', 0):
+          indent = fmt.get(last_child, 'indent') or ''
+          fmt.set(node, 'suffix', self.create_indent_markers(
+              self.tokens.block_whitespace(indent), indent))
+      else:
+        self.suffix(node, comment=True)
 
     @block_statement
     def visit_Try(self, node):
@@ -1385,6 +1390,10 @@ def get_ast_annotator(astlib=ast):
       super(AstAnnotator, self).__init__()
       self.tokens = token_generator.TokenGenerator(source)
 
+    @property
+    def is_annotator(self):
+      return True
+
     def visit(self, node):
       try:
         fmt.set(node, 'indent', self._indent)
@@ -1435,7 +1444,8 @@ def get_ast_annotator(astlib=ast):
         yield child
       # Store the suffix at this indentation level, which could be many lines
       fmt.set(node, 'block_suffix_%s' % children_attr,
-              self.tokens.block_whitespace(self._indent))
+              self.create_indent_markers(
+                  self.tokens.block_whitespace(self._indent)))
 
       # Dedent back to the previous level
       self._indent = prev_indent
@@ -1528,8 +1538,40 @@ def get_ast_annotator(astlib=ast):
       # but also treats a[::None] exactly the same.
       return self.tokens.peek_non_whitespace().src not in '],'
 
+    def create_indent_markers(self, ws, indent=None):
+      if indent is None:
+        indent = self._indent
+      # Replace @@NL@@<indent> with @@indent@@. Note this string munging is safe
+      # because inside whitespace, @@indent@@ is never legal after a newline
+      # (only after a comment, which needs a '#' after a newline).
+      # This might not work in the presence of '\' line continuations.
+      ws = ws.replace('@@NL@@' + indent, '@@indent@@')
+      # Remove non-indent-carrying newline markers
+      ws = ws.replace('@@NL@@', '')
+      # Do not create whitespace in empty lines
+      if not indent:
+        ws = ws.replace('@@indent@@\n', '\n')
+      return ws
+
     def ws(self, max_lines=None, semicolon=False, comment=True):
-      """Parse some whitespace from the source tokens and return it."""
+      """Parse some whitespace from the source tokens and return it.
+
+      This function will strip the node's current indent after each newline, and
+      replace it with @@indent@@. Whenever whitespace it printed, @@indent@@
+      is replaced with the appropriate amount of indentation, such that this
+      operation is cleanly reversed.
+
+      This relies on the token_generator generating @@NL@@ *after* each newline
+      when asked for whitespace.
+
+      Args:
+        max_lines: Eat at most this many newline tokens.
+        semicolon: Absorb a semicolon and the space after it.
+        comment: Absorb comments.
+
+      Returns:
+        The whitespace string.
+      """
       next_token = self.tokens.peek()
       if semicolon and next_token and next_token.src == ';':
         result = self.tokens.whitespace() + self.token(';')
@@ -1537,8 +1579,11 @@ def get_ast_annotator(astlib=ast):
         if next_token.type in (token_generator.TOKENS.NL,
                                token_generator.TOKENS.NEWLINE):
           result += self.tokens.whitespace(max_lines=1)
-        return result
-      return self.tokens.whitespace(max_lines=max_lines, comment=comment)
+      else:
+        result = self.tokens.whitespace(max_lines=max_lines, comment=comment,
+                                        line_start_marker=True)
+
+      return self.create_indent_markers(result)
 
     def dots(self, num_dots):
       """Parse a number of dots."""
@@ -1547,9 +1592,6 @@ def get_ast_annotator(astlib=ast):
         return self.tokens.dots(num_dots)
 
       return _parse_dots
-
-    def block_suffix(self, node, indent_level):
-      fmt.set(node, 'suffix', self.tokens.block_whitespace(indent_level))
 
     def token(self, token_val, separate_before = False):
       """Parse a single token with exactly the given value.
@@ -1687,20 +1729,24 @@ def get_ast_annotator(astlib=ast):
 
 
 def _get_indent_width(indent):
+  """Computes the width of the indent (leading WS) in the given string."""
   width = 0
   for c in indent:
     if c == ' ':
       width += 1
     elif c == '\t':
       width += 8 - (width % 8)
+    else:
+      break
   return width
 
 
 def _ltrim_indent(indent, remove_width):
+  """Removes leading WS from indent, or nothing if not enough is available."""
   width = 0
   for i, c in enumerate(indent):
     if width == remove_width:
-      break
+      return indent[i:]
     if c == ' ':
       width += 1
     elif c == '\t':
@@ -1708,7 +1754,7 @@ def _ltrim_indent(indent, remove_width):
         width += 8 - (width % 8)
       else:
         return ' ' * (width + 8 - remove_width) + indent[i + 1:]
-  return indent[i:]
+  return indent
 
 
 def _get_indent_diff(outer, inner):

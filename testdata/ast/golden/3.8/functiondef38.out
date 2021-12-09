@@ -1,6 +1,6 @@
-(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=||	indent=||
 (1, 0)       FunctionDef a        	prefix=||	suffix=||	indent=||
-(3, 0)       FunctionDef a        	prefix=|\n|	suffix=||	indent=||
+(3, 0)       FunctionDef a        	prefix=|\n@@indent@@|	suffix=||	indent=||
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
 (1, 31)      Expr                 	prefix=||	suffix=|\n|	indent=||
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||

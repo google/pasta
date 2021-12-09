@@ -1,12 +1,12 @@
-(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=||	indent=||
 (1, 0)       ClassDef A           	prefix=||	suffix=||	indent=||
-(5, 0)       ClassDef G           	prefix=|\n|	suffix=||	indent=||
-(8, 0)       AnnAssign            	prefix=|\n|	suffix=|\n|	indent=||
-(10, 0)      AnnAssign            	prefix=|\n|	suffix=|\n|	indent=||
-(12, 0)      AnnAssign            	prefix=|\n|	suffix=|\n|	indent=||
-(2, 2)       AnnAssign            	prefix=|  |	suffix=|\n|	indent=|  |
-(3, 2)       AnnAssign            	prefix=|  |	suffix=|\n|	indent=|  |
-(6, 2)       AnnAssign            	prefix=|  |	suffix=|\n|	indent=|  |
+(5, 0)       ClassDef G           	prefix=|\n@@indent@@|	suffix=||	indent=||
+(8, 0)       AnnAssign            	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(10, 0)      AnnAssign            	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(12, 0)      AnnAssign            	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(2, 2)       AnnAssign            	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
+(3, 2)       AnnAssign            	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
+(6, 2)       AnnAssign            	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (8, 0)       Name j               	prefix=||	suffix=||	indent=||
 (8, 3)       Name K               	prefix=||	suffix=||	indent=||
 (10, 0)      Name l               	prefix=||	suffix=|  |	indent=||

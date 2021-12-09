@@ -1,14 +1,14 @@
-(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=|@@indent@@|	indent=||
 (1, 0)       With                 	prefix=||	suffix=||	indent=||
-(4, 0)       With                 	prefix=|\n|	suffix=||	indent=||
-(7, 0)       With                 	prefix=|\n|	suffix=||	indent=||
+(4, 0)       With                 	prefix=|\n@@indent@@|	suffix=||	indent=||
+(7, 0)       With                 	prefix=|\n@@indent@@|	suffix=||	indent=||
 (-1, -1)     withitem             	prefix=||	suffix=||	indent=||
-(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(2, 2)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (-1, -1)     withitem             	prefix=||	suffix=||	indent=||
-(5, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(5, 2)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (-1, -1)     withitem             	prefix=||	suffix=||	indent=||
 (-1, -1)     withitem             	prefix=| |	suffix=||	indent=||
-(8, 2)       With                 	prefix=|  |	suffix=||	indent=|  |
+(8, 2)       With                 	prefix=|@@indent@@|	suffix=||	indent=|  |
 (1, 5)       Name a               	prefix=||	suffix=||	indent=||
 (2, 2)       Name b               	prefix=||	suffix=||	indent=|  |
 (4, 8)       Name c               	prefix=||	suffix=|   |	indent=||
@@ -18,7 +18,7 @@
 (7, 8)       Name f               	prefix=||	suffix=| |	indent=||
 (7, 13)      Name g               	prefix=||	suffix=||	indent=||
 (-1, -1)     withitem             	prefix=||	suffix=||	indent=|  |
-(9, 4)       Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
+(9, 4)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||

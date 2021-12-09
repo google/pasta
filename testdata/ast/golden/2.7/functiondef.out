@@ -1,29 +1,29 @@
-(-1, -1)     Module               	prefix=||	suffix=||	indent=||
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=|@@indent@@|	indent=||
 (1, 0)       FunctionDef a        	prefix=||	suffix=||	indent=||
-(4, 0)       FunctionDef d        	prefix=|\n|	suffix=||	indent=||
-(7, 0)       FunctionDef k        	prefix=|\n|	suffix=||	indent=||
-(12, 0)      FunctionDef v        	prefix=|\n|	suffix=||	indent=||
-(18, 0)      FunctionDef x        	prefix=|\n|	suffix=||	indent=||
-(21, 0)      ClassDef A           	prefix=|\n|	suffix=||	indent=||
-(27, 0)      FunctionDef f        	prefix=|\n|	suffix=||	indent=||
+(4, 0)       FunctionDef d        	prefix=|\n@@indent@@|	suffix=||	indent=||
+(7, 0)       FunctionDef k        	prefix=|\n@@indent@@|	suffix=||	indent=||
+(12, 0)      FunctionDef v        	prefix=|\n@@indent@@|	suffix=||	indent=||
+(18, 0)      FunctionDef x        	prefix=|\n@@indent@@|	suffix=||	indent=||
+(21, 0)      ClassDef A           	prefix=|\n@@indent@@|	suffix=||	indent=||
+(27, 0)      FunctionDef f        	prefix=|\n@@indent@@|	suffix=||	indent=||
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
-(2, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(2, 2)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
-(5, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(5, 2)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
-(8, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(9, 2)       Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(10, 2)      Return               	prefix=|  |	suffix=|\n|	indent=|  |
+(8, 2)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
+(9, 2)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
+(10, 2)      Return               	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
-(16, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(16, 2)      Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (12, 1)      Call                 	prefix=||	suffix=||	indent=||
 (13, 1)      Name p               	prefix=||	suffix=||	indent=||
 (14, 1)      Call                 	prefix=||	suffix=||	indent=||
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=||
-(19, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
-(22, 2)      FunctionDef d        	prefix=|  |	suffix=||	indent=|  |
-(-1, -1)     arguments            	prefix=||	suffix=|\n    |	indent=||
-(30, 2)      Expr                 	prefix=|  |	suffix=|\n|	indent=|  |
+(19, 2)      Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
+(22, 2)      FunctionDef d        	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     arguments            	prefix=||	suffix=|\n@@indent@@    |	indent=||
+(30, 2)      Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|  |
 (1, 6)       Name b               	prefix=||	suffix=||	indent=||
 (2, 2)       Name c               	prefix=||	suffix=||	indent=|  |
 (4, 13)      Name e               	prefix=||	suffix=|  |	indent=||
@@ -45,7 +45,7 @@
 (18, 11)     Name a               	prefix=||	suffix=||	indent=||
 (19, 2)      Name b               	prefix=||	suffix=||	indent=|  |
 (-1, -1)     arguments            	prefix=||	suffix=||	indent=|  |
-(25, 4)      Expr                 	prefix=|    |	suffix=|\n|	indent=|    |
+(25, 4)      Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
 (22, 3)      Name b               	prefix=||	suffix=||	indent=|  |
 (23, 3)      Name c               	prefix=||	suffix=||	indent=|  |
 (28, 4)      Name g               	prefix=||	suffix=||	indent=||

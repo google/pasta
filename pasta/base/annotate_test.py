@@ -89,7 +89,7 @@ class PrefixSuffixTest(test_utils.TestCase):
           lambda node: is_node_for_suffix(node, children_attr), astlib=astlib)
       node_finder.visit(t)
       node = node_finder.results[0]
-      expected = '  #b\n    #c\n\n  #d\n'
+      expected = '@@indent@@#b\n@@indent@@  #c\n\n@@indent@@#d\n'
       actual = str(fmt.get(node, 'block_suffix_%s' % children_attr))
       self.assertMultiLineEqual(
           expected, actual,
@@ -100,7 +100,7 @@ class PrefixSuffixTest(test_utils.TestCase):
   def test_module_suffix(self):
     src = 'foo\n#bar\n\n#baz\n'
     t = pasta.parse(src, astlib=astlib)
-    self.assertEqual(src[src.index('#bar'):], fmt.get(t, 'suffix'))
+    self.assertEqual('@@indent@@#bar\n\n@@indent@@#baz\n', fmt.get(t, 'suffix'))
 
   def test_no_block_suffix_for_single_line_statement(self):
     src = 'if x:  return y\n  #a\n#b\n'
@@ -110,13 +110,13 @@ class PrefixSuffixTest(test_utils.TestCase):
   def test_expression_prefix_suffix(self):
     src = 'a\n\nfoo\n\n\nb\n'
     t = pasta.parse(src, astlib=astlib)
-    self.assertEqual('\n', fmt.get(t.body[1], 'prefix'))
+    self.assertEqual('\n@@indent@@', fmt.get(t.body[1], 'prefix'))
     self.assertEqual('\n', fmt.get(t.body[1], 'suffix'))
 
   def test_statement_prefix_suffix(self):
     src = 'a\n\ndef foo():\n  return bar\n\n\nb\n'
     t = pasta.parse(src, astlib=astlib)
-    self.assertEqual('\n', fmt.get(t.body[1], 'prefix'))
+    self.assertEqual('\n@@indent@@', fmt.get(t.body[1], 'prefix'))
     self.assertEqual('', fmt.get(t.body[1], 'suffix'))
 
 
@@ -259,6 +259,66 @@ class IndentationTest(test_utils.TestCase):
     t = pasta.parse(src, astlib=astlib)
     # Repace the second node and make sure the indent level is corrected
     t.body[0].body[1] = astlib.Expr(astlib.Name(id='new_node'))
+    self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
+
+  def test_autoindent_with_prefix(self):
+    src = textwrap.dedent("""\
+        def a():
+            b
+            c
+        """)
+    expected = textwrap.dedent("""\
+        def a():
+            b
+            # comment before new node
+            new_node
+        """)
+    t = pasta.parse(src, astlib=astlib)
+    # Repace the second node and make sure the indent level is corrected
+    new_node = astlib.Expr(astlib.Name(id='new_node'))
+    fmt.set(new_node, 'prefix',
+            '@@indent@@# comment before new node\n@@indent@@')
+    t.body[0].body[1] = new_node
+    self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
+
+  def test_block_suffix_indent(self):
+    src = textwrap.dedent("""\
+        def a():
+            b
+            # block suffix
+            # more block suffix
+        """)
+    expected = textwrap.dedent("""\
+        def a():
+          b
+          # block suffix
+          # more block suffix
+        """)
+    t = pasta.parse(src, astlib=astlib)
+    # Change indent
+    fmt.clear(t.body[-1].body[-1], 'indent')
+    fmt.clear(t.body[-1].body[-1], 'indent_diff')
+    fmt.set(t.body[-1], 'indent_diff', '  ')
+    self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
+
+  def test_autoindent_with_first_prefix(self):
+    src = textwrap.dedent("""\
+        def a():
+            b
+            c
+        """)
+    expected = textwrap.dedent("""\
+        def a():
+            # comment before new node
+            new_node
+            c
+        """)
+    t = pasta.parse(src, astlib=astlib)
+    # Repace the second node and make sure the indent level is corrected
+    new_node = astlib.Expr(astlib.Name(id='new_node'))
+    fmt.set(new_node, 'prefix',
+            '@@indent@@# comment before new node\n@@indent@@')
+    t.body[0].body[0] = new_node
     self.assertMultiLineEqual(expected, codegen.to_str(t, astlib=astlib))
 
   @test_utils.requires_features(['mixed_tabs_spaces'], astlib=astlib)

@@ -48,7 +48,15 @@ def to_str(tree, astlib=ast):
 
     def __init__(self):
       super(Printer, self).__init__()
-      self.code = ''
+      self._code = ''
+
+    @property
+    def code(self):
+      return self._code
+
+    def _add_code(self, code):
+      code = code.replace('@@indent@@', self._indent)
+      self._code += code
 
     def visit(self, node):
       node._printer_info = collections.defaultdict(lambda: False)
@@ -62,14 +70,14 @@ def to_str(tree, astlib=ast):
       self.prefix(node)
       bom = fmt.get(node, 'bom')
       if bom is not None:
-        self.code += bom
+        self._add_code(bom)
       self.generic_visit(node)
       self.suffix(node)
 
     def visit_Num(self, node):
       self.prefix(node)
       content = fmt.get(node, 'content')
-      self.code += content if content is not None else repr(node.n)
+      self._add_code(content if content is not None else repr(node.n))
       self.suffix(node)
 
     def visit_Str(self, node):
@@ -77,14 +85,14 @@ def to_str(tree, astlib=ast):
       content = fmt.get(node, 'content')
       str_fmt = fmt.get(node, 'fmt')
       if str_fmt:
-        self.code += str_fmt
-        self.code += content if content is not None else repr(node.s)
+        self._add_code(str_fmt)
+        self._add_code(content if content is not None else repr(node.s))
       elif hasattr(node, 'kind'):
         # Hack: print typed_ast27 strings correctly when running in python3
-        self.code += node.kind + (content if content is not None
-                                  else repr(node.s)).lstrip('BbRrUu')
+        self._add_code(node.kind + (content if content is not None
+                                    else repr(node.s)).lstrip('BbRrUu'))
       else:
-        self.code += content if content is not None else repr(node.s)
+        self._add_code(content if content is not None else repr(node.s))
       self.suffix(node)
 
     def visit_JoinedStr(self, node):
@@ -102,13 +110,13 @@ def to_str(tree, astlib=ast):
 
       values = [to_str(v, astlib)
                for v in fstring_utils.get_formatted_values(node, astlib=astlib)]
-      self.code += fstring_utils.perform_replacements(content, values)
+      self._add_code(fstring_utils.perform_replacements(content, values))
       self.suffix(node)
 
     def visit_Bytes(self, node):
       self.prefix(node)
       content = fmt.get(node, 'content')
-      self.code += content if content is not None else repr(node.s)
+      self._add_code(content if content is not None else repr(node.s))
       self.suffix(node)
 
     def visit_Constant(self, node):
@@ -117,7 +125,7 @@ def to_str(tree, astlib=ast):
         content = '...'
       else:
         content = fmt.get(node, 'content')
-      self.code += content if content is not None else repr(node.s)
+      self._add_code(content if content is not None else repr(node.s))
       self.suffix(node)
 
     def token(self, token_val,
@@ -131,8 +139,8 @@ def to_str(tree, astlib=ast):
       """
       if separate_before and self.code and self.code[-1].isalnum() and \
             (not token_val or token_val[0].isalnum()):
-          self.code += ' '
-      self.code += token_val
+          self._add_code(' ')
+      self._add_code(token_val)
 
     def optional_token(self, node, attr_name, token_val,
                        allow_whitespace_prefix=False, default=False):
@@ -140,7 +148,7 @@ def to_str(tree, astlib=ast):
       value = fmt.get(node, attr_name)
       if value is None and default:
         value = token_val
-      self.code += value or ''
+      self._add_code(value or '')
 
     def attr(self, node, attr_name, attr_vals, deps=None, default=None,
              separate_before=False):
@@ -174,8 +182,8 @@ def to_str(tree, astlib=ast):
       val = val if val is not None else ''
       if separate_before and self.code and self.code[-1].isalnum() and \
             (not val or val[0].isalnum()):
-          self.code += ' '
-      self.code += val
+          self._add_code(' ')
+      self._add_code(val)
 
     def check_is_elif(self, node):
       try:
@@ -184,12 +192,10 @@ def to_str(tree, astlib=ast):
         return False
 
     def check_is_continued_try(self, node):
-      # TODO: Don't set extra attributes on nodes
-      return getattr(node, 'is_continued', False)
+      return fmt.get(node, 'is_continued', False)
 
     def check_is_continued_with(self, node):
-      # TODO: Don't set extra attributes on nodes
-      return getattr(node, 'is_continued', False)
+      return fmt.get(node, 'is_continued', False)
 
   p = Printer()
 
@@ -233,6 +239,6 @@ def to_tree_str(node, indent, astlib=ast):
     print('%s%s' % (indent, field))
     if isinstance(value, list):
       for item in value:
-        to_tree_str(item, astlib, indent + '    ')
+        to_tree_str(item, indent + '    ', astlib)
     elif value is not None:
-      to_tree_str(value, astlib, indent + '    ')
+      to_tree_str(value, indent + '    ', astlib)
