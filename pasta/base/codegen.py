@@ -208,8 +208,11 @@ def to_str(tree, astlib=ast):
       seen_indent_diffs[indent_diff] += 1
 
   if seen_indent_diffs:
-    indent_diff, _ = max(six.iteritems(seen_indent_diffs),
-                         key=lambda tup: tup[1] if tup[0] else -1)
+    indent_diff, _ = max(
+        six.iteritems(seen_indent_diffs),
+        # Key is (num of occurrences, inverse of length of indent)
+        # in order to make this deterministic
+        key=lambda tup: (tup[1], -1 * len(tup[0])))
     p.set_default_indent_diff(indent_diff)
 
   p.visit(tree)
