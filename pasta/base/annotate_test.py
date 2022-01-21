@@ -589,15 +589,26 @@ bar('x')
     self.assertEqual(1, fmt.get(foo, 'start_line'))
     self.assertEqual(0, fmt.get(foo, 'start_col'))
     self.assertEqual(2, fmt.get(foo, 'end_line'))
-    self.assertEqual(13, fmt.get(foo, 'end_col'))
+    self.assertEqual(12, fmt.get(foo, 'end_col'))
     self.assertEqual(2, fmt.get(bar_arg, 'start_line'))
     self.assertEqual(2, fmt.get(bar_arg, 'start_col'))
     self.assertEqual(2, fmt.get(bar_arg, 'end_line'))
-    self.assertEqual(12, fmt.get(bar_arg, 'end_col'))
+    self.assertEqual(11, fmt.get(bar_arg, 'end_col'))
     self.assertEqual(3, fmt.get(bar, 'start_line'))
     self.assertEqual(0, fmt.get(bar, 'start_col'))
     self.assertEqual(3, fmt.get(bar, 'end_line'))
-    self.assertEqual(9, fmt.get(bar, 'end_col'))
+    self.assertEqual(8, fmt.get(bar, 'end_col'))
+
+  def test_end_col(self):
+    src = 'a = b + c'
+    t = pasta.parse(src, astlib=astlib)
+    name_nodes = ast_utils.find_nodes_by_type(t, astlib.Name, astlib=astlib)
+    name_nodes.sort(key=lambda node: node.col_offset)
+    a, b, c = name_nodes
+
+    self.assertEqual(2, fmt.get(a, 'end_col'))
+    self.assertEqual(6, fmt.get(b, 'end_col'))
+    self.assertEqual(9, fmt.get(c, 'end_col'))
 
 
 def _get_diff(before, after):
