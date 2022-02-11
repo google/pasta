@@ -1401,8 +1401,8 @@ def get_ast_annotator(astlib=ast):
         fmt.set(node, 'start_line', self.tokens.peek().start[0])
         fmt.set(node, 'start_col', self.tokens.peek().start[1])
         super(AstAnnotator, self).visit(node)
-        fmt.set(node, 'end_line', self.tokens.peek().end[0])
-        fmt.set(node, 'end_col', self.tokens.peek().end[1])
+        fmt.set(node, 'end_line', self.tokens.peek().start[0])
+        fmt.set(node, 'end_col', self.tokens.peek().start[1])
       except (TypeError, ValueError, IndexError, KeyError) as e:
         raise AnnotationError(e)
 
