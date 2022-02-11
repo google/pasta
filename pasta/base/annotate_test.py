@@ -608,7 +608,8 @@ bar('x')
 
     self.assertEqual(2, fmt.get(a, 'end_col'))
     self.assertEqual(6, fmt.get(b, 'end_col'))
-    self.assertEqual(9, fmt.get(c, 'end_col'))
+    # NB: 0 to support python2.7, which does not generate a NEWLINE token.
+    self.assertIn(fmt.get(c, 'end_col'), (9, 0))
 
 
 def _get_diff(before, after):
