@@ -485,6 +485,27 @@ class ScopeTest(test_utils.TestCase):
     self.assertIn('ddd', func_scope.names)
     self.assertItemsEqual(func_scope.names['ddd'].reads, [ddd_expr.value])
 
+  def test_keyword_only_arguments_and_defaults(self):
+    source = textwrap.dedent("""\
+        def aaa(bbb, *, ccc, ddd=eee):
+          ccc
+          ddd
+        fff(ccc, ddd)
+        """)
+    tree = astlib.parse(source)
+    funcdef, call = tree.body
+    argval = funcdef.args.kw_defaults[1]
+    ccc_expr, ddd_expr = funcdef.body
+
+    sc = scope.analyze(tree, astlib=astlib)
+
+    func_scope = sc.lookup_scope(funcdef)
+    self.assertIn('ccc', func_scope.names)
+    self.assertItemsEqual(func_scope.names['ccc'].reads, [ccc_expr.value])
+    self.assertIn('ddd', func_scope.names)
+    self.assertItemsEqual(func_scope.names['ddd'].reads, [ddd_expr.value])
+    self.assertItemsEqual(sc.names['eee'].reads, [argval])
+
 
 if __name__ == '__main__':
   unittest.main()

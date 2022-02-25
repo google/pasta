@@ -145,7 +145,7 @@ def analyze(tree, astlib=ast):
           self.scope.define_name(arg_name, node)
       else:
         # Visit defaults first to avoid declarations in args
-        self.visit_in_order(node, 'vararg', 'kwarg')
+        self.visit_in_order(node, 'vararg', 'kw_defaults', 'kwonlyargs', 'kwarg')
 
     def visit_arg(self, node):
       self.scope.define_name(node.arg, node)
