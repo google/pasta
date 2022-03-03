@@ -485,6 +485,7 @@ class ScopeTest(test_utils.TestCase):
     self.assertIn('ddd', func_scope.names)
     self.assertItemsEqual(func_scope.names['ddd'].reads, [ddd_expr.value])
 
+  @test_utils.requires_features(['keyword_only_arguments'], astlib=astlib)
   def test_keyword_only_arguments_and_defaults(self):
     source = textwrap.dedent("""\
         def aaa(bbb, *, ccc, ddd=eee):

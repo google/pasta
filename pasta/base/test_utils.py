@@ -91,6 +91,8 @@ def supports_feature(feature, astlib=ast):
     return _try_to_parse('def a():	b\n       c', astlib)
   if feature == 'ur_str_literal':
     return _try_to_parse('ur""', astlib)
+  if feature == 'keyword_only_arguments':
+    return _try_to_parse('def a(b, *, c): pass', astlib)
   return False
 
 
