@@ -1086,7 +1086,12 @@ def get_base_visitor(astlib=ast):
 
     @expression
     def visit_Tuple(self, node):
-      with self.scope(node, 'elts', default_parens=True):
+      # Python3.9+ simplified `a[b:c, d]` to have a suple as the `slice`,
+      # whereas previous versions would parse this as an `ExtSlice`. Since a
+      # Subscript has brackets around, there's no need to add default parens.
+      default_parens = not isinstance(self._stack[-2], astlib.Subscript)
+
+      with self.scope(node, 'elts', default_parens=default_parens):
         for i, elt in enumerate(node.elts):
           self.visit(elt)
           if elt is not node.elts[-1]:
