@@ -585,3 +585,6 @@ def _generate_tokens(source, ignore_error_token=False):
   except tokenize.TokenError:
     if not ignore_error_token:
       raise
+  except IndentationError:
+    # tokenize sometimes throws this for invalid inputs. We can ignore it.
+    pass
