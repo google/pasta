@@ -19,6 +19,7 @@
 (38, 0)      Expr                 	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
 (42, 0)      Expr                 	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
 (45, 0)      Expr                 	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(48, 0)      Expr                 	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
 (1, 0)       JoinedStr            	prefix=||	suffix=||	indent=||
 (3, 0)       JoinedStr            	prefix=||	suffix=||	indent=||
 (5, 0)       JoinedStr            	prefix=||	suffix=||	indent=||
@@ -39,6 +40,7 @@
 (38, 0)      Call                 	prefix=||	suffix=||	indent=||
 (42, 1)      JoinedStr            	prefix=|(|	suffix=|)|	indent=||
 (45, 1)      JoinedStr            	prefix=|(|	suffix=|)|	indent=||
+(48, 0)      JoinedStr            	prefix=||	suffix=||	indent=||
 (1, 0)       Constant             	prefix=||	suffix=||	indent=||
 (3, 0)       FormattedValue       	prefix=|@@indent@@|	suffix=||	indent=||
 (5, 0)       Constant             	prefix=||	suffix=||	indent=||
@@ -71,6 +73,9 @@
 (42, 1)      Constant             	prefix=||	suffix=||	indent=||
 (45, 1)      Constant             	prefix=||	suffix=||	indent=||
 (45, 1)      FormattedValue       	prefix=||	suffix=||	indent=||
+(48, 0)      Constant             	prefix=||	suffix=||	indent=||
+(48, 0)      FormattedValue       	prefix=|@@indent@@|	suffix=||	indent=||
+(48, 0)      Constant             	prefix=||	suffix=||	indent=||
 (3, 3)       Name b               	prefix=||	suffix=||	indent=||
 (5, 5)       Name d               	prefix=||	suffix=||	indent=||
 (7, 5)       Name g               	prefix=||	suffix=||	indent=||
@@ -97,6 +102,7 @@
 (38, 4)      Constant             	prefix=||	suffix=||	indent=||
 (42, 6)      Name e               	prefix=||	suffix=||	indent=||
 (45, 2)      Name h               	prefix=||	suffix=||	indent=||
+(49, 3)      Name i               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
@@ -128,6 +134,7 @@
 (36, 4)      Attribute b          	prefix=|(|	suffix=|)|	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (38, 7)      Name d               	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (29, 6)      Name g               	prefix=||	suffix=||	indent=||
