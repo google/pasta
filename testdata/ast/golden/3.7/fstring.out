@@ -102,6 +102,7 @@
 (38, 4)      Str                  	prefix=||	suffix=||	indent=||
 (42, 6)      Name e               	prefix=||	suffix=||	indent=||
 (45, 2)      Name h               	prefix=||	suffix=||	indent=||
+(49, 2)      Name i               	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
 (-1, -1)     Load                 	prefix=||	suffix=||	indent=||
