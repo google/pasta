@@ -675,6 +675,9 @@ def get_base_visitor(astlib=ast):
         self.visit(target)
         if target is not node.targets[-1]:
           self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
+        else:
+          self.optional_token(
+              node, 'extracomma', ',', allow_whitespace_prefix=True)
 
     @statement
     def visit_Exec(self, node):
