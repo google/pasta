@@ -90,7 +90,7 @@ def rename_external(t, old_name, new_name, astlib=ast):
         has_changed = True
 
   for rename_old, rename_new in six.iteritems(renames):
-    _rename_reads(sc, t, rename_old, rename_new, astlib=astlib)
+    rename_reads(sc, t, rename_old, rename_new, astlib=astlib)
   return has_changed
 
 
@@ -127,7 +127,7 @@ def _rename_name_in_importfrom(sc, node, old_name, new_name):
   return True
 
 
-def _rename_reads(sc, t, old_name, new_name, astlib=ast):
+def rename_reads(sc, t, old_name, new_name, astlib=ast):
   """Updates all locations in the module where the given name is read.
 
   Arguments:

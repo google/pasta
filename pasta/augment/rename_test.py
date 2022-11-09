@@ -105,29 +105,29 @@ class RenameTest(test_utils.TestCase):
     src = 'aaa.bbb()'
     t = astlib.parse(src)
     sc = scope.analyze(t, astlib=astlib)
-    self.assertTrue(rename._rename_reads(sc, t, 'aaa', 'xxx', astlib=astlib))
+    self.assertTrue(rename.rename_reads(sc, t, 'aaa', 'xxx', astlib=astlib))
     self.checkAstsEqual(t, astlib.parse('xxx.bbb()'), astlib=astlib)
 
   def test_rename_reads_name_as_attribute(self):
     src = 'aaa.bbb()'
     t = astlib.parse(src)
     sc = scope.analyze(t, astlib=astlib)
-    rename._rename_reads(sc, t, 'aaa', 'xxx.yyy', astlib=astlib)
+    rename.rename_reads(sc, t, 'aaa', 'xxx.yyy', astlib=astlib)
     self.checkAstsEqual(t, astlib.parse('xxx.yyy.bbb()'), astlib=astlib)
 
   def test_rename_reads_attribute(self):
     src = 'aaa.bbb.ccc()'
     t = astlib.parse(src)
     sc = scope.analyze(t, astlib=astlib)
-    rename._rename_reads(sc, t, 'aaa.bbb', 'xxx.yyy', astlib=astlib)
+    rename.rename_reads(sc, t, 'aaa.bbb', 'xxx.yyy', astlib=astlib)
     self.checkAstsEqual(t, astlib.parse('xxx.yyy.ccc()'), astlib=astlib)
 
   def test_rename_reads_noop(self):
     src = 'aaa.bbb.ccc()'
     t = astlib.parse(src)
     sc = scope.analyze(t, astlib=astlib)
-    rename._rename_reads(sc, t, 'aaa.bbb.ccc.ddd', 'xxx.yyy', astlib=astlib)
-    rename._rename_reads(sc, t, 'bbb.aaa', 'xxx.yyy', astlib=astlib)
+    rename.rename_reads(sc, t, 'aaa.bbb.ccc.ddd', 'xxx.yyy', astlib=astlib)
+    rename.rename_reads(sc, t, 'bbb.aaa', 'xxx.yyy', astlib=astlib)
     self.checkAstsEqual(t, astlib.parse(src), astlib=astlib)
 
   @test_utils.requires_features(['type_annotations'], astlib=astlib)
@@ -138,7 +138,7 @@ class RenameTest(test_utils.TestCase):
         """)
     t = astlib.parse(src)
     sc = scope.analyze(t, astlib=astlib)
-    rename._rename_reads(sc, t, 'aaa.bbb', 'xxx.yyy', astlib=astlib)
+    rename.rename_reads(sc, t, 'aaa.bbb', 'xxx.yyy', astlib=astlib)
     self.checkAstsEqual(t, astlib.parse(textwrap.dedent("""\
         def foo(bar: 'xxx.yyy.ccc.Bar'):
           pass
