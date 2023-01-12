@@ -569,6 +569,7 @@ class VersionSupportTest(test_utils.TestCase):
         'stmt',
         'type_ignore',
         'unaryop',
+        'pattern',
     }
     self.assertEqual(set(), ast_nodes - handled_nodes - ignored_nodes)
 

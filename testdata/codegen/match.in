@@ -1,0 +1,13 @@
+match a:
+  case 'b':
+    c
+  case [d, e] if f:
+    g
+  case [h, *i]:
+    j
+  case None:
+    k
+  case {1: _, 2: _}:
+    l
+  case {**m}:
+    n

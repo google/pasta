@@ -140,6 +140,8 @@ def get_last_child(node, astlib=ast):
       return node.orelse[-1]
     if node.handlers:
       return get_last_child(node.handlers[-1], astlib)
+  elif hasattr(astlib, 'Match') and isinstance(node, astlib.Match):
+    return node.cases[-1]
   return node.body[-1]
 
 

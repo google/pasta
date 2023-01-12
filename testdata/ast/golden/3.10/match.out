@@ -1,0 +1,45 @@
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=|@@indent@@|	indent=||
+(1, 0)       Match                	prefix=||	suffix=||	indent=||
+(1, 6)       Name a               	prefix=||	suffix=||	indent=||
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(2, 7)       MatchValue           	prefix=||	suffix=||	indent=|  |
+(2, 12)      Expr                 	prefix=||	suffix=|\n|	indent=|  |
+(3, 7)       MatchSequence        	prefix=||	suffix=|   |	indent=|  |
+(3, 26)      Name f               	prefix=||	suffix=| |	indent=|  |
+(4, 4)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(5, 7)       MatchSequence        	prefix=||	suffix=||	indent=|  |
+(6, 4)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(7, 7)       MatchSingleton       	prefix=||	suffix=||	indent=|  |
+(8, 4)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(9, 7)       MatchMapping         	prefix=||	suffix=||	indent=|  |
+(10, 4)      Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(11, 7)      MatchMapping         	prefix=||	suffix=||	indent=|  |
+(12, 4)      Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(2, 7)       Constant             	prefix=||	suffix=||	indent=|  |
+(2, 12)      Name c               	prefix=||	suffix=||	indent=|  |
+(3, 10)      MatchAs d            	prefix=||	suffix=||	indent=|  |
+(3, 15)      MatchAs e            	prefix=||	suffix=| |	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(4, 4)       Name g               	prefix=||	suffix=||	indent=|    |
+(5, 8)       MatchAs h            	prefix=||	suffix=||	indent=|  |
+(5, 11)      MatchStar i          	prefix=||	suffix=||	indent=|  |
+(6, 4)       Name j               	prefix=||	suffix=||	indent=|    |
+(8, 4)       Name k               	prefix=||	suffix=||	indent=|    |
+(9, 8)       Constant             	prefix=||	suffix=||	indent=|  |
+(9, 14)      Constant             	prefix=||	suffix=||	indent=|  |
+(9, 11)      MatchAs              	prefix=||	suffix=||	indent=|  |
+(9, 17)      MatchAs              	prefix=||	suffix=||	indent=|  |
+(10, 4)      Name l               	prefix=||	suffix=||	indent=|    |
+(12, 4)      Name n               	prefix=||	suffix=||	indent=|    |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

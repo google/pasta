@@ -112,7 +112,8 @@ def get_base_visitor(astlib=ast):
       if self.is_annotator:
         last_child = ast_utils.get_last_child(node, astlib=astlib)
         # Workaround for ast.Module which does not have a lineno
-        if last_child and last_child.lineno != getattr(node, 'lineno', 0):
+        if (last_child and hasattr(last_child, 'lineno')
+            and last_child.lineno != getattr(node, 'lineno', 0)):
           indent = fmt.get(last_child, 'indent') or ''
           fmt.set(node, 'suffix', self.create_indent_markers(
               self.tokens.block_whitespace(indent), indent))
@@ -1047,6 +1048,122 @@ def get_base_visitor(astlib=ast):
       if close_brace:
         self.attr(
             node, 'compexp_close', [self.ws, close_brace], default=close_brace)
+
+    @block_statement
+    def visit_Match(self, node):
+      # Python 3.10+
+      self.attr(node, 'open_match', ['match', self.ws], default='match ')
+      self.visit(node.subject)
+      self.attr(
+          node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
+      for stmt in self.indented(node, 'cases'):
+        self.visit(stmt)
+
+    @block_statement
+    def visit_match_case(self, node):
+      # Python 3.10+
+      self.attr(node, 'open_case', ['case', self.ws], default='case ')
+      self.visit(node.pattern)
+      if node.guard:
+        self.attr(node, 'guard', [self.ws, 'if', self.ws], default=' if ')
+        self.visit(node.guard)
+      self.attr(
+          node, 'open_block', [self.ws, ':', self.ws_oneline], default=':\n')
+      for stmt in self.indented(node, 'body'):
+        self.visit(stmt)
+
+    @expression
+    def visit_MatchValue(self, node):
+      # Python 3.10+
+      self.visit(node.value)
+
+    @expression
+    def visit_MatchSingleton(self, node):
+      # Python 3.10+
+      self.token(str(node.value))
+
+    @expression
+    def visit_MatchSequence(self, node):
+      # Python 3.10+
+      self.attr(node, 'patterns_open', ['[', self.ws], default='[')
+
+      for i, pattern in enumerate(node.patterns):
+        self.visit(pattern)
+        if pattern is not node.patterns[-1]:
+          self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
+      if node.patterns:
+        self.optional_token(
+            node, 'extracomma', ',', allow_whitespace_prefix=True)
+
+      self.attr(node, 'patterns_close', [self.ws, ']'], default=']')
+
+    @expression
+    def visit_MatchStar(self, node):
+      # Python 3.10+
+      self.attr(node, 'star',
+                ['*'] + ([node.name] if node.name else []) + [self.ws],
+                default = '*%s' % (node.name if node.name else ''))
+
+    @expression
+    def visit_MatchMapping(self, node):
+      self.token('{')
+      for i, (key, pattern) in enumerate(zip(node.keys, node.patterns)):
+        self.visit(key)
+        self.attr(
+            node, 'key_val_sep_%d' % i, [self.ws, ':', self.ws], default=': ')
+        self.visit(pattern)
+        if pattern is not node.patterns[-1]:
+          self.attr(node, 'comma_%d' % i, [self.ws, ',', self.ws], default=', ')
+
+      if node.rest:
+        self.attr(node, 'rest_prefix', 
+                  [self.ws, '**', self.ws, node.rest, self.ws],
+                  default='**%s' % node.rest)
+
+      self.optional_token(node, 'extracomma', ',', allow_whitespace_prefix=True)
+      self.attr(node, 'close_prefix', [self.ws, '}'], default='}')
+
+    @expression
+    def visit_MatchClass(self, node):
+      self.visit(node.cls)
+      self.attr(node, 'cls_open', [self.ws, '(', self.ws], default='(')
+
+      total_args = len(node.patterns) + len(node.kwd_patterns)
+      arg_i = 0
+      for arg in node.patterns:
+        self.visit(arg)
+        arg_i += 1
+        if arg_i < total_args:
+          self.attr(
+              node, 'comma_%d' % arg_i, [self.ws, ',', self.ws], default=', ')
+
+      for i, (arg, pattern) in enumerate(zip(node.kwd_attrs, node.kwd_patterns)):
+        self.visit(arg)
+        self.attr(node, 'pattern_%d' % i, [self.ws, '=', self.ws], default='=')
+        self.visit(pattern)
+        arg_i += 1
+        if arg_i < total_args:
+          self.attr(
+              node, 'comma_%d' % arg_i, [self.ws, ',', self.ws], default=', ')
+
+      self.attr(node, 'cls_close', [self.ws, ')', self.ws], default=')')
+
+    @expression
+    def visit_MatchAs(self, node):
+      if node.pattern is not None:
+        self.visit(node.pattern)
+        if node.name is not None:
+          self.attr(node, 'as', [self.ws, 'as', self.ws], default=' as ')
+      self.token(node.name if node.name is not None else '_')
+
+    @expression
+    def visit_MatchOr(self, node):
+      for pattern in node.patterns:
+        self.visit(node.pattern)
+        if pattern is not node.patterns[-1]:
+          self.attr(
+              node, 'comma_%d' % arg_i, [self.ws, ',', self.ws], default=', ')
+      self.optional_token(node, 'extracomma', ',', allow_whitespace_prefix=True)
 
     @expression
     def visit_Name(self, node):
