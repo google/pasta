@@ -41,6 +41,16 @@ tree = pasta.parse(source_code)
 source_code = pasta.dump(tree)
 ```
 
+## Scope (static analysis)
+
+`paste.base.scope` provides static analysis functionality.
+
+`scope.analyze`, given a tree, returns a `Scope` object with information about
+the named defined in the tree. In a scope, `names` is a dictionary from variable
+names to `Name` objects. Each name object provides `definition` that indicates
+the AST node where the variable is defined, and `reads` is a list of nodes that
+reference the variable.
+
 ## Built-in Augmentations
 
 Pasta includes some common augmentations out-of-the-box. These can be used as
