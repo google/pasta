@@ -1490,11 +1490,15 @@ def get_base_visitor(astlib=ast):
     def visit_FormattedValue(self, node):
       self.visit(node.value)
       if node.conversion != -1:
-        self.attr(
-            node,
-            'conversion', [self.ws, '!', chr(node.conversion)],
-            deps=('conversion',),
-            default='!%c' % node.conversion)
+        # If we have a self-documenting token, eat the '='.
+        if self.tokens.peek_non_whitespace().src == '=':
+          self.token('=')
+        else:
+          self.attr(
+              node,
+              'conversion', [self.ws, '!', chr(node.conversion)],
+              deps=('conversion',),
+              default='!%c' % node.conversion)
       if node.format_spec:
         self.attr(
             node, 'format_spec_prefix', [self.ws, ':', self.ws], default=':')
