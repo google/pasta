@@ -11,9 +11,10 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
+       # TODO: Add back 2.7 if possible
        # TODO: Add 3.4 when possible
-        python-version: ["2.7", "3.5.10", "3.6.15", "3.7.12", "3.8.12", "3.9.9"]
-
+        os: [ ubuntu-20.04 ]
+        python-version: ["3.5.10", "3.6.15", "3.7.12", "3.8.12", "3.9.9"]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
