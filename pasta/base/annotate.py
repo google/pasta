@@ -566,9 +566,15 @@ def get_base_visitor(astlib=ast):
         for stmt in self.indented(node, 'finalbody'):
           self.visit(stmt)
 
+    # Added in python 3.11
+    def visit_TryStar(self, node):
+      return self.visit_Try(node)
+
     @block_statement
     def visit_ExceptHandler(self, node):
       self.token('except')
+      # except* support https://peps.python.org/pep-0654/#except
+      self.optional_token(node, 'star', '*', allow_whitespace_prefix=True)
       self.attr(node, 'leading_ws', [self.ws], default=' ')
       if node.type:
         self.visit(node.type)
