@@ -8,7 +8,7 @@ on: [ push, workflow_dispatch ]
 jobs:
   build:
 
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
        # TODO: Add back 2.7 if possible
