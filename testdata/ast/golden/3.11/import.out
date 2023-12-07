@@ -1,0 +1,19 @@
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=||	indent=||
+(1, 0)       Import               	prefix=||	suffix=|\n|	indent=||
+(3, 0)       Import               	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(5, 0)       Import               	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(7, 0)       Import               	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(9, 0)       Import               	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(11, 0)      Import               	prefix=|\n@@indent@@|	suffix=|\n|	indent=||
+(1, 7)       alias a              	prefix=||	suffix=||	indent=||
+(3, 7)       alias b              	prefix=||	suffix=||	indent=||
+(3, 10)      alias c              	prefix=||	suffix=||	indent=||
+(5, 7)       alias d              	prefix=||	suffix=||	indent=||
+(7, 7)       alias f              	prefix=||	suffix=||	indent=||
+(7, 10)      alias g              	prefix=||	suffix=||	indent=||
+(7, 18)      alias i              	prefix=||	suffix=||	indent=||
+(9, 10)      alias j              	prefix=||	suffix=||	indent=||
+(9, 21)      alias l              	prefix=||	suffix=||	indent=||
+(9, 37)      alias n              	prefix=||	suffix=||	indent=||
+(11, 7)      alias p.q.r          	prefix=||	suffix=||	indent=||
+(11, 19)     alias t.u.v          	prefix=||	suffix=||	indent=||
