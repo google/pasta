@@ -174,6 +174,10 @@ class ScopeVisitor(ast.NodeVisitor):
 
 
 class Scope(object):
+  """Static analysis information for an AST tree.
+
+  'names' is a dictionary from of Name objects.
+  """
 
   def __init__(self, parent_scope, node):
     self.parent_scope = parent_scope
@@ -266,6 +270,12 @@ class RootScope(Scope):
 
 # Should probably also have a scope?
 class Name(object):
+  """Information about one name.
+
+  'reads' is a list of nodes that reference this name.
+
+  'definition' is the node that defines this name.
+  """
 
   def __init__(self, id):
     self.id = id
@@ -291,6 +301,14 @@ class Name(object):
 
 
 def analyze(tree):
+  """Builds static analysis data for an AST tree.
+
+  Args:
+    tree: The tree to analyze.
+
+  Returns:
+    A Scope object with static analysis information.
+  """
   v = ScopeVisitor()
   v.visit(tree)
   return v.scope
