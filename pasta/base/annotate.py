@@ -1494,6 +1494,8 @@ def get_base_visitor(astlib=ast):
     def visit_FormattedValue(self, node):
       self.visit(node.value)
       if node.conversion != -1:
+        # If we have a self-documenting token, eat the '=' (see https://docs.python.org/3/whatsnew/3.8.html#f-strings-support-for-self-documenting-expressions-and-debugging)
+        self.optional_token(node, 'self_documenting', '=')
         self.attr(
             node,
             'conversion', [self.ws, '!', chr(node.conversion)],
