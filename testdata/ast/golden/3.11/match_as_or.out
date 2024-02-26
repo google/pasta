@@ -1,0 +1,19 @@
+(-1, -1)     Module               	prefix=|@@indent@@|	suffix=|@@indent@@|	indent=||
+(1, 0)       Match                	prefix=||	suffix=||	indent=||
+(1, 6)       Name a               	prefix=||	suffix=||	indent=||
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     match_case           	prefix=|@@indent@@|	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(2, 7)       MatchAs c            	prefix=||	suffix=||	indent=|  |
+(3, 4)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(4, 7)       MatchOr              	prefix=||	suffix=||	indent=|  |
+(5, 4)       Expr                 	prefix=|@@indent@@|	suffix=|\n|	indent=|    |
+(2, 7)       MatchSequence        	prefix=||	suffix=| |	indent=|  |
+(3, 4)       Name d               	prefix=||	suffix=||	indent=|    |
+(4, 7)       MatchSequence        	prefix=||	suffix=| |	indent=|  |
+(4, 14)      MatchAs f            	prefix=|(|	suffix=|)|	indent=|  |
+(5, 4)       Name g               	prefix=||	suffix=||	indent=|    |
+(2, 8)       MatchAs b            	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||
+(4, 8)       MatchAs e            	prefix=||	suffix=||	indent=|  |
+(-1, -1)     Load                 	prefix=||	suffix=||	indent=||

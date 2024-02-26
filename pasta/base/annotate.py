@@ -1164,12 +1164,10 @@ def get_base_visitor(astlib=ast):
 
     @expression
     def visit_MatchOr(self, node):
-      for pattern in node.patterns:
-        self.visit(node.pattern)
+      for i, pattern in enumerate(node.patterns):
+        self.visit(pattern)
         if pattern is not node.patterns[-1]:
-          self.attr(
-              node, 'comma_%d' % arg_i, [self.ws, ',', self.ws], default=', ')
-      self.optional_token(node, 'extracomma', ',', allow_whitespace_prefix=True)
+          self.attr(node, 'bar_%d' % i, [self.ws, '|', self.ws], default=' | ')
 
     @expression
     def visit_Name(self, node):

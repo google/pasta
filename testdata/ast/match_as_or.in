@@ -1,0 +1,5 @@
+match a:
+  case [b] as c:
+    d
+  case [e] | (f):
+    g
