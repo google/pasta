@@ -1265,10 +1265,13 @@ class BaseVisitor(ast.NodeVisitor):
   @fstring_expression
   def visit_FormattedValue(self, node):
     self.visit(node.value)
+    self.optional_token(node, 'debug_specifier', '=')
     if node.conversion != -1:
-      self.attr(node, 'conversion',
-                [self.ws, '!', chr(node.conversion)], deps=('conversion',),
-                default='!%c' % node.conversion)
+      self.optional_token(node, 'conversion_prefix', '!')
+      if fmt.get(node, 'conversion_prefix'):
+        self.attr(node, 'conversion_char',
+                  [chr(node.conversion)], deps=('conversion',),
+                  default='%c' % node.conversion)
     if node.format_spec:
       self.attr(node, 'format_spec_prefix', [self.ws, ':', self.ws],
                 default=':')
