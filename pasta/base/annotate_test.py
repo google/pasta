@@ -454,6 +454,18 @@ class FstringTest(test_utils.TestCase):
         fmt.get(node, 'content'),
         'f"a {{{__pasta_fstring_val_0__} {{c}}"')
 
+  @test_utils.requires_features('fstring')
+  def test_fstring_debug_format(self):
+    src = 'f"{a=}"'
+    self.assertEqual(src, pasta.dump(pasta.parse(src)))
+    src = 'f"{a=!r}"'
+    self.assertEqual(src, pasta.dump(pasta.parse(src)))
+    src = 'f"{a=:d}"'
+    self.assertEqual(src, pasta.dump(pasta.parse(src)))
+    src = 'f"{a=!r:10}"'
+    self.assertEqual(src, pasta.dump(pasta.parse(src)))
+    src = 'f"prefix {x=} suffix"'
+    self.assertEqual(src, pasta.dump(pasta.parse(src)))
 
 
 class VersionSupportTest(test_utils.TestCase):
